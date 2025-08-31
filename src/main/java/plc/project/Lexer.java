@@ -98,7 +98,10 @@ public final class Lexer {
     public Token lexString() {
         do {
             if (peek("\\\\") && !peek("\\\\", "[bnrt'\"\\\\]")) {
-                break;
+                throw new ParseException(
+                        "Invalid Escape Character",
+                        chars.index
+                );
             }
         } while (match("[^\"]"));
         if (match("\"")) {
@@ -119,6 +122,7 @@ public final class Lexer {
         if (peek("=")) {
             chars.advance();
         }
+
         return chars.emit(Token.Type.OPERATOR);
     }
 
