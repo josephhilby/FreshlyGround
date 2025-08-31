@@ -24,11 +24,9 @@ public final class Token {
     public Type getType() {
         return type;
     }
-
     public String getLiteral() {
         return literal;
     }
-
     public int getIndex() {
         return index;
     }

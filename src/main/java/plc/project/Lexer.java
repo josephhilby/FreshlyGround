@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,15 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        List<Token> tokens = new ArrayList<>();
+        while (chars.has(0)) {
+            if (!peek("[^ \\b\\n\\r\\t]")) {
+                tokens.add(lexToken());
+            } else {
+                lexEscape();
+            }
+        }
+        return tokens;
     }
 
     /**
@@ -41,27 +50,54 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        throw new UnsupportedOperationException(); //TODO
+        Token result;
+        if (peek("[A-Za-z]")) {
+            chars.advance();
+            return lexIdentifier();
+        }
+        if (peek("[1-9]") || peek("[+-]", "[1-9]") || peek("0","\\.")) {
+            chars.advance();
+            return lexNumber();
+        }
+        if (peek("'")) {
+            return lexCharacter();
+        }
+        if (peek("\"")) {
+            return lexString();
+        }
+        throw new ParseException(
+                "Unexpected character",
+                chars.index
+        );
     }
 
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
+        while (match("[A-Za-z0-9_-]")) {}
+        return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        while (match("[0-9]")) {}
+        if (match("\\.", "[0-9]")) {
+            while (match("[0-9]")) {}
+            return chars.emit(Token.Type.DECIMAL);
+        }
+        return chars.emit(Token.Type.INTEGER);
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        while (match("[^']"));
+        return chars.emit(Token.Type.CHARACTER);
     }
 
     public Token lexString() {
-        throw new UnsupportedOperationException(); //TODO
+        while (match("[^\"]"));
+        return chars.emit(Token.Type.STRING);
     }
 
     public void lexEscape() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();
+        chars.skip();
     }
 
     public Token lexOperator() {
@@ -74,7 +110,12 @@ public final class Lexer {
      * return true if the next characters are {@code 'a', 'b', 'c'}.
      */
     public boolean peek(String... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        for (int i = 0; i < patterns.length; i++) {
+            if (!chars.has(i) || !String.valueOf(chars.get(i)).matches(patterns[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -83,7 +124,13 @@ public final class Lexer {
      * true. Hint - it's easiest to have this method simply call peek.
      */
     public boolean match(String... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        boolean peek = peek(patterns);
+        if (peek) {
+            for (int i = 0; i < patterns.length; i++) {
+                chars.advance();
+            }
+        }
+        return peek;
     }
 
     /**
@@ -100,18 +147,14 @@ public final class Lexer {
         private int index = 0;
         private int length = 0;
 
-        public CharStream(String input) {
-            this.input = input;
-        }
+        public CharStream(String input) { this.input = input; }
 
         public boolean has(int offset) {
             return index + offset < input.length();
         }
-
         public char get(int offset) {
             return input.charAt(index + offset);
         }
-
         public void advance() {
             index++;
             length++;

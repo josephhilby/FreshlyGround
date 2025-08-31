@@ -39,7 +39,10 @@ public class LexerTests {
                 Arguments.of("Decimal", "123.456", false),
                 Arguments.of("Signed Decimal", "-1.0", false),
                 Arguments.of("Trailing Decimal", "1.", false),
-                Arguments.of("Leading Decimal", ".5", false)
+                Arguments.of("Leading Decimal", ".5", false),
+
+                Arguments.of("Signed (-) Int", "-1", true),
+                Arguments.of("Signed (+) Int", "+1", true)
         );
     }
 
