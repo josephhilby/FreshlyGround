@@ -97,7 +97,7 @@ public final class Lexer {
 
     public Token lexString() {
         do {
-            if (!peek("\\\\", "[^bnrt'\"\\\\]")) {
+            if (peek("\\\\") && !peek("\\\\", "[bnrt'\"\\\\]")) {
                 break;
             }
         } while (match("[^\"]"));
