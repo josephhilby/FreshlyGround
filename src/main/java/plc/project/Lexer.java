@@ -50,7 +50,6 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        Token result;
         if (peek("[A-Za-z]")) {
             chars.advance();
             return lexIdentifier();
@@ -60,15 +59,15 @@ public final class Lexer {
             return lexNumber();
         }
         if (peek("'")) {
+            chars.advance();
             return lexCharacter();
         }
         if (peek("\"")) {
+            chars.advance();
             return lexString();
         }
-        throw new ParseException(
-                "Unexpected character",
-                chars.index
-        );
+        chars.advance();
+        return lexOperator();
     }
 
     public Token lexIdentifier() {
@@ -77,9 +76,9 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
-        while (match("[0-9]")) {}
+        while (match("[0-9]"));
         if (match("\\.", "[0-9]")) {
-            while (match("[0-9]")) {}
+            while (match("[0-9]"));
             return chars.emit(Token.Type.DECIMAL);
         }
         return chars.emit(Token.Type.INTEGER);
@@ -87,12 +86,28 @@ public final class Lexer {
 
     public Token lexCharacter() {
         while (match("[^']"));
-        return chars.emit(Token.Type.CHARACTER);
+        if (match("'") && 2 < chars.length && chars.length < 5) {
+            return chars.emit(Token.Type.CHARACTER);
+        }
+        throw new ParseException(
+                "Missing char literal or empty character",
+                chars.index
+        );
     }
 
     public Token lexString() {
-        while (match("[^\"]"));
-        return chars.emit(Token.Type.STRING);
+        do {
+            if (!peek("\\\\", "[^bnrt'\"\\\\]")) {
+                break;
+            }
+        } while (match("[^\"]"));
+        if (match("\"")) {
+            return chars.emit(Token.Type.STRING);
+        }
+        throw new ParseException(
+                "Missing str literal or empty string",
+                chars.index
+        );
     }
 
     public void lexEscape() {
@@ -101,7 +116,10 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+        if (peek("=")) {
+            chars.advance();
+        }
+        return chars.emit(Token.Type.OPERATOR);
     }
 
     /**
