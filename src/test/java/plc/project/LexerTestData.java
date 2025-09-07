@@ -96,8 +96,9 @@ import java.util.Arrays;
 
 
 public class LexerTestData {
-    private LexerTestData() {};
-    public static final List<Token> input = Arrays.asList(
+    private LexerTestData() {}
+    public static final String source = new String("LET i = -1;\nLET inc = 2;\nDEF foo() DO\n    WHILE i <= 1 DO\n        IF i > 0 DO\n            print(\"bar\");\n        END\n        i = i + inc;\n    END\nEND");
+    public static final List<Token> tokens = Arrays.asList(
 
             //LET i = -1;
             new Token(Token.Type.IDENTIFIER, "LET", 0),

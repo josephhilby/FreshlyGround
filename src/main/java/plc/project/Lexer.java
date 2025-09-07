@@ -32,7 +32,8 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
         while (chars.has(0)) {
-            if (!peek("[^ \\b\\n\\r\\t]")) {
+            // \b changed to \x08 as \b was returning an unsupported escape char
+            if (!peek("[ \\n\\r\\t\\x08]")) {
                 tokens.add(lexToken());
             } else {
                 lexEscape();
@@ -54,7 +55,11 @@ public final class Lexer {
             chars.advance();
             return lexIdentifier();
         }
-        if (peek("[1-9]") || peek("[+-]", "[1-9]") || peek("0","\\.")) {
+        if (peek("[1-9]") ||
+                peek("[+-]", "[1-9]") ||
+                peek("0","\\.") ||
+                peek("0", "[^0-9]") ||
+                peek("0")) {
             chars.advance();
             return lexNumber();
         }
