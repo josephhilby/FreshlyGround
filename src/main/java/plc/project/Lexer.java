@@ -55,11 +55,7 @@ public final class Lexer {
             chars.advance();
             return lexIdentifier();
         }
-        if (peek("[1-9]") ||
-                peek("[+-]", "[1-9]") ||
-                peek("0","\\.") ||
-                peek("0", "[^0-9]") ||
-                peek("0")) {
+        if (peek("[0-9]") || peek("[+-]", "[0-9]")) {
             chars.advance();
             return lexNumber();
         }
@@ -81,6 +77,12 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
+        if (peek("0", "[0-9]")) {
+            throw new ParseException(
+                    "No leading zeros",
+                    chars.index
+            );
+        }
         while (match("[0-9]"));
         if (match("\\.", "[0-9]")) {
             while (match("[0-9]"));
