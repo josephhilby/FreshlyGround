@@ -44,7 +44,9 @@ public class LexerTests {
 
                 Arguments.of("Signed (-) Int", "-1", true),
                 Arguments.of("Signed (-) Zero", "+0", true),
-                Arguments.of("Signed (+) Int", "+1", true)
+                Arguments.of("Signed (+) Int", "+1", true),
+                Arguments.of("Leading Zero", "01", false),
+                Arguments.of("Signed (+) Leading Zero", "+01", false)
         );
     }
 
@@ -61,7 +63,9 @@ public class LexerTests {
                 Arguments.of("Negative Decimal", "-1.0", true),
                 Arguments.of("Trailing Decimal", "1.", false),
                 Arguments.of("Trailing Decimal Zero", "0.", false),
-                Arguments.of("Leading Decimal", ".5", false)
+                Arguments.of("Leading Decimal", ".5", false),
+                Arguments.of("Leading Zero", "01.003", false),
+                Arguments.of("Leading Signed Zero", "+01.003", false)
         );
     }
 

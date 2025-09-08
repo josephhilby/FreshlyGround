@@ -56,7 +56,9 @@ public final class Lexer {
             return lexIdentifier();
         }
         if (peek("[0-9]") || peek("[+-]", "[0-9]")) {
-            chars.advance();
+            if (peek("[+-]")) {
+                chars.advance();
+            }
             return lexNumber();
         }
         if (peek("'")) {
