@@ -51,7 +51,7 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        if (peek("[A-Za-z]")) {
+        if (peek("[A-Za-z_]")) {
             chars.advance();
             return lexIdentifier();
         }
@@ -94,7 +94,14 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
-        while (match("[^']"));
+        do {
+            if (peek("\\\\", "[^bnrt'\"\\\\]")) {
+                throw new ParseException(
+                        "Invalid escape character",
+                        chars.index
+                );
+            }
+        } while (match("[^']"));
         if (match("'") && 2 < chars.length && chars.length < 5) {
             return chars.emit(Token.Type.CHARACTER);
         }
@@ -106,9 +113,9 @@ public final class Lexer {
 
     public Token lexString() {
         do {
-            if (peek("\\\\") && !peek("\\\\", "[bnrt'\"\\\\]")) {
+            if (peek("\\\\", "[^bnrt'\"\\\\]")) {
                 throw new ParseException(
-                        "Invalid Escape Character",
+                        "Invalid escape character",
                         chars.index
                 );
             }
@@ -117,7 +124,7 @@ public final class Lexer {
             return chars.emit(Token.Type.STRING);
         }
         throw new ParseException(
-                "Missing str literal or empty string",
+                "Missing str literal",
                 chars.index
         );
     }
@@ -183,9 +190,11 @@ public final class Lexer {
         public boolean has(int offset) {
             return index + offset < input.length();
         }
+
         public char get(int offset) {
             return input.charAt(index + offset);
         }
+
         public void advance() {
             index++;
             length++;
