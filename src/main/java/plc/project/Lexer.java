@@ -79,19 +79,25 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
+        // Identify if signed and first num in squence
         boolean signed = chars.length == 1;
         char leadingNum = chars.get(0);
+
+        // Leading Zero Check
         if (peek("0", "[0-9]")) {
             throw new ParseException(
                     "No leading zeros",
                     chars.index
             );
         }
+
         while (match("[0-9]"));
         if (match(".", "[0-9]")) {
             while (match("[0-9]"));
             return chars.emit(Token.Type.DECIMAL);
         }
+
+        // Signed Zero Int Check (should be no leading zeros)
         if (leadingNum == '0' && signed) {
             throw new ParseException(
                     "No signed zero integers",
@@ -102,12 +108,15 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
+        // Check For special chars
         if (peek("\\\\", "[bnrt'\"\\\\]", "'")) {
-            chars.index += 3;
-            chars.length += 3;
+            chars.advance();
+            chars.advance();
+            chars.advance();
             return chars.emit(Token.Type.CHARACTER);
         }
         do {
+            // Throw error if escape not correctly used
             if (peek("\\\\")) {
                 throw new ParseException(
                         "Invalid escape",
@@ -126,16 +135,19 @@ public final class Lexer {
 
     public Token lexString() {
         do {
+            // Check For special chars
             if (peek("\\\\", "[bnrt'\"\\\\]")) {
                 chars.advance();
                 chars.advance();
             }
-            if (peek("\\\\", "[^bnrt'\"\\\\]")) {
+            // Throw error if escape not correctly used
+            if (peek("\\\\")) {
                 throw new ParseException(
                         "Invalid escape character",
                         chars.index
                 );
             }
+            // Throw error if literals separated by new line
             if (peek("\n")) {
                 throw new ParseException(
                         "Unescaped new line",
