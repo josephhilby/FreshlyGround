@@ -24,9 +24,13 @@ public class LexerTests {
                 Arguments.of("Alphabetic", "getName", true),
                 Arguments.of("Alphanumeric", "thelegend27", true),
                 Arguments.of("Underscore", "_abC01", true),
+                Arguments.of("Underscores", "____", true),
                 Arguments.of("Hyphenated", "a-b-c", true),
                 Arguments.of("Leading Digit", "1fish2fish3fishbluefish", false),
-                Arguments.of("Single Char", "a", true),
+                Arguments.of("Single Char String", "a", true),
+                Arguments.of("Long Char String", "abcdefghijklmnopqrstuvwxyz012346789_-", true),
+                Arguments.of("AND", "AND", true),
+                Arguments.of("OR", "OR", true),
 
                 // But cannot start with a digit or a hyphen [-]
                 Arguments.of("Leading Hyphen", "-five", false)
@@ -44,6 +48,7 @@ public class LexerTests {
                 // Integer number
                 Arguments.of("Single Digit", "1", true),
                 Arguments.of("Multiple Digits", "1234", true),
+                Arguments.of("Long Int", "123456789123456789123456789", true),
                 Arguments.of("Comma Separated", "1,234", false),
                 Arguments.of("Decimal", "123.456", false),
                 Arguments.of("Trailing Decimal", "1.", false),
@@ -68,8 +73,8 @@ public class LexerTests {
                 Arguments.of("Signed Decimal", "-1.0", false),
 
                 // Except for a zero (0) integer
-                Arguments.of("Signed (-) Zero", "+0", true),
-                Arguments.of("Signed (+) Zero", "-0", false)
+                Arguments.of("Signed (+) Zero", "+0", false),
+                Arguments.of("Signed (-) Zero", "-0", false)
         );
     }
 
@@ -88,6 +93,7 @@ public class LexerTests {
                 Arguments.of("Trailing Decimal Zero", "0.", false),
                 Arguments.of("Double Decimal", "1..0", false),
                 Arguments.of("Integers", "123.456", true),
+                Arguments.of("One", "1.0",  true),
 
                 // No leading zeros, unless the only digit to the left of the decimal point is a zero (0.[...])
                 Arguments.of("Leading Zero", "01.003", false),
@@ -96,10 +102,13 @@ public class LexerTests {
 
                 // Trailing zeros are allowed
                 Arguments.of("Trailing Zeros", "7.0000", true),
+                Arguments.of("Trailing Zeros Zero", "0.000", true),
 
                 // Optional sign + or - may immediately precede any decimal
-                Arguments.of("Negative Decimal", "-1.0", true),
-                Arguments.of("Leading Signed Zero", "+01.003", false)
+                Arguments.of("Signed (-) Decimal", "-1.0", true),
+                Arguments.of("Signed (-) Zero", "-0.0", true),
+                Arguments.of("Leading Signed Zero", "+01.003", false),
+                Arguments.of("Signed (+) Decimal", "+123.321", true)
         );
     }
 
@@ -113,8 +122,11 @@ public class LexerTests {
         return Stream.of(
                 // Start and end with a single quote (')
                 Arguments.of("Alphabetic", "\'c\'", true),
-                Arguments.of("Unterminated", "\'c", false),
-                Arguments.of("Not-Started", "c\'", false),
+                Arguments.of("Unicode Character", "\'ρ\'", true),
+                Arguments.of("Character", "\'&\'", true),
+                Arguments.of("Unterminated Char", "\'c", false),
+                Arguments.of("Unterminated", "\'", false),
+                Arguments.of("Not-Started Char", "c\'", false),
 
                 // Contain one and only one character
                 Arguments.of("Empty", "\'\'", false),
@@ -124,13 +136,14 @@ public class LexerTests {
                 // Supports escape characters (\), (bnrt'"\) and considered one character
                 Arguments.of("Newline Escape", "\'\\n\'", true),
                 Arguments.of("Tab Escape", "\'\\t\'", true),
+                Arguments.of("Backslash Escape", "\'\\\\\'", true),
 
                 // Character cannot be a single quote ('), without being preceded by a backslash (\)
                 Arguments.of("Unterminated Quote", "\'\'\'", false),
                 Arguments.of("Terminated Quote", "\'\\'\'", true),
 
                 // Cannot span multiple lines, opening and closing quotes must be on the same line, no \n
-                Arguments.of("Newline No Escape", "\'\n\'", true)
+                Arguments.of("Newline No Escape", "\'\n\'", false)
         );
     }
 
@@ -143,14 +156,27 @@ public class LexerTests {
     private static Stream<Arguments> testString() {
         return Stream.of(
                 // strings start and end with a double quote (")
-                // Supports escape characters (\), (bnrt'"\) and considered one character
-                // Character cannot be a double quote ("), without being preceded by a backslash (\)
-                // Cannot span multiple lines, opening and closing quotes must be on the same line, no \n
                 Arguments.of("Empty", "\"\"", true),
                 Arguments.of("Alphabetic", "\"abc\"", true),
-                Arguments.of("Newline Escape", "\"Hello,\\nWorld\"", true),
+                Arguments.of("Characters", "\"!@#$%^&*()\"", true),
+                Arguments.of("Unicode", "\"ρ★⚡\"", true),
+                Arguments.of("Whitespaces", "\" ␈␉\"", true),
                 Arguments.of("Unterminated", "\"unterminated", false),
-                Arguments.of("Invalid Escape", "\"invalid\\escape\"", false)
+
+                // Supports escape characters (\), (bnrt'"\) and considered one character
+                Arguments.of("Newline Escape", "\"Hello,\\nWorld\"", true),
+                Arguments.of("Invalid Escape", "\"invalid\\escape\"", false),
+                Arguments.of("Numeric Invalid Escapes", "\"abc\\0123\"", false),
+                Arguments.of("Multiple Escapes", "\"a\\bcdefghijklm\\nopq\\rs\\tuvwxyz\"", true),
+                Arguments.of("Special Escapes", "\"sq\\'dq\\\"bs\\\\\"", true),
+                Arguments.of("Unicode Escapes", "\"a\\u0000b\\u12ABc\"", false),
+
+                // Character cannot be a double quote ("), without being preceded by a backslash (\)
+                Arguments.of("Quote", "\"\"\"", false),
+
+                // Cannot span multiple lines, opening and closing quotes must be on the same line, no \n
+                Arguments.of("Newline Escape", "\"Hello,\nWorld\"", false),
+                Arguments.of("Newline at End", "unterminated␊", false)
         );
     }
 
@@ -164,11 +190,19 @@ public class LexerTests {
     private static Stream<Arguments> testOperator() {
         return Stream.of(
                 // Any other single character, excluding whitespace
-                // Comparison (<=, >=, !=, ==) operators are special cases
                 Arguments.of("Character", "(", true),
-                Arguments.of("Comparison", "<=", true),
+                Arguments.of("Unicode Character", "★", true),
+                Arguments.of("Symbol", "$", true),
+                Arguments.of("Plus", "+", true),
+                Arguments.of("Literal", "'", false),
                 Arguments.of("Space", " ", false),
-                Arguments.of("Tab", "\t", false)
+                Arguments.of("Tab", "\t", false),
+                Arguments.of("Formfeed", "\f", true),
+
+                // Comparison (<=, >=, !=, ==) operators are special cases
+                Arguments.of("Comparison", "<=", true),
+                Arguments.of("Bang", "!=", true),
+                Arguments.of("Equal", "==", true)
         );
     }
 

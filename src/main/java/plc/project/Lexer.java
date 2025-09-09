@@ -79,6 +79,12 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
+        if (chars.length == 1 && peek("0")) {
+            throw new ParseException(
+                    "No signed zero ints",
+                    chars.index
+            );
+        }
         if (peek("0", "[0-9]")) {
             throw new ParseException(
                     "No leading zeros",
@@ -94,19 +100,24 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
+        if (peek("\\\\", "[bnrt'\"\\\\]", "'")) {
+            chars.index += 3;
+            chars.length += 3;
+            return chars.emit(Token.Type.CHARACTER);
+        }
         do {
-            if (peek("\\\\", "[^bnrt'\"\\\\]")) {
+            if (peek("\\\\")) {
                 throw new ParseException(
-                        "Invalid escape character",
+                        "Invalid escape",
                         chars.index
                 );
             }
-        } while (match("[^']"));
-        if (match("'") && 2 < chars.length && chars.length < 5) {
+        } while (match("[^'\n]"));
+        if (match("'") && 2 < chars.length && chars.length < 4) {
             return chars.emit(Token.Type.CHARACTER);
         }
         throw new ParseException(
-                "Missing char literal or empty character",
+                "Missing char literal or empty/invalid character",
                 chars.index
         );
     }
