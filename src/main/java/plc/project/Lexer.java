@@ -36,7 +36,8 @@ public final class Lexer {
             if (!peek("[ \\n\\r\\t\\x08]")) {
                 tokens.add(lexToken());
             } else {
-                lexEscape();
+                chars.advance();
+                chars.skip();
             }
         }
         return tokens;
@@ -108,23 +109,19 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
-        // Check For special chars
-        if (peek("\\\\", "[bnrt'\"\\\\]", "'")) {
-            chars.advance();
-            chars.advance();
-            chars.advance();
-            return chars.emit(Token.Type.CHARACTER);
+        // Check if escape sequence used
+        if (peek("\\\\")) {
+            lexEscape();
         }
-        do {
-            // Throw error if escape not correctly used
-            if (peek("\\\\")) {
-                throw new ParseException(
-                        "Invalid escape",
-                        chars.index
-                );
-            }
-        } while (match("[^'\n]"));
-        if (match("'") && chars.length == 3) {
+        // Throw error if literals separated by new line
+        if (peek("\n")) {
+            throw new ParseException(
+                    "Unescaped new line",
+                    chars.index
+            );
+        }
+        match("[^']");
+        if (match("'") && chars.length > 2) {
             return chars.emit(Token.Type.CHARACTER);
         }
         throw new ParseException(
@@ -135,17 +132,9 @@ public final class Lexer {
 
     public Token lexString() {
         do {
-            // Check For special chars
-            if (peek("\\\\", "[bnrt'\"\\\\]")) {
-                chars.advance();
-                chars.advance();
-            }
-            // Throw error if escape not correctly used
+            // Check if escape sequence used
             if (peek("\\\\")) {
-                throw new ParseException(
-                        "Invalid escape character",
-                        chars.index
-                );
+                lexEscape();
             }
             // Throw error if literals separated by new line
             if (peek("\n")) {
@@ -165,8 +154,15 @@ public final class Lexer {
     }
 
     public void lexEscape() {
-        chars.advance();
-        chars.skip();
+        if (peek("\\\\", "[bnrt'\"\\\\]")) {
+            chars.advance();
+            chars.advance();
+        } else {
+            throw new ParseException(
+                    "Invalid escape character",
+                    chars.index
+            );
+        }
     }
 
     public Token lexOperator() {
