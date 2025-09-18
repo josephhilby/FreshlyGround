@@ -26,6 +26,7 @@ public final class Parser {
     /**
      * Parses the {@code source} rule.
      */
+    // source ::= field* method*
     public Ast.Source parseSource() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -34,6 +35,7 @@ public final class Parser {
      * Parses the {@code field} rule. This method should only be called if the
      * next tokens start a field, aka {@code LET}.
      */
+    // field ::= 'LET' 'CONST'? identifier ('=' expression)? ';'
     public Ast.Field parseField() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -42,6 +44,7 @@ public final class Parser {
      * Parses the {@code method} rule. This method should only be called if the
      * next tokens start a method, aka {@code DEF}.
      */
+    // method ::= 'DEF' identifier '(' ( identifier ( ',' identifier )* )? ')' 'DO' statement* 'END'
     public Ast.Method parseMethod() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -51,6 +54,7 @@ public final class Parser {
      * If the next tokens do not start a declaration, if, for, while, or return
      * statement, then it is an expression/assignment statement.
      */
+    // statement ::= LET | IF | FOR | WHILE | RETURN | expression ('=' expression)? ';'
     public Ast.Statement parseStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -60,6 +64,7 @@ public final class Parser {
      * method should only be called if the next tokens start a declaration
      * statement, aka {@code LET}.
      */
+    // 'LET' identifier ('=' expression)? ';'
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -69,6 +74,7 @@ public final class Parser {
      * should only be called if the next tokens start an if statement, aka
      * {@code IF}.
      */
+    // 'IF' expression 'DO' statement* ('ELSE' statement*)? 'END'
     public Ast.Statement.If parseIfStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -78,6 +84,7 @@ public final class Parser {
      * should only be called if the next tokens start a for statement, aka
      * {@code FOR}.
      */
+    // 'FOR' '(' (identifier '=' expression)? ';' expression ';' (identifier '=' expression)? ')' statement* 'END'
     public Ast.Statement.For parseForStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -87,6 +94,7 @@ public final class Parser {
      * should only be called if the next tokens start a while statement, aka
      * {@code WHILE}.
      */
+    // 'WHILE' expression 'DO' statement* 'END'
     public Ast.Statement.While parseWhileStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -96,6 +104,7 @@ public final class Parser {
      * should only be called if the next tokens start a return statement, aka
      * {@code RETURN}.
      */
+    // 'RETURN' expression ';'
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -103,6 +112,7 @@ public final class Parser {
     /**
      * Parses the {@code expression} rule.
      */
+    // expression ::= logical_expression
     public Ast.Expression parseExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -110,6 +120,7 @@ public final class Parser {
     /**
      * Parses the {@code logical-expression} rule.
      */
+    // logical_expression ::= comparison_expression (('AND' | 'OR') comparison_expression)*
     public Ast.Expression parseLogicalExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -117,6 +128,8 @@ public final class Parser {
     /**
      * Parses the {@code equality-expression} rule.
      */
+    // comparison_expression ::=
+    //      additive_expression (('<' | '<=' | '>' | '>=' | '==' | '!=') additive_expression)*
     public Ast.Expression parseEqualityExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -124,6 +137,7 @@ public final class Parser {
     /**
      * Parses the {@code additive-expression} rule.
      */
+    // additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
     public Ast.Expression parseAdditiveExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -131,6 +145,7 @@ public final class Parser {
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
+    // multiplicative_expression ::= secondary_expression (('*' | '/') secondary_expression)*
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -138,6 +153,7 @@ public final class Parser {
     /**
      * Parses the {@code secondary-expression} rule.
      */
+    // secondary_expression ::= primary_expression ('.' identifier ('(' (expression (',' expression)*)? ')')?)*
     public Ast.Expression parseSecondaryExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -148,6 +164,11 @@ public final class Parser {
      * functions. It may be helpful to break these up into other methods but is
      * not strictly necessary.
      */
+    // primary_expression ::=
+    //      'NIL' | 'TRUE' | 'FALSE' |
+    //      integer | decimal | character | string |
+    //      '(' expression ')' |
+    //      identifier ('(' (expression (',' expression)*)? ')')?
     public Ast.Expression parsePrimaryExpression() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -163,7 +184,22 @@ public final class Parser {
      * {@code peek(Token.Type.IDENTIFIER)} and {@code peek("literal")}.
      */
     private boolean peek(Object... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        for (int i = 0; i < patterns.length; i++) {
+            if (!tokens.has(i)) {
+                return false;
+            } else if (patterns[i] instanceof Token.Type) {
+                if (patterns[i] != tokens.get(i).getType()) {
+                    return false;
+                }
+            } else if (patterns[i] instanceof String) {
+                if (!patterns[i].equals(tokens.get(i).getLiteral())) {
+                    return false;
+                }
+            } else {
+                throw new AssertionError("Invalid pattern object: " + patterns[i].getClass());
+            }
+        }
+        return true;
     }
 
     /**
@@ -171,7 +207,13 @@ public final class Parser {
      * and advances the token stream.
      */
     private boolean match(Object... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        boolean peek = peek(patterns);
+        if (peek) {
+            for (int i = 0; i < patterns.length; i++) {
+                tokens.advance();
+            }
+        }
+        return peek;
     }
 
     private static final class TokenStream {

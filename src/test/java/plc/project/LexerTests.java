@@ -48,9 +48,12 @@ public class LexerTests {
                 // Integer number
                 Arguments.of("Single Digit", "1", true),
                 Arguments.of("Multiple Digits", "1234", true),
+                Arguments.of("Whitespace", "123 456", false),
+                Arguments.of("Dash", "15-10", false),
                 Arguments.of("Long Int", "123456789123456789123456789", true),
                 Arguments.of("Comma Separated", "1,234", false),
                 Arguments.of("Decimal", "123.456", false),
+                Arguments.of("Decimal Trailing Zero", "1.0", false),
                 Arguments.of("Trailing Decimal", "1.", false),
                 Arguments.of("Leading Decimal", ".5", false),
 
@@ -74,7 +77,8 @@ public class LexerTests {
 
                 // Except for a zero (0) integer
                 Arguments.of("Signed (+) Zero", "+0", false),
-                Arguments.of("Signed (-) Zero", "-0", false)
+                Arguments.of("Signed (-) Zero", "-0", false),
+                Arguments.of("Double Signed", "+0 -0", false)
         );
     }
 
@@ -88,6 +92,7 @@ public class LexerTests {
         return Stream.of(
                 // Two integer values separated by a decimal point
                 Arguments.of("Integer", "1", false),
+                Arguments.of("Dash", "15-10", false),
                 Arguments.of("Leading Decimal", ".5", false),
                 Arguments.of("Trailing Decimal", "1.", false),
                 Arguments.of("Trailing Decimal Zero", "0.", false),
@@ -137,6 +142,8 @@ public class LexerTests {
                 Arguments.of("Newline Escape", "\'\\n\'", true),
                 Arguments.of("Tab Escape", "\'\\t\'", true),
                 Arguments.of("Backslash Escape", "\'\\\\\'", true),
+                Arguments.of("Invalid Escape Character", "\'\\x\'", false),
+                Arguments.of("Invalid (Unicode) Escape Character", "\'\\u12G4\'", false),
 
                 // Character cannot be a single quote ('), without being preceded by a backslash (\)
                 Arguments.of("Unterminated Quote", "\'\'\'", false),
@@ -170,6 +177,7 @@ public class LexerTests {
                 Arguments.of("Multiple Escapes", "\"a\\bcdefghijklm\\nopq\\rs\\tuvwxyz\"", true),
                 Arguments.of("Special Escapes", "\"sq\\'dq\\\"bs\\\\\"", true),
                 Arguments.of("Unicode Escapes", "\"a\\u0000b\\u12ABc\"", false),
+                Arguments.of("Invalid Escape At Start", "\"\\e then a string\"", false),
 
                 // Character cannot be a double quote ("), without being preceded by a backslash (\)
                 Arguments.of("Quote", "\"\"\"", false),
@@ -202,7 +210,9 @@ public class LexerTests {
                 // Comparison (<=, >=, !=, ==) operators are special cases
                 Arguments.of("Comparison", "<=", true),
                 Arguments.of("Bang", "!=", true),
-                Arguments.of("Equal", "==", true)
+                Arguments.of("Equal", "==", true),
+                Arguments.of("Extra Char", "<=>", false),
+                Arguments.of("Double Operator", ">>", false)
         );
     }
 
@@ -228,7 +238,25 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
                 )),
-                Arguments.of("Example 3", LexerTestData.source, LexerTestData.tokens)
+                Arguments.of("Example 3", LexerTestData.source, LexerTestData.tokens),
+                Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "x", 4),
+                        new Token(Token.Type.OPERATOR, "=", 6),
+                        new Token(Token.Type.INTEGER, "5", 8),
+                        new Token(Token.Type.OPERATOR, "-", 9),
+                        new Token(Token.Type.INTEGER, "2", 10),
+                        new Token(Token.Type.OPERATOR, ";", 11)
+                )),
+                Arguments.of("Example 5", "LET x = 5 - 2;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "x", 4),
+                        new Token(Token.Type.OPERATOR, "=", 6),
+                        new Token(Token.Type.INTEGER, "5", 8),
+                        new Token(Token.Type.OPERATOR, "-", 10),
+                        new Token(Token.Type.INTEGER, "2", 12),
+                        new Token(Token.Type.OPERATOR, ";", 13)
+                ))
         );
     }
 

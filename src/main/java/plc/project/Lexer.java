@@ -32,12 +32,10 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
         while (chars.has(0)) {
-            // \b changed to \x08 as \b was returning an unsupported escape char
-            if (!peek("[ \\n\\r\\t\\x08]")) {
-                tokens.add(lexToken());
-            } else {
-                chars.advance();
+            if (match("[ \b\n\r\t]")) {
                 chars.skip();
+            } else {
+                tokens.add(lexToken());
             }
         }
         return tokens;
@@ -53,13 +51,12 @@ public final class Lexer {
      */
     public Token lexToken() {
         if (peek("[A-Za-z_]")) {
-            chars.advance();
             return lexIdentifier();
         }
         if (peek("[0-9]") || peek("[+-]", "[0-9]")) {
-            if (peek("[+-]")) {
-                chars.advance();
-            }
+//            if (peek("[+-]")) {
+//                chars.advance();
+//            }
             return lexNumber();
         }
         if (peek("'")) {
@@ -74,16 +71,19 @@ public final class Lexer {
         return lexOperator();
     }
 
+    // identifier ::= [A-Za-z_] [A-Za-z0-9_#x2D]*
+    // #x2D is -
     public Token lexIdentifier() {
-        while (match("[A-Za-z0-9_-]")) {}
+        chars.advance();
+        while (match("[A-Za-z0-9_-]"));
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
+    // number ::= [+#x2D]? [0-9]+ ( '.' [0-9]+ )?
     public Token lexNumber() {
-        // Identify if signed and first num in squence
+        // Identify if signed and first num in sequence
         boolean signed = chars.length == 1;
         char leadingNum = chars.get(0);
-
         // Leading Zero Check
         if (peek("0", "[0-9]")) {
             throw new ParseException(
@@ -91,13 +91,11 @@ public final class Lexer {
                     chars.index
             );
         }
-
         while (match("[0-9]"));
-        if (match(".", "[0-9]")) {
+        if (match("(\\.)", "[0-9]")) {
             while (match("[0-9]"));
             return chars.emit(Token.Type.DECIMAL);
         }
-
         // Signed Zero Int Check (should be no leading zeros)
         if (leadingNum == '0' && signed) {
             throw new ParseException(
@@ -108,18 +106,9 @@ public final class Lexer {
         return chars.emit(Token.Type.INTEGER);
     }
 
+    // character ::= "'" ( [^'\nr] | escape ) "'"
     public Token lexCharacter() {
-        // Check if escape sequence used
-        if (peek("\\\\")) {
-            lexEscape();
-        }
-        // Throw error if literals separated by new line
-        if (peek("\n")) {
-            throw new ParseException(
-                    "Unescaped new line",
-                    chars.index
-            );
-        }
+        checkCharacter();
         match("[^']");
         if (match("'") && chars.length > 2) {
             return chars.emit(Token.Type.CHARACTER);
@@ -130,19 +119,10 @@ public final class Lexer {
         );
     }
 
+    // string ::= '"' ( [^"\nr] | escape )* '"'
     public Token lexString() {
         do {
-            // Check if escape sequence used
-            if (peek("\\\\")) {
-                lexEscape();
-            }
-            // Throw error if literals separated by new line
-            if (peek("\n")) {
-                throw new ParseException(
-                        "Unescaped new line",
-                        chars.index
-                );
-            }
+            checkCharacter();
         } while (match("[^\"]"));
         if (match("\"")) {
             return chars.emit(Token.Type.STRING);
@@ -153,23 +133,34 @@ public final class Lexer {
         );
     }
 
-    public void lexEscape() {
-        if (peek("\\\\", "[bnrt'\"\\\\]")) {
-            chars.advance();
-            chars.advance();
-        } else {
+    private void checkCharacter() {
+        if (match("\\\\")) {
+            lexEscape();
+        }
+        if (peek("[\n\r]")) {
             throw new ParseException(
-                    "Invalid escape character",
+                    "Unescaped new line or carriage return",
                     chars.index
             );
         }
     }
 
+    // escape ::= '\' [bnrt'"\]
+    public void lexEscape() {
+        if (match("[bnrt'\"\\\\]")) {
+            return;
+        }
+        throw new ParseException(
+                "Invalid escape character",
+                chars.index
+        );
+    }
+
+    // operator ::= [<>!=] '='? | 'any character'
     public Token lexOperator() {
         if (peek("=")) {
             chars.advance();
         }
-
         return chars.emit(Token.Type.OPERATOR);
     }
 
@@ -240,7 +231,5 @@ public final class Lexer {
             skip();
             return new Token(type, input.substring(start, index), start);
         }
-
     }
-
 }
