@@ -177,12 +177,14 @@ public final class Parser {
         Token.Type type = tokens.get(0).getType();
         String literal = tokens.get(0).getLiteral();
 
-        if (match("TRUE") || match("FALSE")) {
-            boolean bool = Boolean.parseBoolean(literal);
-            return new Ast.Expression.Literal(bool);
-        }
         if (match("NIL")) {
             return new Ast.Expression.Literal(null);
+        }
+        if (match("TRUE") || match("FALSE")) {
+            if (literal.equals("TRUE")) {
+                return new Ast.Expression.Literal(true);
+            }
+            return new Ast.Expression.Literal(false);
         }
         if (match(Token.Type.INTEGER) || match(Token.Type.DECIMAL)) {
             if (type == Token.Type.INTEGER) {
@@ -223,7 +225,8 @@ public final class Parser {
         // TODO: handle char index instead of -1
     }
 
-    ArrayList<Integer> findSlashIndices(String string) {
+    // helper
+    private ArrayList<Integer> findSlashIndices(String string) {
         ArrayList<Integer> indexes = new ArrayList<>();
         for (int i = 0; i < string.length(); i++) {
             char c = string.charAt(i);
@@ -234,7 +237,8 @@ public final class Parser {
         return indexes;
     }
 
-    String clean(String string, ArrayList<Integer> indexes) {
+    // helper
+    private String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder(string);
         for (int i = 0; i < indexes.size(); i++) {
             int index = indexes.get(i);
