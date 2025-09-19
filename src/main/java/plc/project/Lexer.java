@@ -53,7 +53,8 @@ public final class Lexer {
         if (peek("[A-Za-z_]")) {
             return lexIdentifier();
         }
-        if (peek("[0-9]") || (peek("[+-]", "[0-9]") && chars.previous != Token.Type.INTEGER)) {
+        if (peek("[0-9]") || (peek("[+-]", "[0-9]") &&
+                (chars.previous != Token.Type.INTEGER && chars.previous != Token.Type.DECIMAL))) {
             return lexNumber();
         }
         if (peek("'")) {
