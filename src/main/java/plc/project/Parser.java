@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -114,7 +115,7 @@ public final class Parser {
      */
     // expression ::= logical_expression
     public Ast.Expression parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parsePrimaryExpression();
     }
 
     /**
@@ -170,7 +171,36 @@ public final class Parser {
     //      '(' expression ')' |
     //      identifier ('(' (expression (',' expression)*)? ')')?
     public Ast.Expression parsePrimaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("NIL") || match("TRUE") || match("FALSE")) {
+            boolean bool = Boolean.parseBoolean(tokens.get(-1).getLiteral());
+            return new Ast.Expression.Literal(bool);
+        }
+        if (match(Token.Type.INTEGER)
+                || match(Token.Type.DECIMAL)
+                || match(Token.Type.CHARACTER)
+                || match(Token.Type.STRING)) {
+            String type = tokens.get(-1).getLiteral();
+            return new Ast.Expression.Literal(type);
+        }
+        if (match("(")) {
+            Ast.Expression expression = parseExpression();
+            if (!match(")")) {
+                throw new ParseException("Expected Closing Parenthesis", -1);
+                // TODO: handle char index instead of -1
+            }
+            return new Ast.Expression.Group(expression);
+        }
+        if (match(Token.Type.IDENTIFIER)) {
+            String identifier = tokens.get(-1).getLiteral();
+            return new Ast.Expression.Access(Optional.empty(), identifier);
+
+            // receiver => property in Ast.Expression.Access
+            // obj.method => obj is the receiver
+            // object.field => object is the receiver
+            // reference Alan Kay's discussion of "message passing"
+        }
+        throw new ParseException("Invalid Primary Expression", -1);
+        // TODO: handle char index instead of -1
     }
 
     /**

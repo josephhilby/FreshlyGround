@@ -269,5 +269,4 @@ final class ParserExpressionTests {
             Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
         }
     }
-
 }
