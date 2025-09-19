@@ -2,6 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -192,9 +193,9 @@ public final class Parser {
         if (match(Token.Type.CHARACTER) || match(Token.Type.STRING)) {
             if (type == Token.Type.STRING) {
                 String substring = literal.substring(1, literal.length() - 1);
-                int slashIndex = substring.indexOf('\\');
-                if (slashIndex != -1) {
-                    substring = clean(substring, slashIndex);
+                ArrayList<Integer> indexes = findSlashIndices(substring);
+                if (!indexes.isEmpty()) {
+                    substring = clean(substring, indexes);
                 }
                 return new Ast.Expression.Literal(substring);
             }
@@ -222,24 +223,43 @@ public final class Parser {
         // TODO: handle char index instead of -1
     }
 
-    String clean(String string, int firstIndex) {
-//        string = string.replace("\\b", "\b");
-//        string = string.replace("\\n", "\n");
-//        string = string.replace("\\r", "\r");
-//        string = string.replace("\\t", "\t");
-//        string = string.replace("\\'", "'");
-//        string = string.replace("\\\\", "\\");
-//        return string;
-        int end = string.length();
+    ArrayList<Integer> findSlashIndices(String string) {
+        ArrayList<Integer> indexes = new ArrayList<>();
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (c == '\\') {
+                indexes.add(i);
+            }
+        }
+        return indexes;
+    }
+
+    String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder(string);
-        for (int i = firstIndex; i < end; i++) {
-            char c = string.charAt(i+1);
+        for (int i = 0; i < indexes.size(); i++) {
+            int index = indexes.get(i);
+            char c = string.charAt(index+1);
+            builder.deleteCharAt(index+1);
+            builder.deleteCharAt(index);
+
             switch (c) {
+                case 'b':
+                    builder.append('\b');
+                    break;
                 case 'n':
-                    builder.deleteCharAt(i+1);
-                    builder.deleteCharAt(i);
-                    builder.insert(i, '\n');
-                    end--;
+                    builder.insert(index, '\n');
+                    break;
+                case 'r':
+                    builder.append('\r');
+                    break;
+                case 't':
+                    builder.append('\t');
+                    break;
+                case '\'':
+                    builder.append('\'');
+                    break;
+                case '\\':
+                    builder.append('\\');
                     break;
             }
         }
