@@ -165,9 +165,7 @@ public final class Lexer {
     // operator ::= [<>!=] '='? | 'any character'
     public Token lexOperator() {
         chars.advance();
-        if (peek("=")) {
-            chars.advance();
-        }
+        match("=");
         return chars.emit(Token.Type.OPERATOR);
     }
 
