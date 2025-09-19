@@ -79,14 +79,13 @@ public final class Lexer {
     // number ::= [+#x2D]? [0-9]+ ( '.' [0-9]+ )?
     public Token lexNumber() {
         boolean signed = match("[+-]");
-        char leadingNum = chars.get(0);
         checkLeadingZeros();
+        checkSignedZero(signed);
         while (match("[0-9]"));
         if (match("\\.", "[0-9]")) {
             while (match("[0-9]"));
             return chars.emit(Token.Type.DECIMAL);
         }
-        checkSignedZero(leadingNum, signed);
         return chars.emit(Token.Type.INTEGER);
     }
 
@@ -101,8 +100,8 @@ public final class Lexer {
     }
 
     // helper
-    private void checkSignedZero(char num, boolean signed) {
-        if (num == '0' && signed) {
+    private void checkSignedZero(boolean signed) {
+        if (signed && match("0") && !peek("\\.", "[0-9]")) {
             throw new ParseException(
                     "No signed zero integers",
                     chars.index
@@ -113,7 +112,7 @@ public final class Lexer {
     // character ::= "'" ( [^'\nr] | escape ) "'"
     public Token lexCharacter() {
         chars.advance();
-        checkCharacter();
+        matchCharacter();
         match("[^']");
         if (match("'") && chars.length > 2) {
             return chars.emit(Token.Type.CHARACTER);
@@ -128,7 +127,7 @@ public final class Lexer {
     public Token lexString() {
         chars.advance();
         do {
-            checkCharacter();
+            matchCharacter();
         } while (match("[^\"]"));
         if (match("\"")) {
             return chars.emit(Token.Type.STRING);
@@ -140,7 +139,7 @@ public final class Lexer {
     }
 
     // helper
-    private void checkCharacter() {
+    private void matchCharacter() {
         if (match("\\\\")) {
             lexEscape();
         }
