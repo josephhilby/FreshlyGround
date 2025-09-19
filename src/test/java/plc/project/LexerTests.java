@@ -257,14 +257,14 @@ public class LexerTests {
                         new Token(Token.Type.DECIMAL, "2.2", 12),
                         new Token(Token.Type.OPERATOR, ";", 15)
                 )),
-                Arguments.of("Example 6", "LET x = 5 - 2;", Arrays.asList(
+                Arguments.of("Example 6", "LET x = 5 -2;", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "LET", 0),
                         new Token(Token.Type.IDENTIFIER, "x", 4),
                         new Token(Token.Type.OPERATOR, "=", 6),
                         new Token(Token.Type.INTEGER, "5", 8),
                         new Token(Token.Type.OPERATOR, "-", 10),
-                        new Token(Token.Type.INTEGER, "2", 12),
-                        new Token(Token.Type.OPERATOR, ";", 13)
+                        new Token(Token.Type.INTEGER, "2", 11),
+                        new Token(Token.Type.OPERATOR, ";", 12)
                 ))
         );
     }
