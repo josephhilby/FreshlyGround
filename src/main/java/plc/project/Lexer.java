@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +30,15 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        List<Token> tokens = new ArrayList<>();
+        while (chars.has(0)) {
+            if (match("[ \b\n\r\t]")) {
+                chars.skip();
+            } else {
+                tokens.add(lexToken());
+            }
+        }
+        return tokens;
     }
 
     /**
@@ -41,31 +50,125 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        throw new UnsupportedOperationException(); //TODO
+        if (peek("[A-Za-z_]")) {
+            return lexIdentifier();
+        }
+        if (peek("[0-9]")
+                || (peek("[+-]", "[0-9]")
+                && chars.previous != Token.Type.INTEGER
+                && chars.previous != Token.Type.DECIMAL)) {
+            return lexNumber();
+        }
+        if (peek("'")) {
+            return lexCharacter();
+        }
+        if (peek("\"")) {
+            return lexString();
+        }
+        return lexOperator();
     }
 
+    // identifier ::= [A-Za-z_] [A-Za-z0-9_#x2D]*
+    // #x2D is -
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();
+        while (match("[A-Za-z0-9_-]"));
+        return chars.emit(Token.Type.IDENTIFIER);
     }
 
+    // number ::= [+#x2D]? [0-9]+ ( '.' [0-9]+ )?
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        boolean signed = match("[+-]");
+        checkLeadingZeros();
+        checkSignedZero(signed);
+        while (match("[0-9]"));
+        if (match("\\.", "[0-9]")) {
+            while (match("[0-9]"));
+            return chars.emit(Token.Type.DECIMAL);
+        }
+        return chars.emit(Token.Type.INTEGER);
     }
 
+    // helper
+    private void checkLeadingZeros() {
+        if (peek("0", "[0-9]")) {
+            throw new ParseException(
+                    "No leading zeros",
+                    chars.index
+            );
+        }
+    }
+
+    // helper
+    private void checkSignedZero(boolean signed) {
+        if (signed && match("0") && !peek("\\.", "[0-9]")) {
+            throw new ParseException(
+                    "No signed zero integers",
+                    chars.index
+            );
+        }
+    }
+
+    // character ::= "'" ( [^'\nr] | escape ) "'"
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();
+        matchCharacter();
+        match("[^']");
+        if (match("'") && chars.length > 2) {
+            return chars.emit(Token.Type.CHARACTER);
+        }
+        throw new ParseException(
+                "Missing char literal or empty/invalid character",
+                chars.index
+        );
     }
 
+    // string ::= '"' ( [^"\nr] | escape )* '"'
     public Token lexString() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();
+        do {
+            matchCharacter();
+        } while (match("[^\"]"));
+        if (match("\"")) {
+            return chars.emit(Token.Type.STRING);
+        }
+        throw new ParseException(
+                "Missing str literal",
+                chars.index
+        );
     }
 
+    // helper
+    private void matchCharacter() {
+        if (match("\\\\")) {
+            lexEscape();
+        }
+        if (peek("[\n\r]")) {
+            throw new ParseException(
+                    "Unescaped new line or carriage return",
+                    chars.index
+            );
+        }
+    }
+
+    // escape ::= '\' [bnrt'"\]
     public void lexEscape() {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("[bnrt'\"\\\\]")) {
+            return;
+        }
+        throw new ParseException(
+                "Invalid escape character",
+                chars.index
+        );
     }
 
+    // operator ::= [<>!=] '='? | 'any character'
     public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();
+        if (peek("=")) {
+            chars.advance();
+        }
+        return chars.emit(Token.Type.OPERATOR);
     }
 
     /**
@@ -74,7 +177,12 @@ public final class Lexer {
      * return true if the next characters are {@code 'a', 'b', 'c'}.
      */
     public boolean peek(String... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        for (int i = 0; i < patterns.length; i++) {
+            if (!chars.has(i) || !String.valueOf(chars.get(i)).matches(patterns[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -83,7 +191,13 @@ public final class Lexer {
      * true. Hint - it's easiest to have this method simply call peek.
      */
     public boolean match(String... patterns) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        boolean peek = peek(patterns);
+        if (peek) {
+            for (int i = 0; i < patterns.length; i++) {
+                chars.advance();
+            }
+        }
+        return peek;
     }
 
     /**
@@ -99,10 +213,9 @@ public final class Lexer {
         private final String input;
         private int index = 0;
         private int length = 0;
+        private Token.Type previous = null;
 
-        public CharStream(String input) {
-            this.input = input;
-        }
+        public CharStream(String input) { this.input = input; }
 
         public boolean has(int offset) {
             return index + offset < input.length();
@@ -124,9 +237,8 @@ public final class Lexer {
         public Token emit(Token.Type type) {
             int start = index - length;
             skip();
+            previous = type;
             return new Token(type, input.substring(start, index), start);
         }
-
     }
-
 }
