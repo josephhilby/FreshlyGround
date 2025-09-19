@@ -265,6 +265,15 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, "-", 10),
                         new Token(Token.Type.INTEGER, "2", 11),
                         new Token(Token.Type.OPERATOR, ";", 12)
+                )),
+                Arguments.of("Example 7", "LET x = 5 -0;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "x", 4),
+                        new Token(Token.Type.OPERATOR, "=", 6),
+                        new Token(Token.Type.INTEGER, "5", 8),
+                        new Token(Token.Type.OPERATOR, "-", 10),
+                        new Token(Token.Type.INTEGER, "0", 11),
+                        new Token(Token.Type.OPERATOR, ";", 12)
                 ))
         );
     }
