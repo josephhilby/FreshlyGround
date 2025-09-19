@@ -1,5 +1,7 @@
 package plc.project;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -171,16 +173,33 @@ public final class Parser {
     //      '(' expression ')' |
     //      identifier ('(' (expression (',' expression)*)? ')')?
     public Ast.Expression parsePrimaryExpression() throws ParseException {
-        if (match("NIL") || match("TRUE") || match("FALSE")) {
-            boolean bool = Boolean.parseBoolean(tokens.get(-1).getLiteral());
+        Token.Type type = tokens.get(0).getType();
+        String literal = tokens.get(0).getLiteral();
+
+        if (match("TRUE") || match("FALSE")) {
+            boolean bool = Boolean.parseBoolean(literal);
             return new Ast.Expression.Literal(bool);
         }
-        if (match(Token.Type.INTEGER)
-                || match(Token.Type.DECIMAL)
-                || match(Token.Type.CHARACTER)
-                || match(Token.Type.STRING)) {
-            String type = tokens.get(-1).getLiteral();
-            return new Ast.Expression.Literal(type);
+        if (match("NIL")) {
+            return new Ast.Expression.Literal(null);
+        }
+        if (match(Token.Type.INTEGER) || match(Token.Type.DECIMAL)) {
+            if (type == Token.Type.INTEGER) {
+                return new Ast.Expression.Literal(new BigInteger(literal));
+            }
+            return new Ast.Expression.Literal(new BigDecimal(literal));
+        }
+        if (match(Token.Type.CHARACTER) || match(Token.Type.STRING)) {
+            if (type == Token.Type.STRING) {
+                String substring = literal.substring(1, literal.length() - 1);
+                int slashIndex = substring.indexOf('\\');
+                if (slashIndex != -1) {
+                    substring = clean(substring, slashIndex);
+                }
+                return new Ast.Expression.Literal(substring);
+            }
+            Character character = literal.charAt(1);
+            return new Ast.Expression.Literal(character);
         }
         if (match("(")) {
             Ast.Expression expression = parseExpression();
@@ -201,6 +220,30 @@ public final class Parser {
         }
         throw new ParseException("Invalid Primary Expression", -1);
         // TODO: handle char index instead of -1
+    }
+
+    String clean(String string, int firstIndex) {
+//        string = string.replace("\\b", "\b");
+//        string = string.replace("\\n", "\n");
+//        string = string.replace("\\r", "\r");
+//        string = string.replace("\\t", "\t");
+//        string = string.replace("\\'", "'");
+//        string = string.replace("\\\\", "\\");
+//        return string;
+        int end = string.length();
+        StringBuilder builder = new StringBuilder(string);
+        for (int i = firstIndex; i < end; i++) {
+            char c = string.charAt(i+1);
+            switch (c) {
+                case 'n':
+                    builder.deleteCharAt(i+1);
+                    builder.deleteCharAt(i);
+                    builder.insert(i, '\n');
+                    end--;
+                    break;
+            }
+        }
+        return builder.toString();
     }
 
     /**
