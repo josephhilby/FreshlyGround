@@ -177,6 +177,7 @@ public final class Parser {
         Token.Type type = tokens.get(0).getType();
         String literal = tokens.get(0).getLiteral();
 
+        // 'NIL' | 'TRUE' | 'FALSE'
         if (match("NIL")) {
             return new Ast.Expression.Literal(null);
         }
@@ -186,6 +187,8 @@ public final class Parser {
             }
             return new Ast.Expression.Literal(false);
         }
+
+        // integer | decimal | character | string
         if (match(Token.Type.INTEGER) || match(Token.Type.DECIMAL)) {
             if (type == Token.Type.INTEGER) {
                 return new Ast.Expression.Literal(new BigInteger(literal));
@@ -204,6 +207,8 @@ public final class Parser {
             Character character = literal.charAt(1);
             return new Ast.Expression.Literal(character);
         }
+
+        // '(' expression ')'
         if (match("(")) {
             Ast.Expression expression = parseExpression();
             if (!match(")")) {
@@ -212,9 +217,10 @@ public final class Parser {
             }
             return new Ast.Expression.Group(expression);
         }
+
+        // identifier ('(' (expression (',' expression)*)? ')')?
         if (match(Token.Type.IDENTIFIER)) {
-            String identifier = tokens.get(-1).getLiteral();
-            return new Ast.Expression.Access(Optional.empty(), identifier);
+            return new Ast.Expression.Access(Optional.empty(), literal);
 
             // receiver => property in Ast.Expression.Access
             // obj.method => obj is the receiver
@@ -248,22 +254,22 @@ public final class Parser {
 
             switch (c) {
                 case 'b':
-                    builder.append('\b');
+                    builder.insert(index, '\b');
                     break;
                 case 'n':
                     builder.insert(index, '\n');
                     break;
                 case 'r':
-                    builder.append('\r');
+                    builder.insert(index, '\r');
                     break;
                 case 't':
-                    builder.append('\t');
+                    builder.insert(index, '\t');
                     break;
                 case '\'':
-                    builder.append('\'');
+                    builder.insert(index, '\'');
                     break;
                 case '\\':
-                    builder.append('\\');
+                    builder.insert(index, '\\');
                     break;
             }
         }
