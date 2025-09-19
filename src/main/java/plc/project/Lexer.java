@@ -53,21 +53,15 @@ public final class Lexer {
         if (peek("[A-Za-z_]")) {
             return lexIdentifier();
         }
-        if (peek("[0-9]") || peek("[+-]", "[0-9]")) {
-//            if (peek("[+-]")) {
-//                chars.advance();
-//            }
+        if (peek("[0-9]") || (peek("[+-]", "[0-9]") && chars.previous != Token.Type.INTEGER)) {
             return lexNumber();
         }
         if (peek("'")) {
-            chars.advance();
             return lexCharacter();
         }
         if (peek("\"")) {
-            chars.advance();
             return lexString();
         }
-        chars.advance();
         return lexOperator();
     }
 
@@ -81,33 +75,41 @@ public final class Lexer {
 
     // number ::= [+#x2D]? [0-9]+ ( '.' [0-9]+ )?
     public Token lexNumber() {
-        // Identify if signed and first num in sequence
-        boolean signed = chars.length == 1;
+        boolean signed = match("[+-]");
         char leadingNum = chars.get(0);
-        // Leading Zero Check
+        checkLeadingZeros();
+        while (match("[0-9]"));
+        if (match("\\.", "[0-9]")) {
+            while (match("[0-9]"));
+            return chars.emit(Token.Type.DECIMAL);
+        }
+        checkSignedZero(leadingNum, signed);
+        return chars.emit(Token.Type.INTEGER);
+    }
+
+    // helper
+    private void checkLeadingZeros() {
         if (peek("0", "[0-9]")) {
             throw new ParseException(
                     "No leading zeros",
                     chars.index
             );
         }
-        while (match("[0-9]"));
-        if (match("(\\.)", "[0-9]")) {
-            while (match("[0-9]"));
-            return chars.emit(Token.Type.DECIMAL);
-        }
-        // Signed Zero Int Check (should be no leading zeros)
-        if (leadingNum == '0' && signed) {
+    }
+
+    // helper
+    private void checkSignedZero(char num, boolean signed) {
+        if (num == '0' && signed) {
             throw new ParseException(
                     "No signed zero integers",
                     chars.index
             );
         }
-        return chars.emit(Token.Type.INTEGER);
     }
 
     // character ::= "'" ( [^'\nr] | escape ) "'"
     public Token lexCharacter() {
+        chars.advance();
         checkCharacter();
         match("[^']");
         if (match("'") && chars.length > 2) {
@@ -121,6 +123,7 @@ public final class Lexer {
 
     // string ::= '"' ( [^"\nr] | escape )* '"'
     public Token lexString() {
+        chars.advance();
         do {
             checkCharacter();
         } while (match("[^\"]"));
@@ -133,6 +136,7 @@ public final class Lexer {
         );
     }
 
+    // helper
     private void checkCharacter() {
         if (match("\\\\")) {
             lexEscape();
@@ -158,6 +162,7 @@ public final class Lexer {
 
     // operator ::= [<>!=] '='? | 'any character'
     public Token lexOperator() {
+        chars.advance();
         if (peek("=")) {
             chars.advance();
         }
@@ -206,6 +211,7 @@ public final class Lexer {
         private final String input;
         private int index = 0;
         private int length = 0;
+        private Token.Type previous = null;
 
         public CharStream(String input) { this.input = input; }
 
@@ -224,11 +230,13 @@ public final class Lexer {
 
         public void skip() {
             length = 0;
+            previous = null;
         }
 
         public Token emit(Token.Type type) {
             int start = index - length;
             skip();
+            previous = type;
             return new Token(type, input.substring(start, index), start);
         }
     }
