@@ -5,6 +5,17 @@ execution on the **Java Virtual Machine (JVM)**. This project was developed for 
 the **University of Florida** and follows the methodology outlined in the 
 book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
 
+## Lexical Tokens
+```regexp 
+identifier ::= [A-Za-z_] [A-Za-z0-9_-]*
+escape     ::= [\] [bnrt'"\]
+operator   ::= [<>!=] '='? | 'any character'
+
+integer    ::= [+-]?[0-9]+
+decimal    ::= [+-]?[0-9]+\.[0-9]+
+character  ::= ['] ([^'\\] | escape) [']
+string     ::= ["] ([^"\n\r\\] | escape)* ["]
+```
 
 ## Context Free Grammar
 
@@ -26,29 +37,21 @@ The syntax map of this CFG is represented as:
 Note: In the syntax rules below, each line should be read as `non-terminal symbol ::= production rule`.
 
 ### Syntax Rules
-#### Source
 ```ebnf
-source ::= { field } { method }
+source                    ::= { field } { method }
 
-field  ::= "LET" identifier [ "=" expression ] ";"
-method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")"
-           "DO" { statement } "END"
-```
+field                     ::= "LET" identifier [ "=" expression ] ";"
 
-#### Statement
-```ebnf
-statement ::= "LET" identifier [ "=" expression ] ";" 
-            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
-            | "FOR" identifier "IN" expression "DO" { statement } "END"
-            | "WHILE" expression "DO" { statement } "END"
-            | "RETURN" expression ";"
-            | expression [ "=" expression ] ";"
+method                    ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")"
+                            "DO" { statement } "END"
 
-```
+statement                 ::= "LET" identifier [ "=" expression ] ";"
+                            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
+                            | "FOR" identifier "IN" expression "DO" { statement } "END"
+                            | "WHILE" expression "DO" { statement } "END"
+                            | "RETURN" expression ";"
+                            | expression [ "=" expression ] ";"
 
-#### Expressions
-##### Non-Primary Expressions
-```ebnf
 expression                ::= logical_expression
 
 logical_expression        ::= comparison_expression 
@@ -65,36 +68,96 @@ multiplicative_expression ::= secondary_expression
                               
 secondary_expression      ::= primary_expression
                               { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+
+primary_expression        ::= "NIL" | "TRUE" | "FALSE"
+                              | integer | decimal | character | string
+                              | "(" expression ")"
+                              | identifier [ "(" [ expression { "," expression } ] ")" ]
 ```
 
-##### Primary Expression
-```ebnf
-primary_expression   ::= "NIL" | "TRUE" | "FALSE"
-                        | integer | decimal | character | string
-                        | "(" expression ")"
-                        | identifier [ "(" [ expression { "," expression } ] ")" ]
+**Legend:**
+- `{ … }` = zero or more
+- `[ … ]` = optional (zero or one)
+- `|` = alternative
+- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
+## CSG -> Code
+```text
+source ─> Ast.Source
+ ├─ field ─> Ast.Field
+ │    └─ "LET" identifier [ "=" expression ] ";"
+ │        └─> Field(constant=true, name=identifier, value=expression)
+ │ 
+ └─ method ─> Ast.Method
+      └─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
+          └─> Method(name=identifier, parameters=identifier(s), statements=statement)
+
+statement ─> Ast.Statement.*
+ ├─ "LET" identifier [ "=" expression ] ";"
+ │    └─> Declaration(name=identifier, value=expression)
+ │
+ ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
+ │    └─> If(condition=expression, thenStatements=statement(s), elseStatements=statement(s))
+ │
+ ├─ "FOR" identifier "IN" expression "DO" { statement } "END"
+ │    └─> For(initialization=Declaration(name=identifier, value=Optional.empty), 
+ │            condition=expression, 
+ │            increment=null, 
+ │            statements=statement(s))
+ │
+ ├─ "WHILE" expression "DO" { statement } "END"
+ │    └─> While(condition=expression, statements=statement(s))
+ │
+ ├─ "RETURN" expression ";"
+ │    └─> Return(value=expression)
+ │
+ ├─ expression "=" expression ";"
+ │    └─> Assignment(receiver=expression, value=expression)
+ │
+ └─ expression ";"
+      └─> Expression(expression=expression)
+
+expression ──> Ast.Expression.*
+ ├─ logical_expression
+ │    └─comparison_expression { ("AND"|"OR") comparison_expression }
+ │        └─> Binary(operator=*from set*, left=comparison_expression, right=comparison_expression)
+ │
+ ├─ comparison_expression
+ │    └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
+ │        └─> Binary(operator=*from set*, left=additive_expression, right=additive_expression)
+ │
+ ├─ additive_expression
+ │    └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
+ │        └─> Binary(operator=*from set*, left=multiplicative_expression, right=multiplicative_expression)
+ │            
+ ├─ multiplicative_expression
+ │    └─ secondary_expression { ("*"|"/") secondary_expression }
+ │        └─> Binary(operator=*from set*, left=secondary_expression, right=secondary_expression)
+ │
+ ├─ secondary_expression
+ │    └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+ │        ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
+ │        └─ ".identifier(args)" ──> Function(receiver=*previous token*, name=identifier, arguments=expression(s))
+ │
+ └─ primary_expression
+      ├─ "NIL"  
+      │   └─> Literal(literal=null)
+      │
+      ├─ "TRUE" | "FALSE"                          
+      │   └─> Literal(literal=Boolean)
+      │
+      ├─ integer | decimal | character | string    
+      │   └─> Literal(literal=Number|Character|String)
+      │
+      ├─ "(" expression ")"                        
+      │   └─> Group(expression=expression)
+      │
+      ├─ identifier                                
+      │   └─> Access(receiver=Optional.empty, name=identifier)
+      │
+      └─ identifier "(" [ expression { "," expression } ] ")"
+          └─> Function(receiver=Optional.empty, name=identifier, arguments=expression(s))
 ```
-
-#### Lexical Tokens
-```regexp
-/* regex */ 
-identifier ::= [A-Za-z_] [A-Za-z0-9_-]*
-escape     ::= '\' [bnrt'"\]
-operator   ::= [<>!=] '='? | 'any character'
-
-integer    ::= [+-]?[0-9]+
-decimal    ::= [+-]?[0-9]+\.[0-9]+
-character  ::= ['] ([^'\\] | escape) [']
-string     ::= ["] ([^"\n\r\\] | escape)* ["]
-```
-
-**Legend:**  
- - `{ … }` = zero or more  
- - `[ … ]` = optional (zero or one)  
- - `|` = alternative  
- - Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive  
- - Operator regex is intentionally broad and unexpected symbols raise a `ParseException()`
 
 ### Examples:
 #### Example 1:
@@ -110,7 +173,7 @@ will follow the recursive chain:
 
 This will result in `"LET" "x" "=" integer ";"` and `integer` will map to `10`. With the following AST:
 
-```
+```text
 source
 └── field
 ├── "LET"
