@@ -167,48 +167,49 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >  
 > └─ comparison_expression
 >     └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
->         └─> Binary(operator=*from set*, 
->                    left=additive_expression, 
->                    right=additive_expression)
+>         └─> Ast.Expression.Binary(operator=*from set*, 
+>                                   left=additive_expression, 
+>                                   right=additive_expression)
 >  
 > └─ additive_expression
 >     └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
->         └─> Binary(operator=*from set*, 
->                    left=multiplicative_expression, 
->                    right=multiplicative_expression)
+>         └─> Ast.Expression.Binary(operator=*from set*, 
+>                                   left=multiplicative_expression, 
+>                                   right=multiplicative_expression)
 >              
 > └─ multiplicative_expression
 >     └─ secondary_expression { ("*"|"/") secondary_expression }
->         └─> Binary(operator=*from set*, 
->                    left=secondary_expression, 
->                    right=secondary_expression)
+>         └─> Ast.Expression.Binary(operator=*from set*, 
+>                                   left=secondary_expression, 
+>                                   right=secondary_expression)
 >  
 > └─ secondary_expression
 >     └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
->         ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
->         └─ ".identifier(args)" ──> Function(receiver=*previous token*, 
->                                             name=identifier, 
->                                             arguments=expression(s))
+>         ├─ ".identifier"       ──> Ast.Expression.Access(receiver=*previous token*, 
+>         │                                                name=identifier)
+>         └─ ".identifier(args)" ──> Ast.Expression.Function(receiver=*previous token*, 
+>                                                            name=identifier, 
+>                                                            arguments=expression(s))
 > └─ primary_expression
 >     ├─ "NIL"  
->     │   └─> Literal(literal=null)
+>     │   └─> Ast.Expression.Literal(literal=null)
 >     │
 >     ├─ "TRUE" | "FALSE"                          
->     │   └─> Literal(literal=Boolean)
+>     │   └─> Ast.Expression.Literal(literal=Boolean)
 >     │
 >     ├─ integer | decimal | character | string    
->     │   └─> Literal(literal=Number|Character|String)
+>     │   └─> Ast.Expression.Literal(literal=Number|Character|String)
 >     │
 >     ├─ "(" expression ")"                        
->     │   └─> Group(expression=expression)
+>     │   └─> Ast.Expression.Group(expression=expression)
 >     │
 >     ├─ identifier                                
->     │   └─> Access(receiver=Optional.empty, name=identifier)
+>     │   └─> Ast.Expression.Access(receiver=Optional.empty, name=identifier)
 >     │
 >     └─ identifier "(" [ expression { "," expression } ] ")"
->         └─> Function(receiver=Optional.empty, 
->                      name=identifier, 
->                      arguments=expression(s))
+>         └─> Ast.Expression.Function(receiver=Optional.empty, 
+>                                     name=identifier, 
+>                                     arguments=expression(s))
 >```
 
 ## Examples
@@ -284,7 +285,7 @@ Again, start at `source`...
 
 ```yaml
 Ast.Source
-└─ fields: []
+├─ fields: []
 └─ methods: [
     Ast.Method
     ├─ name: "main"
