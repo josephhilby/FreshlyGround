@@ -116,94 +116,97 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 ### AST Mapping Diagram
 >```text
 >source ─> Ast.Source(fields=field(s), methods=method(s))
-> ├─ field ─> Ast.Field
-> │  ├─ "LET" identifier [ "=" expression ] ";"
-> │  └─> Field(constant=true, name=identifier, value=expression)
-> │ 
-> └─ method ─> Ast.Method
->    ├─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
->    └─> Method(name=identifier, parameters=identifier(s), statements=statement(s))
+>
+>field
+> └─ "LET" identifier [ "=" expression ] ";"
+>     └─> Ast.Field(constant=true, name=identifier, value=expression)
+>  
+> method
+> └─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
+>     └─> Ast.Method(name=identifier, parameters=identifier(s), statements=statement(s))
 >```
 >
 >```text
->statement ─> Ast.Statement.*
+>statement
 > ├─ "LET" identifier [ "=" expression ] ";"
-> ├─> Declaration(name=identifier, value=expression)
+> │   └─> Ast.Statement.Declaration(name=identifier, value=expression)
 > │
 > ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
-> ├─> If(condition=expression, 
-> │      thenStatements=statement(s), 
-> │      elseStatements=statement(s))
+> │   └─> Ast.Statement.If(condition=expression, 
+> │                        thenStatements=statement(s), 
+> │                        elseStatements=statement(s))
 > │
 > ├─ "FOR" identifier "IN" expression "DO" { statement } "END"
-> ├─> For(initialization=Declaration(name=identifier, value=Optional.empty), 
-> │       condition=expression, 
-> │       increment=null, 
-> │       statements=statement(s))
+> │   └─> Ast.Statement.For(initialization=Declaration(name=identifier, 
+> │                                                    value=Optional.empty
+> │                                                    ), 
+> │                         condition=expression, 
+> │                         increment=null, 
+> │                         statements=statement(s))
 > │
 > ├─ "WHILE" expression "DO" { statement } "END"
-> ├─> While(condition=expression, statements=statement(s))
+> │   └─> Ast.Statement.While(condition=expression, statements=statement(s))
 > │
 > ├─ "RETURN" expression ";"
-> ├─> Return(value=expression)
+> │   └─> Ast.Statement.Return(value=expression)
 > │
 > ├─ expression "=" expression ";"
-> ├─> Assignment(receiver=expression, value=expression)
+> │   └─> Ast.Statement.Assignment(receiver=expression, value=expression)
 > │
-> ├─ expression ";"
-> └─> Expression(expression=expression)
+> └─ expression ";"
+>     └─> Ast.Statement.Expression(expression=expression)
 >```
 >
 >```text
 >expression ──> Ast.Expression.*
 > ├─ logical_expression
-> │    ├─comparison_expression { ("AND"|"OR") comparison_expression }
-> │    └─> Binary(operator=*from set*, 
-> │               left=comparison_expression, 
-> │               right=comparison_expression)
+> │   └─ comparison_expression { ("AND"|"OR") comparison_expression }
+> │       └─> Ast.Expression.Binary(operator=*from set*, 
+> │                                 left=comparison_expression, 
+> │                                 right=comparison_expression)
 > │
 > ├─ comparison_expression
-> │    ├─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
-> │    └─> Binary(operator=*from set*, 
-> │               left=additive_expression, 
-> │               right=additive_expression)
+> │   └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
+> │       └─> Binary(operator=*from set*, 
+> │                  left=additive_expression, 
+> │                  right=additive_expression)
 > │
 > ├─ additive_expression
-> │    ├─ multiplicative_expression { ("+"|"-") multiplicative_expression }
-> │    └─> Binary(operator=*from set*, 
-> │               left=multiplicative_expression, 
-> │               right=multiplicative_expression)
+> │   └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
+> │       └─> Binary(operator=*from set*, 
+> │                  left=multiplicative_expression, 
+> │                  right=multiplicative_expression)
 > │            
 > ├─ multiplicative_expression
-> │    ├─ secondary_expression { ("*"|"/") secondary_expression }
-> │    └─> Binary(operator=*from set*, 
-> │               left=secondary_expression, 
-> │               right=secondary_expression)
+> │   └─ secondary_expression { ("*"|"/") secondary_expression }
+> │       └─> Binary(operator=*from set*, 
+> │                  left=secondary_expression, 
+> │                  right=secondary_expression)
 > │
 > ├─ secondary_expression
-> │    ├─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
-> │    ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
-> │    └─ ".identifier(args)" ──> Function(receiver=*previous token*, 
-> │                                        name=identifier, 
-> │                                        arguments=expression(s))
+> │   └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+> │       ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
+> │       └─ ".identifier(args)" ──> Function(receiver=*previous token*, 
+> │                                           name=identifier, 
+> │                                           arguments=expression(s))
 > └─ primary_expression
->      ├─ "NIL"  
->      ├─> Literal(literal=null)
->      │
->      ├─ "TRUE" | "FALSE"                          
->      ├─> Literal(literal=Boolean)
->      │
->      ├─ integer | decimal | character | string    
->      ├─> Literal(literal=Number|Character|String)
->      │
->      ├─ "(" expression ")"                        
->      ├─> Group(expression=expression)
->      │
->      ├─ identifier                                
->      ├─> Access(receiver=Optional.empty, name=identifier)
->      │
->      ├─ identifier "(" [ expression { "," expression } ] ")"
->      └─> Function(receiver=Optional.empty, 
+>     ├─ "NIL"  
+>     │   └─> Literal(literal=null)
+>     │
+>     ├─ "TRUE" | "FALSE"                          
+>     │   └─> Literal(literal=Boolean)
+>     │
+>     ├─ integer | decimal | character | string    
+>     │   └─> Literal(literal=Number|Character|String)
+>     │
+>     ├─ "(" expression ")"                        
+>     │   └─> Group(expression=expression)
+>     │
+>     ├─ identifier                                
+>     │   └─> Access(receiver=Optional.empty, name=identifier)
+>     │
+>     └─ identifier "(" [ expression { "," expression } ] ")"
+>         └─> Function(receiver=Optional.empty, 
 >                   name=identifier, 
 >                   arguments=expression(s))
 >```
