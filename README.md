@@ -1,166 +1,201 @@
-# FreshlyGround
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/<your_repo>">
+    <img src="images/readme_banner.png" alt="Logo" width="80%">
+  </a>
 
+  <h3>
+    A novel programming language for the Java Virtual Machine
+  </h3>
+</div>
+
+---
+
+<!-- TABLE OF CONTENTS -->
+## Table of Contents
+<ol>
+  <li><a href="#about-the-project">About The Project</a></li>
+  <li><a href="#design-and-theory">Design and Theory</a></li>
+  <li><a href="#practical-implementation">Practical Implementation</a></li>
+  <li><a href="#examples">Examples</a></li>
+  <li><a href="#built-with">Built With</a></li>
+</ol>
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
 FreshlyGround is a **novel programming language** whose source code is interpreted into **Java** for 
 execution on the **Java Virtual Machine (JVM)**. This project was developed for **COP 4020** at 
 the **University of Florida** and follows the methodology outlined in the 
 book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
 
-## Lexical Tokens
-```regexp 
-identifier ::= [A-Za-z_] [A-Za-z0-9_-]*
-escape     ::= [\] [bnrt'"\]
-operator   ::= [<>!=] '='? | 'any character'
+<!-- DESIGN AND THEORY -->
+## Design and Theory
+### Context Free Grammar
+The context free grammar (CFG) of this project is presented in Extended Backus–Naur Form (EBNF).
+It enables a top-down (recursive-descent) parser that runs in linear time. The pipeline:
 
-integer    ::= [+-]?[0-9]+
-decimal    ::= [+-]?[0-9]+\.[0-9]+
-character  ::= ['] ([^'\\] | escape) [']
-string     ::= ["] ([^"\n\r\\] | escape)* ["]
+- Source code → `Lexer.java` → Array of Tokens
+- Tokens → `Parser.java` → Abstract Syntax Tree (AST)
+
+### Lexical Tokens
+At the start of the pipeline is the lexer. This will take a source code file and lex it into an array of tokens following 
+the rules below. These tokens will then act 
+
+```regexp 
+identifier := [A-Za-z_] [A-Za-z0-9_-]*
+operator   := [<>!=] '='? | 'any character'
+
+integer    := [+-]?[0-9]+
+decimal    := [+-]?[0-9]+\.[0-9]+
+character  := ['] ([^'\\]) [']
+string     := ["] ([^"\n\r\\])* ["]
 ```
 
-## Context Free Grammar
-
-The context free grammar (CFG) of this project is presented in Extended Backus-Naur From (EBNF). This grammar enables 
-a top-down (recursive-descent) method to parse the language in linear time. Starting as source code from the user
-that is lexed (`Lexer.java`) into an array of tokens (`Token.java`), that will then be parsed (`Parser.java`) into an 
-Abstract Syntax Tree (AST) (`Ast.java`)... 
-
-**TODO: write the rest of this explanation**
-
-The syntax map of this CFG is represented as:
-
+### Syntax Map
 *CFG* = (*Σ*, *N*, *P*, *S*), where:
 - **Σ** – terminal symbols (array of tokens produced by the lexer)
 - **N** – non-terminal symbols (see `source`, `statement`, `expression` below)
 - **P** – production rules (right side of `::=`)
 - **S** – start symbol (`source`), which constitutes the instantiation of the AST
 
-Note: In the syntax rules below, each line should be read as `non-terminal symbol ::= production rule`.
+**Note:** 
+In the syntax rules below, each line should be read as `non-terminal symbol ::= production rule`.
 
 ### Syntax Rules
-```ebnf
-source                    ::= { field } { method }
+>```ebnf
+>source                    ::= { field } { method }
+>
+>field                     ::= "LET" identifier [ "=" expression ] ";"
+>
+>method                    ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")"
+>                            "DO" { statement } "END"
+>```
+>
+>```ebnf
+>statement                 ::= "LET" identifier [ "=" expression ] ";"
+>                            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
+>                            | "FOR" identifier "IN" expression "DO" { statement } "END"
+>                            | "WHILE" expression "DO" { statement } "END"
+>                            | "RETURN" expression ";"
+>                            | expression [ "=" expression ] ";"
+>```
+>
+>```ebnf
+>expression                ::= logical_expression
+>
+>logical_expression        ::= comparison_expression 
+>                              { ( "AND" | "OR" ) comparison_expression }
+>
+>comparison_expression     ::= additive_expression
+>                              { ( "<" | "<=" | ">" | ">=" | "==" | "!=" ) additive_expression }
+>
+>additive_expression       ::= multiplicative_expression
+>                              { ( "+" | "-" ) multiplicative_expression }
+>
+>multiplicative_expression ::= secondary_expression
+>                              { ( "*" | "/" ) secondary_expression }
+>                              
+>secondary_expression      ::= primary_expression
+>                              { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+>
+>primary_expression        ::= "NIL" | "TRUE" | "FALSE"
+>                              | integer | decimal | character | string
+>                              | "(" expression ")"
+>                              | identifier [ "(" [ expression { "," expression } ] ")" ]
+>```
+>
+>**Legend:**
+>- `{ … }` = zero or more
+>- `[ … ]` = optional (zero or one)
+>- `|` = alternative
+>- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
-field                     ::= "LET" identifier [ "=" expression ] ";"
+<!-- PRACTICAL IMPLEMENTATION -->
+## Practical Implementation
+>```text
+>source ─> Ast.Source(fields=field(s), methods=method(s))
+> ├─ field ─> Ast.Field
+> │    └─ "LET" identifier [ "=" expression ] ";"
+> │        └─> Field(constant=true, name=identifier, value=expression)
+> │ 
+> └─ method ─> Ast.Method
+>      └─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
+>          └─> Method(name=identifier, parameters=identifier(s), statements=statement)
+>```
+>
+>```text
+>statement ─> Ast.Statement.*
+> ├─ "LET" identifier [ "=" expression ] ";"
+> │    └─> Declaration(name=identifier, value=expression)
+> │
+> ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
+> │    └─> If(condition=expression, thenStatements=statement(s), elseStatements=statement(s))
+> │
+> ├─ "FOR" identifier "IN" expression "DO" { statement } "END"
+> │    └─> For(initialization=Declaration(name=identifier, value=Optional.empty), 
+> │            condition=expression, 
+> │            increment=null, 
+> │            statements=statement(s))
+> │
+> ├─ "WHILE" expression "DO" { statement } "END"
+> │    └─> While(condition=expression, statements=statement(s))
+> │
+> ├─ "RETURN" expression ";"
+> │    └─> Return(value=expression)
+> │
+> ├─ expression "=" expression ";"
+> │    └─> Assignment(receiver=expression, value=expression)
+> │
+> └─ expression ";"
+>      └─> Expression(expression=expression)
+>```
+>
+>```text
+>expression ──> Ast.Expression.*
+> ├─ logical_expression
+> │    └─comparison_expression { ("AND"|"OR") comparison_expression }
+> │        └─> Binary(operator=*from set*, left=comparison_expression, right=comparison_expression)
+> │
+> ├─ comparison_expression
+> │    └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
+> │        └─> Binary(operator=*from set*, left=additive_expression, right=additive_expression)
+> │
+> ├─ additive_expression
+> │    └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
+> │        └─> Binary(operator=*from set*, left=multiplicative_expression, right=multiplicative_expression)
+> │            
+> ├─ multiplicative_expression
+> │    └─ secondary_expression { ("*"|"/") secondary_expression }
+> │        └─> Binary(operator=*from set*, left=secondary_expression, right=secondary_expression)
+> │
+> ├─ secondary_expression
+> │    └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+> │        ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
+> │        └─ ".identifier(args)" ──> Function(receiver=*previous token*, name=identifier, arguments=expression(s))
+> │
+> └─ primary_expression
+>      ├─ "NIL"  
+>      │   └─> Literal(literal=null)
+>      │
+>      ├─ "TRUE" | "FALSE"                          
+>      │   └─> Literal(literal=Boolean)
+>      │
+>      ├─ integer | decimal | character | string    
+>      │   └─> Literal(literal=Number|Character|String)
+>      │
+>      ├─ "(" expression ")"                        
+>      │   └─> Group(expression=expression)
+>      │
+>      ├─ identifier                                
+>      │   └─> Access(receiver=Optional.empty, name=identifier)
+>      │
+>      └─ identifier "(" [ expression { "," expression } ] ")"
+>          └─> Function(receiver=Optional.empty, name=identifier, arguments=expression(s))
+>```
 
-method                    ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")"
-                            "DO" { statement } "END"
-
-statement                 ::= "LET" identifier [ "=" expression ] ";"
-                            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
-                            | "FOR" identifier "IN" expression "DO" { statement } "END"
-                            | "WHILE" expression "DO" { statement } "END"
-                            | "RETURN" expression ";"
-                            | expression [ "=" expression ] ";"
-
-expression                ::= logical_expression
-
-logical_expression        ::= comparison_expression 
-                              { ( "AND" | "OR" ) comparison_expression }
-
-comparison_expression     ::= additive_expression
-                              { ( "<" | "<=" | ">" | ">=" | "==" | "!=" ) additive_expression }
-
-additive_expression       ::= multiplicative_expression
-                              { ( "+" | "-" ) multiplicative_expression }
-
-multiplicative_expression ::= secondary_expression
-                              { ( "*" | "/" ) secondary_expression }
-                              
-secondary_expression      ::= primary_expression
-                              { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
-
-primary_expression        ::= "NIL" | "TRUE" | "FALSE"
-                              | integer | decimal | character | string
-                              | "(" expression ")"
-                              | identifier [ "(" [ expression { "," expression } ] ")" ]
-```
-
-**Legend:**
-- `{ … }` = zero or more
-- `[ … ]` = optional (zero or one)
-- `|` = alternative
-- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
-
-## CSG -> Code
-```text
-source ─> Ast.Source
- ├─ field ─> Ast.Field
- │    └─ "LET" identifier [ "=" expression ] ";"
- │        └─> Field(constant=true, name=identifier, value=expression)
- │ 
- └─ method ─> Ast.Method
-      └─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
-          └─> Method(name=identifier, parameters=identifier(s), statements=statement)
-
-statement ─> Ast.Statement.*
- ├─ "LET" identifier [ "=" expression ] ";"
- │    └─> Declaration(name=identifier, value=expression)
- │
- ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
- │    └─> If(condition=expression, thenStatements=statement(s), elseStatements=statement(s))
- │
- ├─ "FOR" identifier "IN" expression "DO" { statement } "END"
- │    └─> For(initialization=Declaration(name=identifier, value=Optional.empty), 
- │            condition=expression, 
- │            increment=null, 
- │            statements=statement(s))
- │
- ├─ "WHILE" expression "DO" { statement } "END"
- │    └─> While(condition=expression, statements=statement(s))
- │
- ├─ "RETURN" expression ";"
- │    └─> Return(value=expression)
- │
- ├─ expression "=" expression ";"
- │    └─> Assignment(receiver=expression, value=expression)
- │
- └─ expression ";"
-      └─> Expression(expression=expression)
-
-expression ──> Ast.Expression.*
- ├─ logical_expression
- │    └─comparison_expression { ("AND"|"OR") comparison_expression }
- │        └─> Binary(operator=*from set*, left=comparison_expression, right=comparison_expression)
- │
- ├─ comparison_expression
- │    └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
- │        └─> Binary(operator=*from set*, left=additive_expression, right=additive_expression)
- │
- ├─ additive_expression
- │    └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
- │        └─> Binary(operator=*from set*, left=multiplicative_expression, right=multiplicative_expression)
- │            
- ├─ multiplicative_expression
- │    └─ secondary_expression { ("*"|"/") secondary_expression }
- │        └─> Binary(operator=*from set*, left=secondary_expression, right=secondary_expression)
- │
- ├─ secondary_expression
- │    └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
- │        ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
- │        └─ ".identifier(args)" ──> Function(receiver=*previous token*, name=identifier, arguments=expression(s))
- │
- └─ primary_expression
-      ├─ "NIL"  
-      │   └─> Literal(literal=null)
-      │
-      ├─ "TRUE" | "FALSE"                          
-      │   └─> Literal(literal=Boolean)
-      │
-      ├─ integer | decimal | character | string    
-      │   └─> Literal(literal=Number|Character|String)
-      │
-      ├─ "(" expression ")"                        
-      │   └─> Group(expression=expression)
-      │
-      ├─ identifier                                
-      │   └─> Access(receiver=Optional.empty, name=identifier)
-      │
-      └─ identifier "(" [ expression { "," expression } ] ")"
-          └─> Function(receiver=Optional.empty, name=identifier, arguments=expression(s))
-```
-
-### Examples:
-#### Example 1:
+## Examples:
+### Example 1:
 ```
 LET x = 10;
 ```
@@ -195,14 +230,14 @@ Getting this one step closer to the actual coded implementation for this project
 ```yaml
 Ast.Source
 └─ fields: [
-     Ast.Field
-     ├─ name: "x"
-     ├─ constant: true # LET → constant
-     └─ value: Optional.of(
-          Ast.Expression.Literal
-          └─ literal: 10
+    Ast.Field
+    ├─ name: "x"
+    ├─ constant: true # LET → constant
+    └─ value: Optional.of(
+        Ast.Expression.Literal
+        └─ literal: 10
         )
-   ]
+    ]
 └─ methods: []
 ```
 
@@ -222,7 +257,7 @@ Ast ast =
     );
 ```
 
-#### Example 2:
+### Example 2:
 ```
 DEF main() DO
     print("Hello", 42);
@@ -239,41 +274,40 @@ Ast.Source
     ├─ parameters: []
     └─ statements: [
         Ast.Statement.Expression
-        └─ expression:
-             Ast.Expression.Function
-             ├─ receiver: Optional.empty
-             ├─ name: "print"
-             └─ arguments: [
-                  Ast.Expression.Literal
-                  ├─ literal: "Hello"
-                  Ast.Expression.Literal
-                  └─ literal: 42
-              ]
+        └─ expression: Ast.Expression.Function
+            ├─ receiver: Optional.empty
+            ├─ name: "print"
+            └─ arguments: [
+                Ast.Expression.Literal,
+                    └─ literal: "Hello"
+                Ast.Expression.Literal
+                    └─ literal: 42
+            ]
         ]
     ]
 ```
 
 ```java
 Ast program =
-        new Ast.Source(
-                List.of(), // no fields
+    new Ast.Source(
+        List.of(), // no fields
+        List.of(
+            new Ast.Method(
+                "main",
+                List.of(),
                 List.of(
-                        new Ast.Method(
-                                "main",
-                                List.of(),
-                                List.of(
-                                        new Ast.Statement.Expression(
-                                                new Ast.Expression.Function(
-                                                        Optional.empty(),
-                                                        "print",
-                                                        List.of(
-                                                                new Ast.Expression.Literal("Hello"),
-                                                                new Ast.Expression.Literal(42)
-                                                        )
-                                                )
-                                        )
-                                )
+                    new Ast.Statement.Expression(
+                        new Ast.Expression.Function(
+                            Optional.empty(),
+                            "print",
+                            List.of(
+                                new Ast.Expression.Literal("Hello"),
+                                new Ast.Expression.Literal(42)
+                            )
                         )
+                    )
                 )
-        );
+            )
+        )
+    );
 ```
