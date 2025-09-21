@@ -158,37 +158,37 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >```
 >
 >```text
->expression ──> Ast.Expression.*
-> ├─ logical_expression
-> │   └─ comparison_expression { ("AND"|"OR") comparison_expression }
-> │       └─> Ast.Expression.Binary(operator=*from set*, 
-> │                                 left=comparison_expression, 
-> │                                 right=comparison_expression)
-> │
-> ├─ comparison_expression
-> │   └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
-> │       └─> Binary(operator=*from set*, 
-> │                  left=additive_expression, 
-> │                  right=additive_expression)
-> │
-> ├─ additive_expression
-> │   └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
-> │       └─> Binary(operator=*from set*, 
-> │                  left=multiplicative_expression, 
-> │                  right=multiplicative_expression)
-> │            
-> ├─ multiplicative_expression
-> │   └─ secondary_expression { ("*"|"/") secondary_expression }
-> │       └─> Binary(operator=*from set*, 
-> │                  left=secondary_expression, 
-> │                  right=secondary_expression)
-> │
-> ├─ secondary_expression
-> │   └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
-> │       ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
-> │       └─ ".identifier(args)" ──> Function(receiver=*previous token*, 
-> │                                           name=identifier, 
-> │                                           arguments=expression(s))
+>expression
+> └─ logical_expression
+>     └─ comparison_expression { ("AND"|"OR") comparison_expression }
+>         └─> Ast.Expression.Binary(operator=*from set*, 
+>                                   left=comparison_expression, 
+>                                   right=comparison_expression)
+>  
+> └─ comparison_expression
+>     └─ additive_expression { ("<"|"<="|">"|">="|"=="|"!=") additive_expression }
+>         └─> Binary(operator=*from set*, 
+>                    left=additive_expression, 
+>                    right=additive_expression)
+>  
+> └─ additive_expression
+>     └─ multiplicative_expression { ("+"|"-") multiplicative_expression }
+>         └─> Binary(operator=*from set*, 
+>                    left=multiplicative_expression, 
+>                    right=multiplicative_expression)
+>              
+> └─ multiplicative_expression
+>     └─ secondary_expression { ("*"|"/") secondary_expression }
+>         └─> Binary(operator=*from set*, 
+>                    left=secondary_expression, 
+>                    right=secondary_expression)
+>  
+> └─ secondary_expression
+>     └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+>         ├─ ".identifier"       ──> Access(receiver=*previous token*, name=identifier)
+>         └─ ".identifier(args)" ──> Function(receiver=*previous token*, 
+>                                             name=identifier, 
+>                                             arguments=expression(s))
 > └─ primary_expression
 >     ├─ "NIL"  
 >     │   └─> Literal(literal=null)
@@ -207,8 +207,8 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >     │
 >     └─ identifier "(" [ expression { "," expression } ] ")"
 >         └─> Function(receiver=Optional.empty, 
->                   name=identifier, 
->                   arguments=expression(s))
+>                      name=identifier, 
+>                      arguments=expression(s))
 >```
 
 ## Examples
@@ -227,19 +227,19 @@ This will result in `"LET" "x" "=" integer ";"` and `integer` will map to `10`. 
 
 ```text
 source
-└── field
-    ├── "LET"
-    ├── identifier("x")
-    ├── "="
-    ├── expression
-    │   └── logical_expression
-    │       └── comparison_expression
-    │           └── additive_expression
-    │               └── multiplicative_expression
-    │                   └── secondary_expression
-    │                       └── primary_expression
-    │                           └── integer("10")
-    └── ";"
+└─ field
+    ├─ "LET"
+    ├─ identifier("x")
+    ├─ "="
+    ├─ expression
+    │   └─ logical_expression
+    │       └─ comparison_expression
+    │           └─ additive_expression
+    │               └─ multiplicative_expression
+    │                   └─ secondary_expression
+    │                       └─ primary_expression
+    │                           └─ integer("10")
+    └─ ";"
 ```
 
 Getting this one step closer to the actual coded implementation for this project. The tree can be thought of as:
@@ -296,9 +296,9 @@ Ast.Source
             ├─ name: "print"
             └─ arguments: [
                 Ast.Expression.Literal,
-                    └─ literal: "Hello"
+                └─ literal: "Hello"
                 Ast.Expression.Literal
-                    └─ literal: 42
+                └─ literal: 42
             ]
         ]
     ]
