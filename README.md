@@ -122,7 +122,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 > │ 
 > └─ method ─> Ast.Method
 >    ├─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
->    └─> Method(name=identifier, parameters=identifier(s), statements=statement)
+>    └─> Method(name=identifier, parameters=identifier(s), statements=statement(s))
 >```
 >
 >```text
@@ -208,7 +208,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >                   arguments=expression(s))
 >```
 
-## Examples:
+## Examples
 ### Example 1:
 ```
 LET x = 10;
@@ -225,18 +225,18 @@ This will result in `"LET" "x" "=" integer ";"` and `integer` will map to `10`. 
 ```text
 source
 └── field
-├── "LET"
-├── identifier("x")
-├── "="
-├── expression
-│   └── logical_expression
-│       └── comparison_expression
-│           └── additive_expression
-│               └── multiplicative_expression
-│                   └── secondary_expression
-│                       └── primary_expression
-│                           └── integer("10")
-└── ";"
+    ├── "LET"
+    ├── identifier("x")
+    ├── "="
+    ├── expression
+    │   └── logical_expression
+    │       └── comparison_expression
+    │           └── additive_expression
+    │               └── multiplicative_expression
+    │                   └── secondary_expression
+    │                       └── primary_expression
+    │                           └── integer("10")
+    └── ";"
 ```
 
 Getting this one step closer to the actual coded implementation for this project. The tree can be thought of as:
