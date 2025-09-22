@@ -28,14 +28,14 @@ final class ParserExpressionTests {
     private static Stream<Arguments> testExpressionStatement() {
         return Stream.of(
             Arguments.of("Function Expression",
-                    Arrays.asList(
-                            // name();
-                            new Token(Token.Type.IDENTIFIER, "name", 0),
-                            new Token(Token.Type.OPERATOR, "(", 4),
-                            new Token(Token.Type.OPERATOR, ")", 5),
-                            new Token(Token.Type.OPERATOR, ";", 6)
-                    ),
-                    new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", Arrays.asList()))
+                Arrays.asList(
+                    // name();
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.OPERATOR, ")", 5),
+                    new Token(Token.Type.OPERATOR, ";", 6)
+                ),
+                new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", Arrays.asList()))
             )
         );
     }
@@ -48,19 +48,19 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testAssignmentStatement() {
         return Stream.of(
-                Arguments.of("Assignment",
-                        Arrays.asList(
-                                // name = value;
-                                new Token(Token.Type.IDENTIFIER, "name", 0),
-                                new Token(Token.Type.OPERATOR, "=", 5),
-                                new Token(Token.Type.IDENTIFIER, "value", 7),
-                                new Token(Token.Type.OPERATOR, ";", 12)
-                        ),
-                        new Ast.Statement.Assignment(
-                                new Ast.Expression.Access(Optional.empty(), "name"),
-                                new Ast.Expression.Access(Optional.empty(), "value")
-                        )
+            Arguments.of("Assignment",
+                Arrays.asList(
+                    // name = value;
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "=", 5),
+                    new Token(Token.Type.IDENTIFIER, "value", 7),
+                    new Token(Token.Type.OPERATOR, ";", 12)
+                ),
+                new Ast.Statement.Assignment(
+                    new Ast.Expression.Access(Optional.empty(), "name"),
+                    new Ast.Expression.Access(Optional.empty(), "value")
                 )
+            )
         );
     }
 
@@ -72,38 +72,38 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
-                Arguments.of("Boolean Literal True",
-                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
-                        new Ast.Expression.Literal(Boolean.TRUE)
-                ),
-                Arguments.of("Boolean Literal False",
-                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "FALSE", 0)),
-                        new Ast.Expression.Literal(Boolean.FALSE)
-                ),
-                Arguments.of("Boolean Literal Nil",
-                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "NIL", 0)),
-                        new Ast.Expression.Literal(null)
-                ),
-                Arguments.of("Integer Literal",
-                        Arrays.asList(new Token(Token.Type.INTEGER, "1", 0)),
-                        new Ast.Expression.Literal(new BigInteger("1"))
-                ),
-                Arguments.of("Decimal Literal",
-                        Arrays.asList(new Token(Token.Type.DECIMAL, "2.0", 0)),
-                        new Ast.Expression.Literal(new BigDecimal("2.0"))
-                ),
-                Arguments.of("Character Literal",
-                        Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
-                        new Ast.Expression.Literal('c')
-                ),
-                Arguments.of("String Literal",
-                        Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
-                        new Ast.Expression.Literal("string")
-                ),
-                Arguments.of("Escape Character",
-                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
-                        new Ast.Expression.Literal("Hello,\nWorld!")
-                )
+            Arguments.of("Boolean Literal True",
+                Arrays.asList(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
+                new Ast.Expression.Literal(Boolean.TRUE)
+            ),
+            Arguments.of("Boolean Literal False",
+                Arrays.asList(new Token(Token.Type.IDENTIFIER, "FALSE", 0)),
+                new Ast.Expression.Literal(Boolean.FALSE)
+            ),
+            Arguments.of("Boolean Literal Nil",
+                Arrays.asList(new Token(Token.Type.IDENTIFIER, "NIL", 0)),
+                new Ast.Expression.Literal(null)
+            ),
+            Arguments.of("Integer Literal",
+                Arrays.asList(new Token(Token.Type.INTEGER, "1", 0)),
+                new Ast.Expression.Literal(new BigInteger("1"))
+            ),
+            Arguments.of("Decimal Literal",
+                Arrays.asList(new Token(Token.Type.DECIMAL, "2.0", 0)),
+                new Ast.Expression.Literal(new BigDecimal("2.0"))
+            ),
+            Arguments.of("Character Literal",
+                Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
+                new Ast.Expression.Literal('c')
+            ),
+            Arguments.of("String Literal",
+                Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
+                new Ast.Expression.Literal("string")
+            ),
+            Arguments.of("Escape Character",
+                Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
+                new Ast.Expression.Literal("Hello,\nWorld!")
+            )
         );
     }
 
@@ -115,72 +115,72 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testGroupExpression() {
         return Stream.of(
-                Arguments.of("Grouped Variable",
-                        Arrays.asList(
-                                // (expr)
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr", 1),
-                                new Token(Token.Type.OPERATOR, ")", 5)
-                        ),
-                        new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
+            Arguments.of("Grouped Variable",
+                Arrays.asList(
+                    // (expr)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1),
+                    new Token(Token.Type.OPERATOR, ")", 5)
                 ),
-                Arguments.of("Grouped Binary",
-                        Arrays.asList(
-                                // (expr1 + expr2)
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr1", 1),
-                                new Token(Token.Type.OPERATOR, "+", 7),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
-                                new Token(Token.Type.OPERATOR, ")", 14)
-                        ),
-                        new Ast.Expression.Group(new Ast.Expression.Binary("+",
-                                new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                new Ast.Expression.Access(Optional.empty(), "expr2")
-                        ))
+                new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
+            ),
+            Arguments.of("Grouped Binary",
+                Arrays.asList(
+                    // (expr1 + expr2)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, ")", 14)
                 ),
-                Arguments.of("Grouped Multiple Binary",
-                        Arrays.asList(
-                                // (expr1 + expr2 + expr3)
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr1", 1),
-                                new Token(Token.Type.OPERATOR, "+", 7),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
-                                new Token(Token.Type.OPERATOR, "+", 15),
-                                new Token(Token.Type.IDENTIFIER, "expr3", 17),
-                                new Token(Token.Type.OPERATOR, ")", 22)
-                        ),
-                        new Ast.Expression.Group(new Ast.Expression.Binary("+",
-                                new Ast.Expression.Binary("+",
-                                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                    new Ast.Expression.Access(Optional.empty(), "expr2")
-                                ),
-                                new Ast.Expression.Access(Optional.empty(), "expr3")
-                        ))
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                ))
+            ),
+            Arguments.of("Grouped Multiple Binary",
+                Arrays.asList(
+                    // (expr1 + expr2 + expr3)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "+", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                    new Token(Token.Type.OPERATOR, ")", 22)
                 ),
-                Arguments.of("Grouped More Multiple Binary",
-                        Arrays.asList(
-                                // (expr1 + expr2 + expr3 + expr4)
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "expr1", 1),
-                                new Token(Token.Type.OPERATOR, "+", 7),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
-                                new Token(Token.Type.OPERATOR, "+", 15),
-                                new Token(Token.Type.IDENTIFIER, "expr3", 17),
-                                new Token(Token.Type.OPERATOR, "+", 23),
-                                new Token(Token.Type.IDENTIFIER, "expr4", 25),
-                                new Token(Token.Type.OPERATOR, ")", 30)
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                ))
+            ),
+            Arguments.of("Grouped More Multiple Binary",
+                Arrays.asList(
+                    // (expr1 + expr2 + expr3 + expr4)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "+", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                    new Token(Token.Type.OPERATOR, "+", 23),
+                    new Token(Token.Type.IDENTIFIER, "expr4", 25),
+                    new Token(Token.Type.OPERATOR, ")", 30)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Binary("+",
+                            new Ast.Expression.Access(Optional.empty(), "expr1"),
+                            new Ast.Expression.Access(Optional.empty(), "expr2")
                         ),
-                        new Ast.Expression.Group(new Ast.Expression.Binary("+",
-                                new Ast.Expression.Binary("+",
-                                        new Ast.Expression.Binary("+",
-                                            new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                            new Ast.Expression.Access(Optional.empty(), "expr2")
-                                        ),
-                                        new Ast.Expression.Access(Optional.empty(), "expr3")
-                                ),
-                                new Ast.Expression.Access(Optional.empty(), "expr4")
-                        ))
-                )
+                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr4")
+                ))
+            )
         );
     }
 
@@ -192,54 +192,54 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
-                Arguments.of("Binary And",
-                        Arrays.asList(
-                                // expr1 && expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "&&", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 10)
-                        ),
-                        new Ast.Expression.Binary("&&",
-                                new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                new Ast.Expression.Access(Optional.empty(), "expr2")
-                        )
+            Arguments.of("Binary And",
+                    Arrays.asList(
+                            // expr1 && expr2
+                            new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                            new Token(Token.Type.OPERATOR, "&&", 6),
+                            new Token(Token.Type.IDENTIFIER, "expr2", 10)
+                    ),
+                    new Ast.Expression.Binary("&&",
+                            new Ast.Expression.Access(Optional.empty(), "expr1"),
+                            new Ast.Expression.Access(Optional.empty(), "expr2")
+                    )
+            ),
+            Arguments.of("Binary Equality",
+                    Arrays.asList(
+                            // expr1 == expr2
+                            new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                            new Token(Token.Type.OPERATOR, "==", 6),
+                            new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                    ),
+                    new Ast.Expression.Binary("==",
+                            new Ast.Expression.Access(Optional.empty(), "expr1"),
+                            new Ast.Expression.Access(Optional.empty(), "expr2")
+                    )
+            ),
+            Arguments.of("Binary Addition",
+                    Arrays.asList(
+                            // expr1 + expr2
+                            new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                            new Token(Token.Type.OPERATOR, "+", 6),
+                            new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                    ),
+                    new Ast.Expression.Binary("+",
+                            new Ast.Expression.Access(Optional.empty(), "expr1"),
+                            new Ast.Expression.Access(Optional.empty(), "expr2")
+                    )
+            ),
+            Arguments.of("Binary Multiplication",
+                Arrays.asList(
+                    // expr1 * expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "*", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8)
                 ),
-                Arguments.of("Binary Equality",
-                        Arrays.asList(
-                                // expr1 == expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "==", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
-                        ),
-                        new Ast.Expression.Binary("==",
-                                new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                new Ast.Expression.Access(Optional.empty(), "expr2")
-                        )
-                ),
-                Arguments.of("Binary Addition",
-                        Arrays.asList(
-                                // expr1 + expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "+", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
-                        ),
-                        new Ast.Expression.Binary("+",
-                                new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                new Ast.Expression.Access(Optional.empty(), "expr2")
-                        )
-                ),
-                Arguments.of("Binary Multiplication",
-                        Arrays.asList(
-                                // expr1 * expr2
-                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "*", 6),
-                                new Token(Token.Type.IDENTIFIER, "expr2", 8)
-                        ),
-                        new Ast.Expression.Binary("*",
-                                new Ast.Expression.Access(Optional.empty(), "expr1"),
-                                new Ast.Expression.Access(Optional.empty(), "expr2")
-                        )
+                new Ast.Expression.Binary("*",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
                 )
+            )
         );
     }
 
