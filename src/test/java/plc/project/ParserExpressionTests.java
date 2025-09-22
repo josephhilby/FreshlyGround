@@ -27,16 +27,16 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testExpressionStatement() {
         return Stream.of(
-                Arguments.of("Function Expression",
-                        Arrays.asList(
-                                // name();
-                                new Token(Token.Type.IDENTIFIER, "name", 0),
-                                new Token(Token.Type.OPERATOR, "(", 4),
-                                new Token(Token.Type.OPERATOR, ")", 5),
-                                new Token(Token.Type.OPERATOR, ";", 6)
-                        ),
-                        new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", Arrays.asList()))
-                )
+            Arguments.of("Function Expression",
+                    Arrays.asList(
+                            // name();
+                            new Token(Token.Type.IDENTIFIER, "name", 0),
+                            new Token(Token.Type.OPERATOR, "(", 4),
+                            new Token(Token.Type.OPERATOR, ")", 5),
+                            new Token(Token.Type.OPERATOR, ";", 6)
+                    ),
+                    new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", Arrays.asList()))
+            )
         );
     }
 
@@ -136,6 +136,49 @@ final class ParserExpressionTests {
                         new Ast.Expression.Group(new Ast.Expression.Binary("+",
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
+                        ))
+                ),
+                Arguments.of("Grouped Multiple Binary",
+                        Arrays.asList(
+                                // (expr1 + expr2 + expr3)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                                new Token(Token.Type.OPERATOR, "+", 7),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.OPERATOR, "+", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                                new Token(Token.Type.OPERATOR, ")", 22)
+                        ),
+                        new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                                new Ast.Expression.Binary("+",
+                                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                                ),
+                                new Ast.Expression.Access(Optional.empty(), "expr3")
+                        ))
+                ),
+                Arguments.of("Grouped More Multiple Binary",
+                        Arrays.asList(
+                                // (expr1 + expr2 + expr3 + expr4)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                                new Token(Token.Type.OPERATOR, "+", 7),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.OPERATOR, "+", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                                new Token(Token.Type.OPERATOR, "+", 23),
+                                new Token(Token.Type.IDENTIFIER, "expr4", 25),
+                                new Token(Token.Type.OPERATOR, ")", 30)
+                        ),
+                        new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                                new Ast.Expression.Binary("+",
+                                        new Ast.Expression.Binary("+",
+                                            new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                            new Ast.Expression.Access(Optional.empty(), "expr2")
+                                        ),
+                                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                                ),
+                                new Ast.Expression.Access(Optional.empty(), "expr4")
                         ))
                 )
         );

@@ -118,7 +118,7 @@ public final class Parser {
      */
     // expression ::= logical_expression
     public Ast.Expression parseExpression() throws ParseException {
-        return parsePrimaryExpression();
+        return parseLogicalExpression();
     }
 
     /**
@@ -126,7 +126,7 @@ public final class Parser {
      */
     // logical_expression ::= comparison_expression (('AND' | 'OR') comparison_expression)*
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parseEqualityExpression();
     }
 
     /**
@@ -135,7 +135,7 @@ public final class Parser {
     // comparison_expression ::=
     //      additive_expression (('<' | '<=' | '>' | '>=' | '==' | '!=') additive_expression)*
     public Ast.Expression parseEqualityExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parseAdditiveExpression();
     }
 
     /**
@@ -143,7 +143,18 @@ public final class Parser {
      */
     // additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression left = parseMultiplicativeExpression();
+
+        while (peek("+") || peek("-")) {
+            String operator = tokens.get(0).getLiteral();
+            match(Token.Type.OPERATOR);
+            Ast.Expression right = parseMultiplicativeExpression();
+            if (!peek("+") && !peek("-")) {
+                return new Ast.Expression.Binary(operator, left, right);
+            }
+            left = new  Ast.Expression.Binary(operator, left, right);
+        }
+        return left;
     }
 
     /**
@@ -151,7 +162,7 @@ public final class Parser {
      */
     // multiplicative_expression ::= secondary_expression (('*' | '/') secondary_expression)*
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parseSecondaryExpression();
     }
 
     /**
@@ -159,7 +170,7 @@ public final class Parser {
      */
     // secondary_expression ::= primary_expression ('.' identifier ('(' (expression (',' expression)*)? ')')?)*
     public Ast.Expression parseSecondaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parsePrimaryExpression();
     }
 
     /**
