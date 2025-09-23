@@ -33,7 +33,9 @@ public final class Parser {
      */
     // source ::= { field } { method }
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Field> fields = new ArrayList<>();
+        List<Ast.Method> methods = new ArrayList<>();
+        return new Ast.Source(fields, methods);
     }
 
     /**
@@ -106,7 +108,23 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression expression = parseExpression();
+        List<Ast.Statement> thenStatements = new ArrayList<>();
+        List<Ast.Statement> elseStatements = new ArrayList<>();
+
+        if (!match("DO")) {
+            throw new ParseException("Unrecognized Statement", -1);
+        }
+        while (!match("ELSE")) {
+            thenStatements.add(parseStatement());
+            if (match("END")) {
+                break;
+            }
+        }
+        while (!match("END")) {
+            elseStatements.add(parseStatement());
+        }
+        return new Ast.Statement.If(expression, thenStatements, elseStatements);
     }
 
     /**
@@ -126,7 +144,16 @@ public final class Parser {
      */
     // "WHILE" expression "DO" { statement } "END"
     public Ast.Statement.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression expression = parseExpression();
+        List<Ast.Statement> statements = new ArrayList<>();
+
+        if (!match("DO")) {
+            throw new ParseException("Unrecognized Statement", -1);
+        }
+        while (!match("END")) {
+            statements.add(parseStatement());
+        }
+        return new Ast.Statement.While(expression, statements);
     }
 
     /**
@@ -136,7 +163,8 @@ public final class Parser {
      */
     // "RETURN" expression ";"
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expression expression = parseExpression();
+        return new Ast.Statement.Return(expression);
     }
 
     // expression "=" expression ";"

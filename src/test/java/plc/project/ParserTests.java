@@ -64,6 +64,10 @@ final class ParserTests {
                                         new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
                                 )))
                         )
+                ),
+                Arguments.of("Large Code Snippet",
+                        ParserTestData.input,
+                        ParserTestData.expected
                 )
         );
     }
