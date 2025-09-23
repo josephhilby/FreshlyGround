@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -128,7 +129,6 @@ public final class Parser {
     public Ast.Expression parseLogicalExpression() throws ParseException {
         Ast.Expression left = parseEqualityExpression();
 
-//        String[] operators = {"AND", "&&",  "OR", "||"};
         while (check("AND", "&&",  "OR", "||")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
@@ -149,7 +149,6 @@ public final class Parser {
     public Ast.Expression parseEqualityExpression() throws ParseException {
         Ast.Expression left = parseAdditiveExpression();
 
-//        String[] operators = {"<", "<=", ">", ">=", "==", "!="};
         while (check("<", "<=", ">", ">=", "==", "!=")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
@@ -167,19 +166,19 @@ public final class Parser {
      */
     // additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
     public Ast.Expression parseAdditiveExpression() throws ParseException {
-        Ast.Expression left = parseMultiplicativeExpression();
-
-//        String[] operators = {"+", "-"};
-        while (check("+", "-")) {
-            String operator = tokens.get(0).getLiteral();
-            match(Token.Type.OPERATOR);
-            Ast.Expression right = parseMultiplicativeExpression();
-            if (!check("+", "-")) {
-                return new Ast.Expression.Binary(operator, left, right);
-            }
-            left = new  Ast.Expression.Binary(operator, left, right);
-        }
-        return left;
+//        Ast.Expression left = parseMultiplicativeExpression();
+//
+//        while (check("+", "-")) {
+//            String operator = tokens.get(0).getLiteral();
+//            match(Token.Type.OPERATOR);
+//            Ast.Expression right = parseMultiplicativeExpression();
+//            if (!check("+", "-")) {
+//                return new Ast.Expression.Binary(operator, left, right);
+//            }
+//            left = new  Ast.Expression.Binary(operator, left, right);
+//        }
+//        return left;
+        return parseLeftExpression(this::parseMultiplicativeExpression, "+", "-");
     }
 
     /**
@@ -189,7 +188,6 @@ public final class Parser {
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
         Ast.Expression left = parseSecondaryExpression();
 
-//        String[] operators = {"*", "/"};
         while (check("*", "/")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
@@ -198,6 +196,20 @@ public final class Parser {
                 return new Ast.Expression.Binary(operator, left, right);
             }
             left = new  Ast.Expression.Binary(operator, left, right);
+        }
+        return left;
+    }
+
+    // generic to parse left side
+    private Ast.Expression parseLeftExpression(Supplier<Ast.Expression> leftExpression,
+                                               String... operators) throws ParseException {
+        Ast.Expression left = leftExpression.get();
+
+        while (check(operators)) {
+            String operator = tokens.get(0).getLiteral();
+            match(Token.Type.OPERATOR);
+            Ast.Expression right = leftExpression.get();
+            left = new Ast.Expression.Binary(operator, left, right);
         }
         return left;
     }
