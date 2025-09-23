@@ -128,12 +128,12 @@ public final class Parser {
     public Ast.Expression parseLogicalExpression() throws ParseException {
         Ast.Expression left = parseEqualityExpression();
 
-        String[] operators = {"AND", "&&",  "OR", "||"};
-        while (check(operators)) {
+//        String[] operators = {"AND", "&&",  "OR", "||"};
+        while (check("AND", "&&",  "OR", "||")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
             Ast.Expression right = parseEqualityExpression();
-            if (!check(operators)) {
+            if (!check("AND", "&&",  "OR", "||")) {
                 return new Ast.Expression.Binary(operator, left, right);
             }
             left = new  Ast.Expression.Binary(operator, left, right);
@@ -149,12 +149,12 @@ public final class Parser {
     public Ast.Expression parseEqualityExpression() throws ParseException {
         Ast.Expression left = parseAdditiveExpression();
 
-        String[] operators = {"<", "<=", ">", ">=", "==", "!="};
-        while (check(operators)) {
+//        String[] operators = {"<", "<=", ">", ">=", "==", "!="};
+        while (check("<", "<=", ">", ">=", "==", "!=")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
             Ast.Expression right = parseAdditiveExpression();
-            if (!check(operators)) {
+            if (!check("<", "<=", ">", ">=", "==", "!=")) {
                 return new Ast.Expression.Binary(operator, left, right);
             }
             left = new  Ast.Expression.Binary(operator, left, right);
@@ -169,12 +169,12 @@ public final class Parser {
     public Ast.Expression parseAdditiveExpression() throws ParseException {
         Ast.Expression left = parseMultiplicativeExpression();
 
-        String[] operators = {"+", "-"};
-        while (check(operators)) {
+//        String[] operators = {"+", "-"};
+        while (check("+", "-")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
             Ast.Expression right = parseMultiplicativeExpression();
-            if (!check(operators)) {
+            if (!check("+", "-")) {
                 return new Ast.Expression.Binary(operator, left, right);
             }
             left = new  Ast.Expression.Binary(operator, left, right);
@@ -189,12 +189,12 @@ public final class Parser {
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
         Ast.Expression left = parseSecondaryExpression();
 
-        String[] operators = {"*", "/"};
-        while (check(operators)) {
+//        String[] operators = {"*", "/"};
+        while (check("*", "/")) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
             Ast.Expression right = parseSecondaryExpression();
-            if (!check(operators)) {
+            if (!check("*", "/")) {
                 return new Ast.Expression.Binary(operator, left, right);
             }
             left = new  Ast.Expression.Binary(operator, left, right);
@@ -203,7 +203,7 @@ public final class Parser {
     }
 
     // leverage demorgians law
-    private boolean check(String[] literals) {
+    private boolean check(String... literals) {
         for (int i = 0; i < literals.length; i++) {
             if (peek(literals[i])) {
                 return true;
