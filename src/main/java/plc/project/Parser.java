@@ -164,7 +164,16 @@ public final class Parser {
     // secondary_expression ::= primary_expression
     //      { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
     public Ast.Expression parseSecondaryExpression() throws ParseException {
-        return parsePrimaryExpression();
+        Ast.Expression receiver = parsePrimaryExpression();
+
+        while (match(".")) {
+            String identifier = tokens.get(0).getLiteral();
+            List<Ast.Expression> expressions;
+            if (match("(")) {
+
+            }
+        }
+        return receiver;
     }
 
     /**
@@ -232,31 +241,31 @@ public final class Parser {
         // identifier [ "(" [ expression { "," expression } ] ")" ]
         if (match(Token.Type.IDENTIFIER)) {
             return new Ast.Expression.Access(Optional.empty(), literal);
+            // return new Ast.Expression.Function(Optional.empty(), literal, arguments);
 
             // receiver => property in Ast.Expression.Access
             // obj.method => obj is the receiver
-            // object.field => object is the receiver
-            // reference Alan Kay's discussion of "message passing"
+            // obj.field => obj is the receiver
         }
         throw new ParseException("Invalid Primary Expression", -1);
         // TODO: handle char index instead of -1
     }
 
     // generic to parse for binary expression
-    private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> leftExpression,
+    private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> expression,
                                                  String... operators) throws ParseException {
-        Ast.Expression left = leftExpression.get();
+        Ast.Expression left = expression.get();
 
         while (check(operators)) {
             String operator = tokens.get(0).getLiteral();
             match(Token.Type.OPERATOR);
-            Ast.Expression right = leftExpression.get();
+            Ast.Expression right = expression.get();
             left = new Ast.Expression.Binary(operator, left, right);
         }
         return left;
     }
 
-    // dynamic or chain, (A OR B OR ...)
+    // dynamic or chain, (A || B || ...)
     private boolean check(String... literals) {
         for (int i = 0; i < literals.length; i++) {
             if (peek(literals[i])) {
