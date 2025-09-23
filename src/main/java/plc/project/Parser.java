@@ -288,6 +288,7 @@ public final class Parser {
                     return new Ast.Expression.Function(receiver, literal, expressions);
                 }
                 throw new ParseException("Expected Closing Parenthesis", -1);
+                // TODO: handle char index instead of -1
             }
             return new Ast.Expression.Access(receiver, literal);
         }
