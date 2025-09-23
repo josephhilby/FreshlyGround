@@ -185,9 +185,9 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >  
 > └─ secondary_expression
 >     └─ primary_expression { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
->         ├─ ".identifier"       ──> Ast.Expression.Access(receiver=*previous token*, 
+>         ├─ ".identifier"       ──> Ast.Expression.Access(receiver=primary_expression, 
 >         │                                                name=identifier)
->         └─ ".identifier(args)" ──> Ast.Expression.Function(receiver=*previous token*, 
+>         └─ ".identifier(args)" ──> Ast.Expression.Function(receiver=primary_expression, 
 >                                                            name=identifier, 
 >                                                            arguments=expression(s))
 > └─ primary_expression

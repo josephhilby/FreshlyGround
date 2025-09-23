@@ -166,12 +166,8 @@ public final class Parser {
     public Ast.Expression parseSecondaryExpression() throws ParseException {
         Ast.Expression receiver = parsePrimaryExpression();
 
-        while (match(".")) {
-            String identifier = tokens.get(0).getLiteral();
-            List<Ast.Expression> expressions;
-            if (match("(")) {
-
-            }
+        while (match(".") && receiver instanceof Ast.Expression.Access) {
+            receiver = parsePrimaryExpression(Optional.of(receiver));
         }
         return receiver;
     }
@@ -190,6 +186,10 @@ public final class Parser {
     //     | "(" expression ")"
     //     | identifier [ "(" [ expression { "," expression } ] ")" ]
     public Ast.Expression parsePrimaryExpression() throws ParseException {
+        return parsePrimaryExpression(Optional.empty());
+    }
+
+    public Ast.Expression parsePrimaryExpression(Optional<Ast.Expression> receiver) throws ParseException {
         Token.Type type = tokens.get(0).getType();
         String literal = tokens.get(0).getLiteral();
 
@@ -240,12 +240,20 @@ public final class Parser {
 
         // identifier [ "(" [ expression { "," expression } ] ")" ]
         if (match(Token.Type.IDENTIFIER)) {
-            return new Ast.Expression.Access(Optional.empty(), literal);
-            // return new Ast.Expression.Function(Optional.empty(), literal, arguments);
-
-            // receiver => property in Ast.Expression.Access
-            // obj.method => obj is the receiver
-            // obj.field => obj is the receiver
+            List<Ast.Expression> expressions = new ArrayList<>();
+            if (match("(", ")")) {
+                return new Ast.Expression.Function(receiver, literal, expressions);
+            }
+            if (match("(")) {
+                do {
+                    expressions.add(parseExpression());
+                } while (match(","));
+                if (match(")")) {
+                    return new Ast.Expression.Function(receiver, literal, expressions);
+                }
+                throw new ParseException("Expected Closing Parenthesis", -1);
+            }
+            return new Ast.Expression.Access(receiver, literal);
         }
         throw new ParseException("Invalid Primary Expression", -1);
         // TODO: handle char index instead of -1

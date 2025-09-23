@@ -256,7 +256,6 @@ final class ParserExpressionTests {
                 Arrays.asList(new Token(Token.Type.IDENTIFIER, "name", 0)),
                 new Ast.Expression.Access(Optional.empty(), "name")
             ),
-
             Arguments.of("Field Access",
                 Arrays.asList(
                     // obj.field
@@ -266,7 +265,7 @@ final class ParserExpressionTests {
                 ),
                 new Ast.Expression.Access(Optional.of(new
                     Ast.Expression.Access(Optional.empty(), "obj")), "field")
-        )
+            )
         );
     }
 
@@ -304,7 +303,28 @@ final class ParserExpressionTests {
                     new Ast.Expression.Access(Optional.empty(), "expr2"),
                     new Ast.Expression.Access(Optional.empty(), "expr3")
                 ))
-            )
+            ),
+                Arguments.of("Function Field Access",
+                        Arrays.asList(
+                                // obj.field(arg1, arg2)
+                                new Token(Token.Type.IDENTIFIER, "obj", 0),
+                                new Token(Token.Type.OPERATOR, ".", 3),
+                                new Token(Token.Type.IDENTIFIER, "field", 4),
+                                new Token(Token.Type.OPERATOR, "(", 9),
+                                new Token(Token.Type.IDENTIFIER, "arg1", 10),
+                                new Token(Token.Type.OPERATOR, ",", 14),
+                                new Token(Token.Type.IDENTIFIER, "arg2", 16),
+                                new Token(Token.Type.OPERATOR, ")", 20)
+                        ),
+                        new Ast.Expression.Function(Optional.of(new
+                                Ast.Expression.Access(Optional.empty(), "obj")),
+                                "field",
+                                List.of(
+                                        new Ast.Expression.Access(Optional.empty(), "arg1"),
+                                        new Ast.Expression.Access(Optional.empty(), "arg2")
+                                )
+                        )
+                )
         );
     }
 
