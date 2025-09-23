@@ -61,7 +61,32 @@ public final class Parser {
      */
     // statement ::= "LET" | "IF" | "FOR" | "WHILE" | "RETURN" | expression [ "=" expression ] ";"
     public Ast.Statement parseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("LET")) {
+            return parseDeclarationStatement();
+        }
+        if (match("IF")) {
+            return parseIfStatement();
+        }
+        if (match("FOR")) {
+            return parseForStatement();
+        }
+        if (match("WHILE")) {
+            return parseWhileStatement();
+        }
+        if (match("RETURN")) {
+            return parseReturnStatement();
+        }
+        if (peek(Token.Type.IDENTIFIER)) {
+            Ast.Expression expression = parseExpression();
+            if (match("=")) {
+                return parseAssignmentStatement(expression);
+            }
+            if (match(";")) {
+                return parseExpressionStatement(expression);
+            }
+        }
+        throw new ParseException("Unrecognized Statement", -1);
+        // TODO: handle char index instead of -1
     }
 
     /**
@@ -112,6 +137,17 @@ public final class Parser {
     // "RETURN" expression ";"
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
+    }
+
+    // expression "=" expression ";"
+    public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
+        Ast.Expression value = parseExpression();
+        return new Ast.Statement.Assignment(receiver, value);
+    }
+
+    // expression ";"
+    public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws ParseException {
+        return new Ast.Statement.Expression(expression);
     }
 
     /**

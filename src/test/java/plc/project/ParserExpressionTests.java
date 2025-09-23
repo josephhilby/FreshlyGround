@@ -35,7 +35,10 @@ final class ParserExpressionTests {
                     new Token(Token.Type.OPERATOR, ")", 5),
                     new Token(Token.Type.OPERATOR, ";", 6)
                 ),
-                new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", Arrays.asList()))
+                new Ast.Statement.Expression(new Ast.Expression.Function(
+                    Optional.empty(),
+                    "name",
+                    Arrays.asList()))
             )
         );
     }
