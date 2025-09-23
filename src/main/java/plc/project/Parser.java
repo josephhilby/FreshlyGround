@@ -122,8 +122,7 @@ public final class Parser {
                 return parseExpressionStatement(expression);
             }
         }
-        throw new ParseException("Unrecognized Statement", -1);
-        // TODO: handle char index instead of -1
+        throw new ParseException("Unrecognized Statement", tokens.get(0).getIndex());
     }
 
     /**
@@ -176,7 +175,8 @@ public final class Parser {
      */
     // "FOR" identifier "IN" expression "DO" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        throw new UnsupportedOperationException();
+        //TODO: Make tests for For Statement
     }
 
     /**
@@ -340,8 +340,7 @@ public final class Parser {
         if (match("(")) {
             Ast.Expression expression = parseExpression();
             if (!match(")")) {
-                throw new ParseException("Expected Closing Parenthesis", -1);
-                // TODO: handle char index instead of -1
+                throw new ParseException("Expected Closing Parenthesis", tokens.get(0).getIndex());
             }
             return new Ast.Expression.Group(expression);
         }
@@ -359,8 +358,7 @@ public final class Parser {
                 if (match(")")) {
                     return new Ast.Expression.Function(receiver, literal, expressions);
                 }
-                throw new ParseException("Expected Closing Parenthesis", -1);
-                // TODO: handle char index instead of -1
+                throw new ParseException("Expected Closing Parenthesis", tokens.get(0).getIndex());
             }
             return new Ast.Expression.Access(receiver, literal);
         }
