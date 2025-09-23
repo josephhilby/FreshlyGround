@@ -54,6 +54,7 @@ public final class Parser {
      */
     // field ::= "LET" identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
+        // TODO: Clean up
         String identifier = tokens.get(0).getLiteral();
         boolean constant = false;
         Optional<Ast.Expression> expression = Optional.empty();
@@ -71,6 +72,7 @@ public final class Parser {
      */
     // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
     public Ast.Method parseMethod() throws ParseException {
+        // TODO: Clean up
         String identifier = tokens.get(0).getLiteral();
         List<String> identifiers = new ArrayList<>();
         List<Ast.Statement> statements = new ArrayList<>();
@@ -132,6 +134,7 @@ public final class Parser {
      */
     // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
+        // TODO: Clean up
         String identifier = tokens.get(0).getLiteral();
         Optional<Ast.Expression> expression = Optional.empty();
         match(Token.Type.IDENTIFIER);
@@ -149,6 +152,7 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
+        // TODO: Clean up
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
         List<Ast.Statement> elseStatements = new ArrayList<>();
@@ -175,8 +179,8 @@ public final class Parser {
      */
     // "FOR" identifier "IN" expression "DO" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
+        //TODO: Make tests for FOR Statement
         throw new UnsupportedOperationException();
-        //TODO: Make tests for For Statement
     }
 
     /**
@@ -186,11 +190,12 @@ public final class Parser {
      */
     // "WHILE" expression "DO" { statement } "END"
     public Ast.Statement.While parseWhileStatement() throws ParseException {
+        // TODO: Clean up
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
 
         if (!match("DO")) {
-            throw new ParseException("Unrecognized Statement", -1);
+            throw new ParseException("Unrecognized Statement", tokens.get(0).getIndex());
         }
         while (!match("END")) {
             statements.add(parseStatement());
@@ -362,8 +367,7 @@ public final class Parser {
             }
             return new Ast.Expression.Access(receiver, literal);
         }
-        throw new ParseException("Invalid Primary Expression", -1);
-        // TODO: handle char index instead of -1
+        throw new ParseException("Invalid Primary Expression", tokens.get(0).getIndex());
     }
 
     // generic to parse for binary expression
