@@ -35,6 +35,16 @@ public final class Parser {
     public Ast.Source parseSource() throws ParseException {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
+
+        while (tokens.has(0)) {
+            if (match("LET")) {
+                fields.add(parseField());
+            }
+            if (match("DEF")) {
+                methods.add(parseMethod());
+            }
+        }
+
         return new Ast.Source(fields, methods);
     }
 
@@ -44,7 +54,15 @@ public final class Parser {
      */
     // field ::= "LET" identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        String identifier = tokens.get(0).getLiteral();
+        boolean constant = false;
+        Optional<Ast.Expression> expression = Optional.empty();
+        match(Token.Type.IDENTIFIER);
+        if (match("=")) {
+            expression = Optional.of(parseExpression());
+        }
+        match(";");
+        return new Ast.Field(identifier, constant, expression);
     }
 
     /**
@@ -53,7 +71,24 @@ public final class Parser {
      */
     // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
     public Ast.Method parseMethod() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        String identifier = tokens.get(0).getLiteral();
+        List<String> identifiers = new ArrayList<>();
+        List<Ast.Statement> statements = new ArrayList<>();
+        match(Token.Type.IDENTIFIER);
+        match("(");
+        if (!match(")")) {
+            do {
+                String parameter = tokens.get(0).getLiteral();
+                identifiers.add(parameter);
+            } while (match(","));
+        }
+        match(")");
+        match("DO");
+        while (!match("END")) {
+            statements.add(parseStatement());
+        }
+        match("END");
+        return new Ast.Method(identifier, identifiers, statements);
     }
 
     /**
@@ -98,7 +133,14 @@ public final class Parser {
      */
     // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        String identifier = tokens.get(0).getLiteral();
+        Optional<Ast.Expression> expression = Optional.empty();
+        match(Token.Type.IDENTIFIER);
+        if (match("=")) {
+            expression = Optional.of(parseExpression());
+        }
+        match(";");
+        return new Ast.Statement.Declaration(identifier, expression);
     }
 
     /**
@@ -118,7 +160,7 @@ public final class Parser {
         while (!match("ELSE")) {
             thenStatements.add(parseStatement());
             if (match("END")) {
-                break;
+                return new Ast.Statement.If(expression, thenStatements, elseStatements);
             }
         }
         while (!match("END")) {
@@ -170,11 +212,13 @@ public final class Parser {
     // expression "=" expression ";"
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
         Ast.Expression value = parseExpression();
+        match(";");
         return new Ast.Statement.Assignment(receiver, value);
     }
 
     // expression ";"
     public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws ParseException {
+        match(";");
         return new Ast.Statement.Expression(expression);
     }
 
