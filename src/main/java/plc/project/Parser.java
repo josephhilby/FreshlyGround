@@ -310,7 +310,7 @@ public final class Parser {
         return left;
     }
 
-    // dynamic or chain, (A || B || ...)
+    // dynamic OR chain, (A || B || ... )
     private boolean check(String... literals) {
         for (int i = 0; i < literals.length; i++) {
             if (peek(literals[i])) {
@@ -335,7 +335,7 @@ public final class Parser {
     // remove found escape characters
     private String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder(string);
-        for (int i = 0; i < indexes.size(); i++) {
+        for (int i = indexes.size()-1; i >= 0; i--) {
             int index = indexes.get(i);
             char c = string.charAt(index+1);
             builder.deleteCharAt(index+1);

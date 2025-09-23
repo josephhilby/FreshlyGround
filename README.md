@@ -300,7 +300,7 @@ Ast.Source
                 └─ literal: "Hello"
                 Ast.Expression.Literal
                 └─ literal: 42
-            ]
+                ]
         ]
     ]
 ```

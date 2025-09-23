@@ -106,6 +106,10 @@ final class ParserExpressionTests {
             Arguments.of("Escape Character",
                 Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                 new Ast.Expression.Literal("Hello,\nWorld!")
+            ),
+            Arguments.of("Multiple Escape Character",
+                    Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld\\n!\"", 0)),
+                    new Ast.Expression.Literal("Hello,\nWorld\n!")
             )
         );
     }
