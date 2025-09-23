@@ -31,7 +31,7 @@ public final class Parser {
     /**
      * Parses the {@code source} rule.
      */
-    // source ::= field* method*
+    // source ::= { field } { method }
     public Ast.Source parseSource() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -40,7 +40,7 @@ public final class Parser {
      * Parses the {@code field} rule. This method should only be called if the
      * next tokens start a field, aka {@code LET}.
      */
-    // field ::= 'LET' 'CONST'? identifier ('=' expression)? ';'
+    // field ::= "LET" identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -49,7 +49,7 @@ public final class Parser {
      * Parses the {@code method} rule. This method should only be called if the
      * next tokens start a method, aka {@code DEF}.
      */
-    // method ::= 'DEF' identifier '(' ( identifier ( ',' identifier )* )? ')' 'DO' statement* 'END'
+    // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
     public Ast.Method parseMethod() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -59,7 +59,7 @@ public final class Parser {
      * If the next tokens do not start a declaration, if, for, while, or return
      * statement, then it is an expression/assignment statement.
      */
-    // statement ::= LET | IF | FOR | WHILE | RETURN | expression ('=' expression)? ';'
+    // statement ::= "LET" | "IF" | "FOR" | "WHILE" | "RETURN" | expression [ "=" expression ] ";"
     public Ast.Statement parseStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -69,7 +69,7 @@ public final class Parser {
      * method should only be called if the next tokens start a declaration
      * statement, aka {@code LET}.
      */
-    // 'LET' identifier ('=' expression)? ';'
+    // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -79,7 +79,7 @@ public final class Parser {
      * should only be called if the next tokens start an if statement, aka
      * {@code IF}.
      */
-    // 'IF' expression 'DO' statement* ('ELSE' statement*)? 'END'
+    // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -89,7 +89,7 @@ public final class Parser {
      * should only be called if the next tokens start a for statement, aka
      * {@code FOR}.
      */
-    // 'FOR' '(' (identifier '=' expression)? ';' expression ';' (identifier '=' expression)? ')' statement* 'END'
+    // "FOR" identifier "IN" expression "DO" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -99,7 +99,7 @@ public final class Parser {
      * should only be called if the next tokens start a while statement, aka
      * {@code WHILE}.
      */
-    // 'WHILE' expression 'DO' statement* 'END'
+    // "WHILE" expression "DO" { statement } "END"
     public Ast.Statement.While parseWhileStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -109,7 +109,7 @@ public final class Parser {
      * should only be called if the next tokens start a return statement, aka
      * {@code RETURN}.
      */
-    // 'RETURN' expression ';'
+    // "RETURN" expression ";"
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -125,8 +125,8 @@ public final class Parser {
     /**
      * Parses the {@code logical-expression} rule.
      */
-    // logical_expression ::=
-    //     comparison_expression (('AND' | 'OR') comparison_expression)*
+    // logical_expression ::= comparison_expression
+    //     { ( "AND" | "OR" ) comparison_expression }
     public Ast.Expression parseLogicalExpression() throws ParseException {
         return parseBinaryExpression(this::parseEqualityExpression, "AND", "&&",  "OR", "||");
     }
@@ -134,8 +134,8 @@ public final class Parser {
     /**
      * Parses the {@code equality-expression} rule.
      */
-    // comparison_expression ::=
-    //      additive_expression (('<' | '<=' | '>' | '>=' | '==' | '!=') additive_expression)*
+    // comparison_expression ::= additive_expression
+    //      { ( "<" | "<=" | ">" | ">=" | "==" | "!=" ) additive_expression }
     public Ast.Expression parseEqualityExpression() throws ParseException {
         return parseBinaryExpression(this::parseAdditiveExpression, "<", "<=", ">", ">=", "==", "!=");
     }
@@ -143,8 +143,8 @@ public final class Parser {
     /**
      * Parses the {@code additive-expression} rule.
      */
-    // additive_expression ::=
-    //      multiplicative_expression (('+' | '-') multiplicative_expression)*
+    // additive_expression ::= multiplicative_expression
+    //      { ( "+" | "-" ) multiplicative_expression }
     public Ast.Expression parseAdditiveExpression() throws ParseException {
         return parseBinaryExpression(this::parseMultiplicativeExpression, "+", "-");
     }
@@ -152,41 +152,17 @@ public final class Parser {
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
-    // multiplicative_expression ::=
-    //      secondary_expression (('*' | '/') secondary_expression)*
+    // multiplicative_expression ::= secondary_expression
+    //      { ( "*" | "/" ) secondary_expression }
     public Ast.Expression parseMultiplicativeExpression() throws ParseException {
         return parseBinaryExpression(this::parseSecondaryExpression, "*", "/");
-    }
-
-    // generic to parse left side
-    private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> leftExpression,
-                                               String... operators) throws ParseException {
-        Ast.Expression left = leftExpression.get();
-
-        while (check(operators)) {
-            String operator = tokens.get(0).getLiteral();
-            match(Token.Type.OPERATOR);
-            Ast.Expression right = leftExpression.get();
-            left = new Ast.Expression.Binary(operator, left, right);
-        }
-        return left;
-    }
-
-    // leverage DeMorgins law
-    private boolean check(String... literals) {
-        for (int i = 0; i < literals.length; i++) {
-            if (peek(literals[i])) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
      * Parses the {@code secondary-expression} rule.
      */
-    // secondary_expression ::=
-    //      primary_expression ('.' identifier ('(' (expression (',' expression)*)? ')')?)*
+    // secondary_expression ::= primary_expression
+    //      { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
     public Ast.Expression parseSecondaryExpression() throws ParseException {
         return parsePrimaryExpression();
     }
@@ -198,18 +174,22 @@ public final class Parser {
      * not strictly necessary.
      */
     // primary_expression ::=
-    //     'NIL' | 'TRUE' | 'FALSE' |
-    //     integer | decimal | character | string |
-    //     '(' expression ')' |
-    //     identifier ('(' (expression (',' expression)*)? ')')?
+    //     "NIL"
+    //     | "TRUE" | "FALSE"
+    //     | integer | decimal
+    //     | character | string
+    //     | "(" expression ")"
+    //     | identifier [ "(" [ expression { "," expression } ] ")" ]
     public Ast.Expression parsePrimaryExpression() throws ParseException {
         Token.Type type = tokens.get(0).getType();
         String literal = tokens.get(0).getLiteral();
 
-        // 'NIL' | 'TRUE' | 'FALSE'
+        // "NIL"
         if (match("NIL")) {
             return new Ast.Expression.Literal(null);
         }
+
+        // "TRUE" | "FALSE"
         if (match("TRUE") || match("FALSE")) {
             if (literal.equals("TRUE")) {
                 return new Ast.Expression.Literal(true);
@@ -217,13 +197,15 @@ public final class Parser {
             return new Ast.Expression.Literal(false);
         }
 
-        // integer | decimal | character | string
+        // integer | decimal
         if (match(Token.Type.INTEGER) || match(Token.Type.DECIMAL)) {
             if (type == Token.Type.INTEGER) {
                 return new Ast.Expression.Literal(new BigInteger(literal));
             }
             return new Ast.Expression.Literal(new BigDecimal(literal));
         }
+
+        // character | string
         if (match(Token.Type.CHARACTER) || match(Token.Type.STRING)) {
             if (type == Token.Type.STRING) {
                 String substring = literal.substring(1, literal.length() - 1);
@@ -237,7 +219,7 @@ public final class Parser {
             return new Ast.Expression.Literal(character);
         }
 
-        // '(' expression ')'
+        // "(" expression ")"
         if (match("(")) {
             Ast.Expression expression = parseExpression();
             if (!match(")")) {
@@ -247,7 +229,7 @@ public final class Parser {
             return new Ast.Expression.Group(expression);
         }
 
-        // identifier ('(' (expression (',' expression)*)? ')')?
+        // identifier [ "(" [ expression { "," expression } ] ")" ]
         if (match(Token.Type.IDENTIFIER)) {
             return new Ast.Expression.Access(Optional.empty(), literal);
 
@@ -260,7 +242,31 @@ public final class Parser {
         // TODO: handle char index instead of -1
     }
 
-    // helper
+    // generic to parse for binary expression
+    private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> leftExpression,
+                                                 String... operators) throws ParseException {
+        Ast.Expression left = leftExpression.get();
+
+        while (check(operators)) {
+            String operator = tokens.get(0).getLiteral();
+            match(Token.Type.OPERATOR);
+            Ast.Expression right = leftExpression.get();
+            left = new Ast.Expression.Binary(operator, left, right);
+        }
+        return left;
+    }
+
+    // dynamic or chain, (A OR B OR ...)
+    private boolean check(String... literals) {
+        for (int i = 0; i < literals.length; i++) {
+            if (peek(literals[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // O(n) find escape characters
     private ArrayList<Integer> findSlashIndices(String string) {
         ArrayList<Integer> indexes = new ArrayList<>();
         for (int i = 0; i < string.length(); i++) {
@@ -272,7 +278,7 @@ public final class Parser {
         return indexes;
     }
 
-    // helper
+    // remove found escape characters
     private String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder(string);
         for (int i = 0; i < indexes.size(); i++) {
