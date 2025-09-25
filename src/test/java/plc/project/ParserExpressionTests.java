@@ -45,6 +45,27 @@ final class ParserExpressionTests {
 
     @ParameterizedTest
     @MethodSource
+    void testExpressionStatementError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseStatement);
+    }
+
+    private static Stream<Arguments> testExpressionStatementError() {
+        return Stream.of(
+            Arguments.of( "Missing ;",
+                Arrays.asList(
+                    // name()
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.OPERATOR, ")", 5)
+                ),
+                "Missing: ;",
+                6
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testAssignmentStatement(String test, List<Token> tokens, Ast.Statement.Assignment expected) {
         test(tokens, expected, Parser::parseStatement);
     }
@@ -145,6 +166,8 @@ final class ParserExpressionTests {
                     new Ast.Expression.Access(Optional.empty(), "expr2")
                 ))
             ),
+            // 4 -
+                // parse expression
             Arguments.of("Grouped Multiple Binary",
                 Arrays.asList(
                     // (expr1 + expr2 + expr3)
@@ -213,14 +236,14 @@ final class ParserExpressionTests {
             ),
             Arguments.of("Multiple Binary And",
                 Arrays.asList(
-                    // expr1 && expr2 && expr3
+                    // expr1 && expr2 AND expr3
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
                     new Token(Token.Type.OPERATOR, "&&", 6),
                     new Token(Token.Type.IDENTIFIER, "expr2", 9),
-                    new Token(Token.Type.OPERATOR, "&&", 15),
+                    new Token(Token.Type.OPERATOR, "AND", 15),
                     new Token(Token.Type.IDENTIFIER, "expr3", 18)
                 ),
-                new Ast.Expression.Binary("&&",
+                new Ast.Expression.Binary("AND",
                     new Ast.Expression.Binary("&&",
                         new Ast.Expression.Access(Optional.empty(), "expr1"),
                         new Ast.Expression.Access(Optional.empty(), "expr2")
@@ -363,5 +386,12 @@ final class ParserExpressionTests {
         } else {
             Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
         }
+    }
+
+    private static <T extends Ast> void testError(List<Token> tokens, String expectedMsg, int expectedIndex, Function<Parser, T> function) {
+        Parser parser = new Parser(tokens);
+        ParseException ex = Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
+        Assertions.assertEquals(expectedMsg, ex.getMessage());
+        Assertions.assertEquals(expectedIndex, ex.getIndex());
     }
 }

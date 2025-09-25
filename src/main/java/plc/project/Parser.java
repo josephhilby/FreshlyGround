@@ -21,7 +21,6 @@ import java.util.function.Supplier;
  * to calling those functions.
  */
 public final class Parser {
-    // TODO: Work on error handling
 
     private final TokenStream tokens;
 
@@ -59,11 +58,11 @@ public final class Parser {
         String identifier = tokens.get(0).getLiteral();
         boolean constant = false;
         Optional<Ast.Expression> expression = Optional.empty();
-        match(Token.Type.IDENTIFIER);
+        typeCheck(Token.Type.IDENTIFIER);
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
-        match(";");
+        keywordCheck(";");
         return new Ast.Field(identifier, constant, expression);
     }
 
@@ -77,20 +76,20 @@ public final class Parser {
         String identifier = tokens.get(0).getLiteral();
         List<String> identifiers = new ArrayList<>();
         List<Ast.Statement> statements = new ArrayList<>();
-        match(Token.Type.IDENTIFIER);
-        match("(");
+        typeCheck(Token.Type.IDENTIFIER);
+        keywordCheck("(");
         if (!match(")")) {
             do {
                 String parameter = tokens.get(0).getLiteral();
                 identifiers.add(parameter);
             } while (match(","));
         }
-        match(")");
-        match("DO");
+        keywordCheck(")");
+        keywordCheck("DO");
         while (!match("END")) {
             statements.add(parseStatement());
         }
-        match("END");
+        keywordCheck("END");
         return new Ast.Method(identifier, identifiers, statements);
     }
 
@@ -116,16 +115,13 @@ public final class Parser {
         if (match("RETURN")) {
             return parseReturnStatement();
         }
-        if (peek(Token.Type.IDENTIFIER)) {
-            Ast.Expression expression = parseExpression();
-            if (match("=")) {
-                return parseAssignmentStatement(expression);
-            }
-            if (match(";")) {
-                return parseExpressionStatement(expression);
-            }
+
+        Ast.Expression expression = parseExpression();
+        if (match("=")) {
+            return parseAssignmentStatement(expression);
         }
-        throw new ParseException("Unrecognized Statement", tokens.get(0).getIndex());
+
+        return parseExpressionStatement(expression);
     }
 
     /**
@@ -142,7 +138,7 @@ public final class Parser {
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
-        match(";");
+        keywordCheck(";");
         return new Ast.Statement.Declaration(identifier, expression);
     }
 
@@ -167,9 +163,10 @@ public final class Parser {
                 return new Ast.Statement.If(expression, thenStatements, elseStatements);
             }
         }
-        while (!match("END")) {
+        while (!peek("END")) {
             elseStatements.add(parseStatement());
         }
+        keywordCheck("END");
         return new Ast.Statement.If(expression, thenStatements, elseStatements);
     }
 
@@ -201,6 +198,7 @@ public final class Parser {
         while (!match("END")) {
             statements.add(parseStatement());
         }
+        keywordCheck("END");
         return new Ast.Statement.While(expression, statements);
     }
 
@@ -212,19 +210,20 @@ public final class Parser {
     // "RETURN" expression ";"
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
         Ast.Expression expression = parseExpression();
+        keywordCheck(";");
         return new Ast.Statement.Return(expression);
     }
 
     // expression "=" expression ";"
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
         Ast.Expression value = parseExpression();
-        match(";");
+        keywordCheck(";");
         return new Ast.Statement.Assignment(receiver, value);
     }
 
     // expression ";"
     public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws ParseException {
-        match(";");
+        keywordCheck(";");
         return new Ast.Statement.Expression(expression);
     }
 
@@ -242,7 +241,7 @@ public final class Parser {
     // logical_expression ::= comparison_expression
     //     { ( "AND" | "OR" ) comparison_expression }
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        return parseBinaryExpression(this::parseEqualityExpression, "AND", "&&",  "OR", "||");
+          return parseBinaryExpression(this::parseEqualityExpression, "AND", "&&",  "OR", "||");
     }
 
     /**
@@ -377,8 +376,7 @@ public final class Parser {
         Ast.Expression left = expression.get();
 
         while (check(operators)) {
-            String operator = tokens.get(0).getLiteral();
-            match(Token.Type.OPERATOR);
+            String operator = tokens.get(-1).getLiteral();
             Ast.Expression right = expression.get();
             left = new Ast.Expression.Binary(operator, left, right);
         }
@@ -388,14 +386,14 @@ public final class Parser {
     // dynamic OR chain, (A || B || ... )
     private boolean check(String... literals) {
         for (int i = 0; i < literals.length; i++) {
-            if (peek(literals[i])) {
+            if (match(literals[i])) {
                 return true;
             }
         }
         return false;
     }
 
-    // O(n) find escape characters
+    // find escape characters locations
     private ArrayList<Integer> findSlashIndices(String string) {
         ArrayList<Integer> indexes = new ArrayList<>();
         for (int i = 0; i < string.length(); i++) {
@@ -407,7 +405,7 @@ public final class Parser {
         return indexes;
     }
 
-    // remove found escape characters
+    // remove found escape characters from locations
     private String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder(string);
         for (int i = indexes.size()-1; i >= 0; i--) {
@@ -438,6 +436,36 @@ public final class Parser {
             }
         }
         return builder.toString();
+    }
+
+    // helper
+    private void error(String message) {
+        throw new ParseException(message, tokenLocation());
+    }
+
+    // helper
+    private int tokenLocation() {
+        return tokens.has(0) ? tokens.get(0).getIndex()
+                : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+    }
+
+    // helper
+    private void keywordCheck(String word) {
+        if (match(word)) {
+            return;
+        }
+        String msg = "Missing: " + word;
+        error(msg);
+    }
+
+    // helper
+    private void typeCheck(Token.Type type) {
+        if (match(type)) {
+            return;
+        }
+        Token.Type actual = tokens.get(0).getType();
+        String msg = "Type Error. Expected: " + actual + ", Got: " + type;
+        error(msg);
     }
 
     /**
