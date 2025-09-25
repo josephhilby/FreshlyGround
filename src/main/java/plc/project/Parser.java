@@ -21,6 +21,7 @@ import java.util.function.Supplier;
  * to calling those functions.
  */
 public final class Parser {
+    // TODO: Work on error handling
 
     private final TokenStream tokens;
 
@@ -158,7 +159,7 @@ public final class Parser {
         List<Ast.Statement> elseStatements = new ArrayList<>();
 
         if (!match("DO")) {
-            throw new ParseException("Unrecognized Statement", -1);
+            throw new ParseException("Unrecognized Statement", tokens.get(0).getIndex());
         }
         while (!match("ELSE")) {
             thenStatements.add(parseStatement());
