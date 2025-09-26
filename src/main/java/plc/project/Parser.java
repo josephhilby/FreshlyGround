@@ -27,6 +27,9 @@ public final class Parser {
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
+    // TODO: On refactor consider
+    //  using overloaded functions to handle optional events ([]),
+    //  iterative helper to handle zero or multiple events
 
     /**
      * Parses the {@code source} rule.
@@ -39,12 +42,12 @@ public final class Parser {
         while (tokens.has(0)) {
             if (match("LET")) {
                 fields.add(parseField());
-            }
-            if (match("DEF")) {
+            } else if (match("DEF")) {
                 methods.add(parseMethod());
+            } else {
+                parseError("Must be a Field (LET) or Method (DEF)");
             }
         }
-
         return new Ast.Source(fields, methods);
     }
 
@@ -54,10 +57,11 @@ public final class Parser {
      */
     // field ::= "LET" identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
-        // TODO: Clean up
+        // TODO: Clean up, add min token check (3 - LET)
         String identifier = tokens.get(0).getLiteral();
         boolean constant = false;
         Optional<Ast.Expression> expression = Optional.empty();
+
         typeCheck(Token.Type.IDENTIFIER);
         if (match("=")) {
             expression = Optional.of(parseExpression());
@@ -72,13 +76,14 @@ public final class Parser {
      */
     // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
     public Ast.Method parseMethod() throws ParseException {
-        // TODO: Clean up
+        // TODO: Clean up, add min token check (6 - DEF)
         String identifier = tokens.get(0).getLiteral();
         List<String> identifiers = new ArrayList<>();
         List<Ast.Statement> statements = new ArrayList<>();
+
         typeCheck(Token.Type.IDENTIFIER);
         keywordCheck("(");
-        if (!match(")")) {
+        if (!peek(")")) {
             do {
                 String parameter = tokens.get(0).getLiteral();
                 identifiers.add(parameter);
@@ -86,7 +91,7 @@ public final class Parser {
         }
         keywordCheck(")");
         keywordCheck("DO");
-        while (!match("END")) {
+        while (!peek("END")) {
             statements.add(parseStatement());
         }
         keywordCheck("END");
@@ -100,6 +105,9 @@ public final class Parser {
      */
     // statement ::= "LET" | "IF" | "FOR" | "WHILE" | "RETURN" | expression [ "=" expression ] ";"
     public Ast.Statement parseStatement() throws ParseException {
+        if (!tokens.has(2)) {
+            parseError("Incomplete statement", 2);
+        }
         if (match("LET")) {
             return parseDeclarationStatement();
         }
@@ -131,10 +139,11 @@ public final class Parser {
      */
     // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        // TODO: Clean up
+        // TODO: Clean up, add min token check (3 - LET)
         String identifier = tokens.get(0).getLiteral();
         Optional<Ast.Expression> expression = Optional.empty();
-        match(Token.Type.IDENTIFIER);
+
+        typeCheck(Token.Type.IDENTIFIER);
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
@@ -149,19 +158,17 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        // TODO: Clean up
+        // TODO: Clean up, add min token check (4 - IF)
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
         List<Ast.Statement> elseStatements = new ArrayList<>();
 
-        if (!match("DO")) {
-            throw new ParseException("Unrecognized Statement", tokens.get(0).getIndex());
-        }
+        keywordCheck("DO");
         while (!match("ELSE")) {
-            thenStatements.add(parseStatement());
             if (match("END")) {
                 return new Ast.Statement.If(expression, thenStatements, elseStatements);
             }
+            thenStatements.add(parseStatement());
         }
         while (!peek("END")) {
             elseStatements.add(parseStatement());
@@ -177,7 +184,7 @@ public final class Parser {
      */
     // "FOR" identifier "IN" expression "DO" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
-        //TODO: Make tests for FOR Statement
+        //TODO: Make tests for FOR Statement, complete func, add min token check (6 - FOR)
         throw new UnsupportedOperationException();
     }
 
@@ -188,14 +195,12 @@ public final class Parser {
      */
     // "WHILE" expression "DO" { statement } "END"
     public Ast.Statement.While parseWhileStatement() throws ParseException {
-        // TODO: Clean up
+        // TODO: Clean up, add min token check (4 - WHILE)
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
 
-        if (!match("DO")) {
-            throw new ParseException("Unrecognized Statement", tokens.get(0).getIndex());
-        }
-        while (!match("END")) {
+        keywordCheck("DO");
+        while (!peek("END")) {
             statements.add(parseStatement());
         }
         keywordCheck("END");
@@ -209,6 +214,7 @@ public final class Parser {
      */
     // "RETURN" expression ";"
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
+        // TODO: Add min token check (3 - RETURN)
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Return(expression);
@@ -216,6 +222,7 @@ public final class Parser {
 
     // expression "=" expression ";"
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
+        // TODO: Add min token check (4 - receiver)
         Ast.Expression value = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Assignment(receiver, value);
@@ -232,6 +239,7 @@ public final class Parser {
      */
     // expression ::= logical_expression
     public Ast.Expression parseExpression() throws ParseException {
+        // TODO: check there is at a minimum an
         return parseLogicalExpression();
     }
 
@@ -278,7 +286,6 @@ public final class Parser {
     //      { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
     public Ast.Expression parseSecondaryExpression() throws ParseException {
         Ast.Expression receiver = parsePrimaryExpression();
-
         while (match(".") && receiver instanceof Ast.Expression.Access) {
             receiver = parsePrimaryExpression(Optional.of(receiver));
         }
@@ -344,9 +351,7 @@ public final class Parser {
         // "(" expression ")"
         if (match("(")) {
             Ast.Expression expression = parseExpression();
-            if (!match(")")) {
-                throw new ParseException("Expected Closing Parenthesis", tokens.get(0).getIndex());
-            }
+            keywordCheck(")");
             return new Ast.Expression.Group(expression);
         }
 
@@ -360,19 +365,19 @@ public final class Parser {
                 do {
                     expressions.add(parseExpression());
                 } while (match(","));
-                if (match(")")) {
-                    return new Ast.Expression.Function(receiver, literal, expressions);
-                }
-                throw new ParseException("Expected Closing Parenthesis", tokens.get(0).getIndex());
+                keywordCheck(")");
+                return new Ast.Expression.Function(receiver, literal, expressions);
             }
             return new Ast.Expression.Access(receiver, literal);
         }
-        throw new ParseException("Invalid Primary Expression", tokens.get(0).getIndex());
+        parseError("Invalid Primary Expression");
+        return null;
     }
 
     // generic to parse for binary expression
     private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> expression,
                                                  String... operators) throws ParseException {
+        // TODO: Add min token check (1)
         Ast.Expression left = expression.get();
 
         while (check(operators)) {
@@ -439,33 +444,40 @@ public final class Parser {
     }
 
     // helper
-    private void error(String message) {
-        throw new ParseException(message, tokenLocation());
+    private void parseError(String message) {
+        parseError(message, 0);
     }
 
     // helper
-    private int tokenLocation() {
-        return tokens.has(0) ? tokens.get(0).getIndex()
-                : tokens.get(-1).getIndex() + tokens.get(-1).getLiteral().length();
+    private void parseError(String message, int tokenOffset) {
+        int index = tokenLocation(tokenOffset);
+        throw new ParseException(message, index);
     }
 
     // helper
-    private void keywordCheck(String word) {
-        if (match(word)) {
-            return;
+    private int tokenLocation(int offset) {
+        int prev =  offset - 1;
+        return tokens.has(offset) ? tokens.get(offset).getIndex()
+                : tokens.get(prev).getIndex() + tokens.get(prev).getLiteral().length();
+    }
+
+    // helper
+    private boolean keywordCheck(String word) {
+        if (!match(word)) {
+            String msg = "Missing: " + word;
+            parseError(msg);
         }
-        String msg = "Missing: " + word;
-        error(msg);
+        return true;
     }
 
     // helper
-    private void typeCheck(Token.Type type) {
-        if (match(type)) {
-            return;
+    private boolean typeCheck(Token.Type type) {
+        if (!match(type)) {
+            Token.Type actual = tokens.get(0).getType();
+            String msg = "Type Error. Expected: " + actual + ", Got: " + type;
+            parseError(msg);
         }
-        Token.Type actual = tokens.get(0).getType();
-        String msg = "Type Error. Expected: " + actual + ", Got: " + type;
-        error(msg);
+        return true;
     }
 
     /**

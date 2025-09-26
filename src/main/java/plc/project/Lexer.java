@@ -50,19 +50,19 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        if (peek("[A-Za-z_]")) {
+        if (match("[A-Za-z_]")) {
             return lexIdentifier();
         }
         if (peek("[0-9]")
                 || (peek("[+-]", "[0-9]")
                 && chars.previous != Token.Type.INTEGER
                 && chars.previous != Token.Type.DECIMAL)) {
-            return lexNumber();
+            return lexNumber(match("[+-]"));
         }
-        if (peek("'")) {
+        if (match("'")) {
             return lexCharacter();
         }
-        if (peek("\"")) {
+        if (match("\"")) {
             return lexString();
         }
         return lexOperator();
@@ -71,14 +71,12 @@ public final class Lexer {
     // identifier ::= [A-Za-z_] [A-Za-z0-9_#x2D]*
     // #x2D is -
     public Token lexIdentifier() {
-        chars.advance();
         while (match("[A-Za-z0-9_-]"));
         return chars.emit(Token.Type.IDENTIFIER);
     }
 
     // number ::= [+#x2D]? [0-9]+ ( '.' [0-9]+ )?
-    public Token lexNumber() {
-        boolean signed = match("[+-]");
+    public Token lexNumber(boolean signed) {
         checkLeadingZeros();
         checkSignedZero(signed);
         while (match("[0-9]"));
@@ -92,50 +90,38 @@ public final class Lexer {
     // helper
     private void checkLeadingZeros() {
         if (peek("0", "[0-9]")) {
-            throw new ParseException(
-                    "No leading zeros",
-                    chars.index
-            );
+            lexError("No leading zeros");
         }
     }
 
     // helper
     private void checkSignedZero(boolean signed) {
         if (signed && match("0") && !peek("\\.", "[0-9]")) {
-            throw new ParseException(
-                    "No signed zero integers",
-                    chars.index
-            );
+            lexError("No signed zero integers");
         }
     }
 
     // character ::= "'" ( [^'\nr] | escape ) "'"
     public Token lexCharacter() {
-        chars.advance();
         matchCharacter();
         match("[^']");
         if (match("'") && chars.length > 2) {
             return chars.emit(Token.Type.CHARACTER);
         }
-        throw new ParseException(
-                "Missing char literal or empty/invalid character",
-                chars.index
-        );
+        lexError("Missing char literal or empty/invalid character");
+        return null;
     }
 
     // string ::= '"' ( [^"\nr] | escape )* '"'
     public Token lexString() {
-        chars.advance();
         do {
             matchCharacter();
         } while (match("[^\"]"));
         if (match("\"")) {
             return chars.emit(Token.Type.STRING);
         }
-        throw new ParseException(
-                "Missing str literal",
-                chars.index
-        );
+        lexError("Missing str literal");
+        return null;
     }
 
     // helper
@@ -143,11 +129,8 @@ public final class Lexer {
         if (match("\\\\")) {
             lexEscape();
         }
-        if (peek("[\n\r]")) {
-            throw new ParseException(
-                    "Unescaped new line or carriage return",
-                    chars.index
-            );
+        if (match("[\n\r]")) {
+            lexError("Unescaped new line or carriage return");
         }
     }
 
@@ -156,10 +139,7 @@ public final class Lexer {
         if (match("[bnrt'\"\\\\]")) {
             return;
         }
-        throw new ParseException(
-                "Invalid escape character",
-                chars.index
-        );
+        lexError("Invalid escape character");
     }
 
     // operator ::= [<>!=] '='? | 'any character'
@@ -167,6 +147,19 @@ public final class Lexer {
         chars.advance();
         match("=");
         return chars.emit(Token.Type.OPERATOR);
+    }
+
+    // helper
+    private void lexError(String message) {
+        lexError(message, chars.index);
+    }
+
+    // helper
+    private void lexError(String message, int index) {
+        throw new ParseException(
+            message,
+            chars.index
+        );
     }
 
     /**

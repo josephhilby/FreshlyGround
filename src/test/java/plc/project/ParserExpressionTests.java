@@ -25,6 +25,7 @@ final class ParserExpressionTests {
         test(tokens, expected, Parser::parseStatement);
     }
 
+    // expression ";"
     private static Stream<Arguments> testExpressionStatement() {
         return Stream.of(
             Arguments.of("Function Expression",
@@ -64,6 +65,7 @@ final class ParserExpressionTests {
         );
     }
 
+    // expression "=" expression ";"
     @ParameterizedTest
     @MethodSource
     void testAssignmentStatement(String test, List<Token> tokens, Ast.Statement.Assignment expected) {
@@ -84,6 +86,36 @@ final class ParserExpressionTests {
                     new Ast.Expression.Access(Optional.empty(), "name"),
                     new Ast.Expression.Access(Optional.empty(), "value")
                 )
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testAssignmentStatementError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseStatement);
+    }
+
+    private static Stream<Arguments> testAssignmentStatementError() {
+        return Stream.of(
+            Arguments.of( "Missing ;",
+                Arrays.asList(
+                    // name = value;
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "=", 5),
+                    new Token(Token.Type.IDENTIFIER, "value", 7)
+                ),
+                "Missing: ;",
+                12
+            ),
+            Arguments.of( "Missing value",
+                Arrays.asList(
+                    // name =
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "=", 5)
+                ),
+                "Incomplete statement",
+                6
             )
         );
     }
@@ -192,7 +224,7 @@ final class ParserExpressionTests {
                     // (expr1 + expr2 + expr3 + expr4)
                     new Token(Token.Type.OPERATOR, "(", 0),
                     new Token(Token.Type.IDENTIFIER, "expr1", 1),
-                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.OPERATOR, "-", 7),
                     new Token(Token.Type.IDENTIFIER, "expr2", 9),
                     new Token(Token.Type.OPERATOR, "+", 15),
                     new Token(Token.Type.IDENTIFIER, "expr3", 17),
@@ -202,7 +234,7 @@ final class ParserExpressionTests {
                 ),
                 new Ast.Expression.Group(new Ast.Expression.Binary("+",
                     new Ast.Expression.Binary("+",
-                        new Ast.Expression.Binary("+",
+                        new Ast.Expression.Binary("-",
                             new Ast.Expression.Access(Optional.empty(), "expr1"),
                             new Ast.Expression.Access(Optional.empty(), "expr2")
                         ),
@@ -210,6 +242,67 @@ final class ParserExpressionTests {
                     ),
                     new Ast.Expression.Access(Optional.empty(), "expr4")
                 ))
+            ),
+            Arguments.of("Grouped Multiple Binary PEMDS",
+                Arrays.asList(
+                    // (expr1 + expr2 + expr3)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "*", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                    new Token(Token.Type.OPERATOR, ")", 22)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                    )
+                ))
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testGroupExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testGroupExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Closing )",
+                Arrays.asList(
+                    // (expr1
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1)
+                ),
+                "Missing: )",
+                6
+            ),
+            Arguments.of("Missing Closing ) Binary",
+                Arrays.asList(
+                    // (expr1 + expr2
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                ),
+                "Missing: )",
+                14
+            ),
+            Arguments.of("Missing Operator Binary",
+                Arrays.asList(
+                    // (expr1 expr2)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 7),
+                    new Token(Token.Type.OPERATOR, ")", 11)
+                ),
+                "Missing: OPERATOR",
+                7
             )
         );
     }
