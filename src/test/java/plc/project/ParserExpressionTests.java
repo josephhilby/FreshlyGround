@@ -40,6 +40,17 @@ final class ParserExpressionTests {
                     Optional.empty(),
                     "name",
                     Arrays.asList()))
+            ),
+            Arguments.of("Variable Expression",
+                Arrays.asList(
+                    // name;
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, ";", 4)
+                ),
+                new Ast.Statement.Expression(new Ast.Expression.Access(
+                    Optional.empty(),
+                    "name")
+                )
             )
         );
     }
@@ -114,7 +125,7 @@ final class ParserExpressionTests {
                     new Token(Token.Type.IDENTIFIER, "name", 0),
                     new Token(Token.Type.OPERATOR, "=", 5)
                 ),
-                "Incomplete statement",
+                "Invalid Length. Remaining: 0 Expected: 1",
                 6
             )
         );
@@ -161,8 +172,8 @@ final class ParserExpressionTests {
                 new Ast.Expression.Literal("Hello,\nWorld!")
             ),
             Arguments.of("Multiple Escape Character",
-                    Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld\\n!\"", 0)),
-                    new Ast.Expression.Literal("Hello,\nWorld\n!")
+                Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld\\n!\"", 0)),
+                new Ast.Expression.Literal("Hello,\nWorld\n!")
             )
         );
     }
@@ -198,8 +209,6 @@ final class ParserExpressionTests {
                     new Ast.Expression.Access(Optional.empty(), "expr2")
                 ))
             ),
-            // 4 -
-                // parse expression
             Arguments.of("Grouped Multiple Binary",
                 Arrays.asList(
                     // (expr1 + expr2 + expr3)
@@ -301,8 +310,18 @@ final class ParserExpressionTests {
                     new Token(Token.Type.IDENTIFIER, "expr2", 7),
                     new Token(Token.Type.OPERATOR, ")", 11)
                 ),
-                "Missing: OPERATOR",
+                "Missing: )",
                 7
+            ),
+            Arguments.of("Wrong Closing Binary",
+                Arrays.asList(
+                    // (expr]
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1),
+                    new Token(Token.Type.OPERATOR, "]", 5)
+                ),
+                "Missing: )",
+                5
             )
         );
     }
@@ -385,6 +404,26 @@ final class ParserExpressionTests {
 
     @ParameterizedTest
     @MethodSource
+    void testBinaryExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testBinaryExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Operand",
+                Arrays.asList(
+                    // expr1 +
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "+", 6)
+                ),
+                "Invalid Length. Remaining: 0 Expected: 1",
+                7
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testAccessExpression(String test, List<Token> tokens, Ast.Expression.Access expected) {
         test(tokens, expected, Parser::parseExpression);
     }
@@ -405,6 +444,35 @@ final class ParserExpressionTests {
                 ),
                 new Ast.Expression.Access(Optional.of(new
                     Ast.Expression.Access(Optional.empty(), "obj")), "field")
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testAccessExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testAccessExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Operand",
+                Arrays.asList(
+                    // obj.5
+                    new Token(Token.Type.IDENTIFIER, "obj", 0),
+                    new Token(Token.Type.OPERATOR, ".", 3),
+                    new Token(Token.Type.INTEGER, "5", 4)
+                ),
+                "Type Error. Expected: IDENTIFIER, Got: INTEGER",
+                4
+            ),
+            Arguments.of("Invalid Expression",
+                Arrays.asList(
+                    // ?
+                    new Token(Token.Type.OPERATOR, "?", 0)
+                ),
+                "Invalid Primary Expression",
+                0
             )
         );
     }
@@ -464,6 +532,31 @@ final class ParserExpressionTests {
                         new Ast.Expression.Access(Optional.empty(), "arg2")
                     )
                 )
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testFunctionExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testFunctionExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Parameters",
+                Arrays.asList(
+                    // name(expr1, expr2, )
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 5),
+                    new Token(Token.Type.OPERATOR, ",", 10),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 12),
+                    new Token(Token.Type.OPERATOR, ",", 17),
+                    new Token(Token.Type.OPERATOR, ")", 19)
+                ),
+                "Invalid Primary Expression",
+                19
             )
         );
     }

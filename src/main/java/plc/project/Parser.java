@@ -105,9 +105,6 @@ public final class Parser {
      */
     // statement ::= "LET" | "IF" | "FOR" | "WHILE" | "RETURN" | expression [ "=" expression ] ";"
     public Ast.Statement parseStatement() throws ParseException {
-        if (!tokens.has(2)) {
-            parseError("Incomplete statement", 2);
-        }
         if (match("LET")) {
             return parseDeclarationStatement();
         }
@@ -222,7 +219,7 @@ public final class Parser {
 
     // expression "=" expression ";"
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
-        // TODO: Add min token check (4 - receiver)
+        // TODO: Add min token check (4 - receiver - '=')
         Ast.Expression value = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Assignment(receiver, value);
@@ -239,7 +236,6 @@ public final class Parser {
      */
     // expression ::= logical_expression
     public Ast.Expression parseExpression() throws ParseException {
-        // TODO: check there is at a minimum an
         return parseLogicalExpression();
     }
 
@@ -249,7 +245,7 @@ public final class Parser {
     // logical_expression ::= comparison_expression
     //     { ( "AND" | "OR" ) comparison_expression }
     public Ast.Expression parseLogicalExpression() throws ParseException {
-          return parseBinaryExpression(this::parseEqualityExpression, "AND", "&&",  "OR", "||");
+        return parseBinaryExpression(this::parseEqualityExpression, "AND", "&&",  "OR", "||");
     }
 
     /**
@@ -286,7 +282,8 @@ public final class Parser {
     //      { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
     public Ast.Expression parseSecondaryExpression() throws ParseException {
         Ast.Expression receiver = parsePrimaryExpression();
-        while (match(".") && receiver instanceof Ast.Expression.Access) {
+        while (match(".")) {
+            typeCheck(Token.Type.IDENTIFIER, false);
             receiver = parsePrimaryExpression(Optional.of(receiver));
         }
         return receiver;
@@ -377,7 +374,7 @@ public final class Parser {
     // generic to parse for binary expression
     private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> expression,
                                                  String... operators) throws ParseException {
-        // TODO: Add min token check (1)
+        remainingCheck(0, 1);
         Ast.Expression left = expression.get();
 
         while (check(operators)) {
@@ -413,10 +410,10 @@ public final class Parser {
     // remove found escape characters from locations
     private String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder(string);
-        for (int i = indexes.size()-1; i >= 0; i--) {
+        for (int i = indexes.size() - 1; i >= 0; i--) {
             int index = indexes.get(i);
-            char c = string.charAt(index+1);
-            builder.deleteCharAt(index+1);
+            char c = string.charAt(index + 1);
+            builder.deleteCharAt(index + 1);
             builder.deleteCharAt(index);
 
             switch (c) {
@@ -472,10 +469,25 @@ public final class Parser {
 
     // helper
     private boolean typeCheck(Token.Type type) {
-        if (!match(type)) {
+        return typeCheck(type, true);
+    }
+
+    private boolean typeCheck(Token.Type type, boolean consume) {
+        if (!peek(type)) {
+            if (consume) {
+               tokens.advance();
+            }
             Token.Type actual = tokens.get(0).getType();
-            String msg = "Type Error. Expected: " + actual + ", Got: " + type;
+            String msg = "Type Error. Expected: " + type + ", Got: " + actual;
             parseError(msg);
+        }
+        return true;
+    }
+
+    // helper
+    private boolean remainingCheck(int remaining, int expected) {
+        if (!tokens.has(remaining)) {
+            parseError("Invalid Length. Remaining: " + remaining + " Expected: " + expected);
         }
         return true;
     }
