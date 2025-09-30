@@ -163,6 +163,14 @@ final class ParserExpressionTests {
                 Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
                 new Ast.Expression.Literal('c')
             ),
+            Arguments.of("Character Escape",
+                Arrays.asList(new Token(Token.Type.CHARACTER, "'\b'", 0)),
+                new Ast.Expression.Literal('\b')
+            ),
+            Arguments.of("Character Escape",
+                Arrays.asList(new Token(Token.Type.CHARACTER, "'\\b'", 0)),
+                new Ast.Expression.Literal('\b')
+            ),
             Arguments.of("String Literal",
                 Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
                 new Ast.Expression.Literal("string")
@@ -170,6 +178,14 @@ final class ParserExpressionTests {
             Arguments.of("Escape Character",
                 Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                 new Ast.Expression.Literal("Hello,\nWorld!")
+            ),
+            Arguments.of("String Escape Single Char",
+                Arrays.asList(new Token(Token.Type.STRING, "\"\b\"", 0)),
+                new Ast.Expression.Literal("\b")
+            ),
+            Arguments.of("String Escape Single Char",
+                Arrays.asList(new Token(Token.Type.STRING, "\"\\b\"", 0)),
+                new Ast.Expression.Literal("\b")
             ),
             Arguments.of("Multiple Escape Character",
                 Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld\\n!\"", 0)),
@@ -346,6 +362,18 @@ final class ParserExpressionTests {
                     new Ast.Expression.Access(Optional.empty(), "expr2")
                 )
             ),
+            Arguments.of("Binary Or",
+                Arrays.asList(
+                    // expr1 || expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "||", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 10)
+                ),
+                new Ast.Expression.Binary("||",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
             Arguments.of("Multiple Binary And",
                 Arrays.asList(
                     // expr1 && expr2 AND expr3
@@ -397,6 +425,28 @@ final class ParserExpressionTests {
                 new Ast.Expression.Binary("*",
                     new Ast.Expression.Access(Optional.empty(), "expr1"),
                     new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
+            Arguments.of("Multiple Binary Logic Comparison",
+                Arrays.asList(
+                    // expr1 == expr2 && expr3 == expr4
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "==", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "&&", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 18),
+                    new Token(Token.Type.OPERATOR, "==", 24),
+                    new Token(Token.Type.IDENTIFIER, "expr4", 27)
+                ),
+                new Ast.Expression.Binary("&&",
+                    new Ast.Expression.Binary("==",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Binary("==",
+                        new Ast.Expression.Access(Optional.empty(), "expr3"),
+                        new Ast.Expression.Access(Optional.empty(), "expr4")
+                    )
                 )
             )
         );

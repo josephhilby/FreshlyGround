@@ -55,11 +55,11 @@ public final class Parser {
      * Parses the {@code field} rule. This method should only be called if the
      * next tokens start a field, aka {@code LET}.
      */
-    // field ::= "LET" identifier [ "=" expression ] ";"
+    // field ::= "LET" [ CONST ] identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
         // TODO: Clean up, add min token check (3 - LET)
-        String identifier = tokens.get(0).getLiteral();
-        boolean constant = false;
+        String identifier = currentToken().getLiteral();
+        boolean constant = match("CONST");
         Optional<Ast.Expression> expression = Optional.empty();
 
         typeCheck(Token.Type.IDENTIFIER);
@@ -77,7 +77,7 @@ public final class Parser {
     // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
     public Ast.Method parseMethod() throws ParseException {
         // TODO: Clean up, add min token check (6 - DEF)
-        String identifier = tokens.get(0).getLiteral();
+        String identifier = currentToken().getLiteral();
         List<String> identifiers = new ArrayList<>();
         List<Ast.Statement> statements = new ArrayList<>();
 
@@ -85,7 +85,7 @@ public final class Parser {
         keywordCheck("(");
         if (!peek(")")) {
             do {
-                String parameter = tokens.get(0).getLiteral();
+                String parameter = currentToken().getLiteral();
                 identifiers.add(parameter);
             } while (match(","));
         }
@@ -137,7 +137,7 @@ public final class Parser {
     // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
         // TODO: Clean up, add min token check (3 - LET)
-        String identifier = tokens.get(0).getLiteral();
+        String identifier = currentToken().getLiteral();
         Optional<Ast.Expression> expression = Optional.empty();
 
         typeCheck(Token.Type.IDENTIFIER);
@@ -307,8 +307,9 @@ public final class Parser {
     }
 
     public Ast.Expression parsePrimaryExpression(Optional<Ast.Expression> receiver) throws ParseException {
-        Token.Type type = tokens.get(0).getType();
-        String literal = tokens.get(0).getLiteral();
+        // TODO: Add min token check (4 - receiver - '=')
+        Token.Type type = currentToken().getType();
+        String literal = currentToken().getLiteral();
 
         // "NIL"
         if (match("NIL")) {
@@ -333,16 +334,15 @@ public final class Parser {
 
         // character | string
         if (match(Token.Type.CHARACTER) || match(Token.Type.STRING)) {
+            String substring = literal.substring(1, literal.length() - 1);
+            ArrayList<Integer> indexes = findSlashIndices(substring);
+            if (!indexes.isEmpty()) {
+                substring = clean(substring, indexes);
+            }
             if (type == Token.Type.STRING) {
-                String substring = literal.substring(1, literal.length() - 1);
-                ArrayList<Integer> indexes = findSlashIndices(substring);
-                if (!indexes.isEmpty()) {
-                    substring = clean(substring, indexes);
-                }
                 return new Ast.Expression.Literal(substring);
             }
-            Character character = literal.charAt(1);
-            return new Ast.Expression.Literal(character);
+            return new Ast.Expression.Literal(substring.charAt(0));
         }
 
         // "(" expression ")"
@@ -459,9 +459,9 @@ public final class Parser {
     }
 
     // helper
-    private boolean keywordCheck(String word) {
-        if (!match(word)) {
-            String msg = "Missing: " + word;
+    private boolean keywordCheck(String keyword) {
+        if (!match(keyword)) {
+            String msg = "Missing: " + keyword;
             parseError(msg);
         }
         return true;
@@ -472,13 +472,13 @@ public final class Parser {
         return typeCheck(type, true);
     }
 
-    private boolean typeCheck(Token.Type type, boolean consume) {
-        if (!peek(type)) {
+    private boolean typeCheck(Token.Type expectation, boolean consume) {
+        if (!peek(expectation)) {
             if (consume) {
                tokens.advance();
             }
-            Token.Type actual = tokens.get(0).getType();
-            String msg = "Type Error. Expected: " + type + ", Got: " + actual;
+            Token.Type actual = currentToken().getType();
+            String msg = "Type Error. Expected: " + expectation + ", Got: " + actual;
             parseError(msg);
         }
         return true;
@@ -490,6 +490,11 @@ public final class Parser {
             parseError("Invalid Length. Remaining: " + remaining + " Expected: " + expected);
         }
         return true;
+    }
+
+    // helper
+    private Token currentToken() {
+        return tokens.get(0);
     }
 
     /**

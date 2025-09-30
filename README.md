@@ -66,7 +66,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >```ebnf
 >source                    ::= { field } { method }
 >
->field                     ::= "LET" identifier [ "=" expression ] ";"
+>field                     ::= "LET" [ CONST ] identifier [ "=" expression ] ";"
 >
 >method                    ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")"
 >                            "DO" { statement } "END"
@@ -128,7 +128,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >
 >```text
 >statement
-> ├─ "LET" identifier [ "=" expression ] ";"
+> ├─ "LET" [ CONST ] identifier [ "=" expression ] ";"
 > │   └─> Ast.Statement.Declaration(name=identifier, value=expression)
 > │
 > ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
@@ -250,7 +250,7 @@ Ast.Source
 └─ fields: [
     Ast.Field
     ├─ name: "x"
-    ├─ constant: true # LET → constant
+    ├─ constant: false
     └─ value: Optional.of(
         Ast.Expression.Literal
         └─ literal: 10
