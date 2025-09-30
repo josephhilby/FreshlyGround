@@ -27,10 +27,6 @@ public final class Parser {
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
-    // TODO: On refactor consider
-    //  using overloaded functions to handle optional events ([]),
-    //  iterative helper to handle zero or multiple events
-
     /**
      * Parses the {@code source} rule.
      */
@@ -57,7 +53,7 @@ public final class Parser {
      */
     // field ::= "LET" [ CONST ] identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
-        // TODO: Clean up, add min token check (3 - LET)
+        // TODO: Clean up
         String identifier = currentToken().getLiteral();
         boolean constant = match("CONST");
         Optional<Ast.Expression> expression = Optional.empty();
@@ -76,7 +72,7 @@ public final class Parser {
      */
     // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
     public Ast.Method parseMethod() throws ParseException {
-        // TODO: Clean up, add min token check (6 - DEF)
+        // TODO: Clean up
         String identifier = currentToken().getLiteral();
         List<String> identifiers = new ArrayList<>();
         List<Ast.Statement> statements = new ArrayList<>();
@@ -136,7 +132,7 @@ public final class Parser {
      */
     // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        // TODO: Clean up, add min token check (3 - LET)
+        // TODO: Clean up
         String identifier = currentToken().getLiteral();
         Optional<Ast.Expression> expression = Optional.empty();
 
@@ -155,7 +151,7 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        // TODO: Clean up, add min token check (4 - IF)
+        // TODO: Clean up
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
         List<Ast.Statement> elseStatements = new ArrayList<>();
@@ -181,7 +177,7 @@ public final class Parser {
      */
     // "FOR" identifier "IN" expression "DO" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
-        //TODO: Make tests for FOR Statement, complete func, add min token check (6 - FOR)
+        //TODO: Make tests for FOR Statement, complete func
         throw new UnsupportedOperationException();
     }
 
@@ -192,7 +188,6 @@ public final class Parser {
      */
     // "WHILE" expression "DO" { statement } "END"
     public Ast.Statement.While parseWhileStatement() throws ParseException {
-        // TODO: Clean up, add min token check (4 - WHILE)
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
 
@@ -211,7 +206,6 @@ public final class Parser {
      */
     // "RETURN" expression ";"
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
-        // TODO: Add min token check (3 - RETURN)
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Return(expression);
@@ -219,7 +213,6 @@ public final class Parser {
 
     // expression "=" expression ";"
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
-        // TODO: Add min token check (4 - receiver - '=')
         Ast.Expression value = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Assignment(receiver, value);
@@ -307,7 +300,6 @@ public final class Parser {
     }
 
     public Ast.Expression parsePrimaryExpression(Optional<Ast.Expression> receiver) throws ParseException {
-        // TODO: Add min token check (4 - receiver - '=')
         Token.Type type = currentToken().getType();
         String literal = currentToken().getLiteral();
 
@@ -374,7 +366,6 @@ public final class Parser {
     // generic to parse for binary expression
     private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> expression,
                                                  String... operators) throws ParseException {
-        remainingCheck(0, 1);
         Ast.Expression left = expression.get();
 
         while (check(operators)) {
@@ -474,14 +465,20 @@ public final class Parser {
 
     private boolean typeCheck(Token.Type expectation, boolean consume) {
         if (!peek(expectation)) {
-            if (consume) {
-               tokens.advance();
-            }
             Token.Type actual = currentToken().getType();
             String msg = "Type Error. Expected: " + expectation + ", Got: " + actual;
             parseError(msg);
         }
+        if (consume) {
+            tokens.advance();
+        }
         return true;
+    }
+
+    // helper
+    private Token currentToken() {
+        remainingCheck(0,1);
+        return tokens.get(0);
     }
 
     // helper
@@ -490,11 +487,6 @@ public final class Parser {
             parseError("Invalid Length. Remaining: " + remaining + " Expected: " + expected);
         }
         return true;
-    }
-
-    // helper
-    private Token currentToken() {
-        return tokens.get(0);
     }
 
     /**

@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+
+
 /**
  * Standard JUnit5 parameterized tests. See the RegexTests file from Homework 1
  * or the LexerTests file from the last project part for more information.
@@ -460,11 +462,20 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testBinaryExpressionError() {
         return Stream.of(
-            Arguments.of("Missing Operand",
+            Arguments.of("Missing Operand Add",
                 Arrays.asList(
                     // expr1 +
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
                     new Token(Token.Type.OPERATOR, "+", 6)
+                ),
+                "Invalid Length. Remaining: 0 Expected: 1",
+                7
+            ),
+            Arguments.of("Missing Operand Mult",
+                Arrays.asList(
+                    // expr1 *
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "*", 6)
                 ),
                 "Invalid Length. Remaining: 0 Expected: 1",
                 7
