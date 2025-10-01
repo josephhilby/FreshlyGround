@@ -238,7 +238,7 @@ public final class Parser {
     // logical_expression ::= comparison_expression
     //     { ( "AND" | "OR" ) comparison_expression }
     public Ast.Expression parseLogicalExpression() throws ParseException {
-        return parseBinaryExpression(this::parseEqualityExpression, "AND", "&&",  "OR", "||");
+        return parseBinaryExpression(this::parseEqualityExpression, "AND",  "OR");
     }
 
     /**

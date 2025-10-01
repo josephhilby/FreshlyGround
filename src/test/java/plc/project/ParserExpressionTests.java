@@ -354,39 +354,39 @@ final class ParserExpressionTests {
         return Stream.of(
             Arguments.of("Binary And",
                 Arrays.asList(
-                    // expr1 && expr2
+                    // expr1 AND expr2
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                    new Token(Token.Type.OPERATOR, "&&", 6),
+                    new Token(Token.Type.IDENTIFIER, "AND", 6),
                     new Token(Token.Type.IDENTIFIER, "expr2", 10)
                 ),
-                new Ast.Expression.Binary("&&",
+                new Ast.Expression.Binary("AND",
                     new Ast.Expression.Access(Optional.empty(), "expr1"),
                     new Ast.Expression.Access(Optional.empty(), "expr2")
                 )
             ),
             Arguments.of("Binary Or",
                 Arrays.asList(
-                    // expr1 || expr2
+                    // expr1 OR expr2
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                    new Token(Token.Type.OPERATOR, "||", 6),
+                    new Token(Token.Type.IDENTIFIER, "OR", 6),
                     new Token(Token.Type.IDENTIFIER, "expr2", 10)
                 ),
-                new Ast.Expression.Binary("||",
+                new Ast.Expression.Binary("OR",
                     new Ast.Expression.Access(Optional.empty(), "expr1"),
                     new Ast.Expression.Access(Optional.empty(), "expr2")
                 )
             ),
             Arguments.of("Multiple Binary And",
                 Arrays.asList(
-                    // expr1 && expr2 AND expr3
+                    // expr1 AND expr2 OR expr3
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                    new Token(Token.Type.OPERATOR, "&&", 6),
+                    new Token(Token.Type.IDENTIFIER, "AND", 6),
                     new Token(Token.Type.IDENTIFIER, "expr2", 9),
-                    new Token(Token.Type.OPERATOR, "AND", 15),
+                    new Token(Token.Type.IDENTIFIER, "OR", 15),
                     new Token(Token.Type.IDENTIFIER, "expr3", 18)
                 ),
-                new Ast.Expression.Binary("AND",
-                    new Ast.Expression.Binary("&&",
+                new Ast.Expression.Binary("OR",
+                    new Ast.Expression.Binary("AND",
                         new Ast.Expression.Access(Optional.empty(), "expr1"),
                         new Ast.Expression.Access(Optional.empty(), "expr2")
                     ),
@@ -431,16 +431,16 @@ final class ParserExpressionTests {
             ),
             Arguments.of("Multiple Binary Logic Comparison",
                 Arrays.asList(
-                    // expr1 == expr2 && expr3 == expr4
+                    // expr1 == expr2 AND expr3 == expr4
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
                     new Token(Token.Type.OPERATOR, "==", 6),
                     new Token(Token.Type.IDENTIFIER, "expr2", 9),
-                    new Token(Token.Type.OPERATOR, "&&", 15),
+                    new Token(Token.Type.IDENTIFIER, "AND", 15),
                     new Token(Token.Type.IDENTIFIER, "expr3", 18),
                     new Token(Token.Type.OPERATOR, "==", 24),
                     new Token(Token.Type.IDENTIFIER, "expr4", 27)
                 ),
-                new Ast.Expression.Binary("&&",
+                new Ast.Expression.Binary("AND",
                     new Ast.Expression.Binary("==",
                         new Ast.Expression.Access(Optional.empty(), "expr1"),
                         new Ast.Expression.Access(Optional.empty(), "expr2")

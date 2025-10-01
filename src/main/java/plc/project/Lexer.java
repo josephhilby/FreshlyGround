@@ -143,11 +143,8 @@ public final class Lexer {
     }
 
     // operator ::= [<>!=] '='? | 'any character'
-    // added && and ||
     public Token lexOperator() {
         if (match("[<>!=]", "=")) {
-        } else if (match("&", "&")) {
-        } else if (match("\\|", "\\|")) {
         } else {
             chars.advance();
         }
