@@ -471,6 +471,15 @@ final class ParserExpressionTests {
                 "Invalid Length. Remaining: 0 Expected: 1",
                 7
             ),
+            Arguments.of("Missing Operand Logical",
+                Arrays.asList(
+                    // expr1 AND
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.IDENTIFIER, "AND", 6)
+                ),
+                "Invalid Length. Remaining: 0 Expected: 1",
+                9
+            ),
             Arguments.of("Missing Operand Mult",
                 Arrays.asList(
                     // expr1 *
