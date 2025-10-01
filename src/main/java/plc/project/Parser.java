@@ -175,10 +175,28 @@ public final class Parser {
      * should only be called if the next tokens start a for statement, aka
      * {@code FOR}.
      */
-    // "FOR" identifier "IN" expression "DO" { statement } "END"
+    // "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
-        //TODO: Make tests for FOR Statement, complete func
-        throw new UnsupportedOperationException();
+        // TODO: Clean up
+        keywordCheck("(");
+        Ast.Statement initialization = null;
+        if (typeCheck(Token.Type.IDENTIFIER, false)) {
+            initialization = parseStatement();
+        }
+        keywordCheck(";");
+        Ast.Expression expression = parseExpression();
+        keywordCheck(";");
+        Ast.Statement increment = null;
+        if (typeCheck(Token.Type.IDENTIFIER, false)) {
+            increment = parseStatement();
+        }
+        List<Ast.Statement> statements = new ArrayList<>();
+        keywordCheck(")");
+        while (!match("END")) {
+            statements.add(parseStatement());
+        }
+        keywordCheck("END");
+        return new Ast.Statement.For(initialization, expression, increment, statements);
     }
 
     /**

@@ -65,6 +65,54 @@ final class ParserTests {
                                 )))
                         )
                 ),
+                Arguments.of("Field Method",
+                    Arrays.asList(
+                        // LET name = expr;␊DEF name() DO stmt; END
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "name", 4),
+                        new Token(Token.Type.OPERATOR, "=", 9),
+                        new Token(Token.Type.IDENTIFIER, "expr", 11),
+                        new Token(Token.Type.OPERATOR, ";", 15),
+                        new Token(Token.Type.IDENTIFIER, "DEF", 16),
+                        new Token(Token.Type.IDENTIFIER, "name", 20),
+                        new Token(Token.Type.OPERATOR, "(", 24),
+                        new Token(Token.Type.OPERATOR, ")", 25),
+                        new Token(Token.Type.IDENTIFIER, "DO", 27),
+                        new Token(Token.Type.IDENTIFIER, "stmt", 30),
+                        new Token(Token.Type.OPERATOR, ";", 34),
+                        new Token(Token.Type.IDENTIFIER, "END", 36)
+                    ),
+                    new Ast.Source(
+                        Arrays.asList(new Ast.Field("name", false, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
+                        Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(
+                            new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                        )))
+                    )
+                ),
+                Arguments.of("Method Field",
+                    Arrays.asList(
+                        // DEF name() DO stmt; END␊LET name = expr;
+                        new Token(Token.Type.IDENTIFIER, "DEF", 0),
+                        new Token(Token.Type.IDENTIFIER, "name", 4),
+                        new Token(Token.Type.OPERATOR, "(", 8),
+                        new Token(Token.Type.OPERATOR, ")", 9),
+                        new Token(Token.Type.IDENTIFIER, "DO", 11),
+                        new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                        new Token(Token.Type.OPERATOR, ";", 18),
+                        new Token(Token.Type.IDENTIFIER, "END", 20),
+                        new Token(Token.Type.IDENTIFIER, "LET", 23),
+                        new Token(Token.Type.IDENTIFIER, "name", 27),
+                        new Token(Token.Type.OPERATOR, "=", 32),
+                        new Token(Token.Type.IDENTIFIER, "expr", 34),
+                        new Token(Token.Type.OPERATOR, ";", 38)
+                    ),
+                    new Ast.Source(
+                        Arrays.asList(new Ast.Field("name", false, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
+                        Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(
+                            new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                        )))
+                    )
+                ),
                 Arguments.of("Large Code Snippet",
                         ParserTestData.input,
                         ParserTestData.expected
@@ -320,12 +368,12 @@ final class ParserTests {
         return Stream.of(
                 Arguments.of("Binary And",
                         Arrays.asList(
-                                // expr1 && expr2
+                                // expr1 AND expr2
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
-                                new Token(Token.Type.OPERATOR, "&&", 6),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6),
                                 new Token(Token.Type.IDENTIFIER, "expr2", 10)
                         ),
-                        new Ast.Expression.Binary("&&",
+                        new Ast.Expression.Binary("AND",
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         )

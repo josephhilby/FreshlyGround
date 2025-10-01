@@ -75,7 +75,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >```ebnf
 >statement                 ::= "LET" identifier [ "=" expression ] ";"
 >                            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
->                            | "FOR" identifier "IN" expression "DO" { statement } "END"
+>                            | "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
 >                            | "WHILE" expression "DO" { statement } "END"
 >                            | "RETURN" expression ";"
 >                            | expression [ "=" expression ] ";"
