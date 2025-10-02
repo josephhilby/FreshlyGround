@@ -181,21 +181,20 @@ public final class Parser {
         keywordCheck("(");
         Ast.Statement initialization = null;
         if (typeCheck(Token.Type.IDENTIFIER, false)) {
-            initialization = parseStatement();
+            initialization = parseLoopStatement();
         }
         keywordCheck(";");
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
         Ast.Statement increment = null;
         if (typeCheck(Token.Type.IDENTIFIER, false)) {
-            increment = parseStatement();
+            increment = parseLoopStatement();
         }
-        List<Ast.Statement> statements = new ArrayList<>();
         keywordCheck(")");
+        List<Ast.Statement> statements = new ArrayList<>();
         while (!match("END")) {
             statements.add(parseStatement());
         }
-        keywordCheck("END");
         return new Ast.Statement.For(initialization, expression, increment, statements);
     }
 
@@ -240,6 +239,14 @@ public final class Parser {
     public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws ParseException {
         keywordCheck(";");
         return new Ast.Statement.Expression(expression);
+    }
+
+    // identifier "=" expression
+    private Ast.Statement.Assignment parseLoopStatement() throws ParseException {
+        Ast.Expression receiver = parseExpression();
+        keywordCheck("=");
+        Ast.Expression value = parseExpression();
+        return new Ast.Statement.Assignment(receiver, value);
     }
 
     /**

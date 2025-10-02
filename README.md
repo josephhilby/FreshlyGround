@@ -44,13 +44,16 @@ the rules below. These tokens will then act
 
 ```regexp 
 identifier := [A-Za-z_] [A-Za-z0-9_-]*
-operator   := [<>!=] '='? | 'any character'
+operator   := [<>!=] =? | 'any character'
 
-integer    := [+-]?[0-9]+
-decimal    := [+-]?[0-9]+\.[0-9]+
-character  := ['] ([^'\\]) [']
-string     := ["] ([^"\n\r\\])* ["]
+integer    := 0 | [+-]? [1-9] [0-9]*
+decimal    := [+-]? [0-9]+ \. [0-9]+
+character  := ^' ([^'\n\r\\] | 'escape') '$
+string     := ^" ([^"\n\r\\] | 'escape')* "$
+escape     := ^\\ [bnrt'"\\]$
 ```
+**Note:**
+Extra spaces and placeholder words ('escape', 'any character'), were added for clarity. To use these as regex patterns they will need to be removed.
 
 ### Syntax Map
 *CFG* = (*Σ*, *N*, *P*, *S*), where:
