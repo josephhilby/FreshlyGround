@@ -35,15 +35,18 @@ public final class Parser {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
 
-        while (tokens.has(0)) {
-            if (match("LET")) {
-                fields.add(parseField());
-            } else if (match("DEF")) {
-                methods.add(parseMethod());
-            } else {
-                parseError("Must be a Field (LET) or Method (DEF)");
-            }
+        while (match("LET")) {
+            fields.add(parseField());
         }
+
+        while (match("DEF")) {
+            methods.add(parseMethod());
+        }
+
+        if (tokens.has(0)) {
+            parseError("Must have all LET statements before DEF");
+        }
+
         return new Ast.Source(fields, methods);
     }
 

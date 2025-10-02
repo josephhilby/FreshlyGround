@@ -42,7 +42,9 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ";", 15)
                 ),
                 new Ast.Source(
-                    Arrays.asList(new Ast.Field("name", false, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
+                    Arrays.asList(new Ast.Field("name", false, Optional.of(
+                        new Ast.Expression.Access(Optional.empty(), "expr")
+                    ))),
                     Arrays.asList()
                 )
             ),
@@ -83,12 +85,29 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "END", 36)
                 ),
                 new Ast.Source(
-                    Arrays.asList(new Ast.Field("name", false, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
+                    Arrays.asList(new Ast.Field("name", false, Optional.of(
+                        new Ast.Expression.Access(Optional.empty(), "expr")
+                    ))),
                     Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(
                         new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
                     )))
                 )
             ),
+            Arguments.of("Large Code Snippet",
+                ParserTestData.input,
+                ParserTestData.expected
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testSourceError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseSource);
+    }
+
+    private static Stream<Arguments> testSourceError() {
+        return Stream.of(
             Arguments.of("Method Field",
                 Arrays.asList(
                     // DEF name() DO stmt; END␊LET name = expr;
@@ -106,16 +125,8 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr", 34),
                     new Token(Token.Type.OPERATOR, ";", 38)
                 ),
-                new Ast.Source(
-                    Arrays.asList(new Ast.Field("name", false, Optional.of(new Ast.Expression.Access(Optional.empty(), "expr")))),
-                    Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(
-                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
-                    )))
-                )
-            ),
-            Arguments.of("Large Code Snippet",
-                ParserTestData.input,
-                ParserTestData.expected
+                "Must have all LET statements before DEF",
+                23
             )
         );
     }
