@@ -269,7 +269,6 @@ final class ParserTests {
         );
     }
 
-
     @ParameterizedTest
     @MethodSource
     void testIfStatement(String test, List<Token> tokens, Ast.Statement.If expected) {
@@ -335,6 +334,16 @@ final class ParserTests {
                 ),
                 "Missing: DO",
                 8
+            ),
+            Arguments.of("Invalid DO",
+                Arrays.asList(
+                    // IF expr THEN
+                    new Token(Token.Type.IDENTIFIER, "IF", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 3),
+                    new Token(Token.Type.IDENTIFIER, "THEN", 8)
+                ),
+                "Missing: DO",
+                8
             )
         );
     }
@@ -347,7 +356,7 @@ final class ParserTests {
 
     private static Stream<Arguments> testForStatement() {
         return Stream.of(
-            Arguments.of("For",
+            Arguments.of("For Loop",
                 Arrays.asList(
                     // FOR (id = expr1; expr2; id = expr3) stmt1; END
                     new Token(Token.Type.IDENTIFIER, "FOR", 0),
@@ -386,6 +395,38 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
+    void testForStatementError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseStatement);
+    }
+
+    private static Stream<Arguments> testForStatementError() {
+        return Stream.of(
+            Arguments.of("Missing END",
+                Arrays.asList(
+                    // FOR (id = expr1; expr2; id = expr3) stmt1;
+                    new Token(Token.Type.IDENTIFIER, "FOR", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.IDENTIFIER, "id", 5),
+                    new Token(Token.Type.OPERATOR, "=", 8),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 10),
+                    new Token(Token.Type.OPERATOR, ";", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 17),
+                    new Token(Token.Type.OPERATOR, ";", 22),
+                    new Token(Token.Type.IDENTIFIER, "id", 24),
+                    new Token(Token.Type.OPERATOR, "=", 27),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 29),
+                    new Token(Token.Type.OPERATOR, ")", 34),
+                    new Token(Token.Type.IDENTIFIER, "stmt1", 36),
+                    new Token(Token.Type.OPERATOR, ";", 41)
+                ),
+                "Invalid Length. Remaining: 0 Expected: 1",
+                42
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testWhileStatement(String test, List<Token> tokens, Ast.Statement.While expected) {
         test(tokens, expected, Parser::parseStatement);
     }
@@ -412,6 +453,29 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
+    void testWhileStatementError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseStatement);
+    }
+
+    private static Stream<Arguments> testWhileStatementError() {
+        return Stream.of(
+            Arguments.of("Missing END",
+                Arrays.asList(
+                    // WHILE expr DO stmt;
+                    new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 6),
+                    new Token(Token.Type.IDENTIFIER, "DO", 11),
+                    new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                    new Token(Token.Type.OPERATOR, ";", 18)
+                ),
+                "Invalid Length. Remaining: 0 Expected: 1",
+                19
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testReturnStatement(String test, List<Token> tokens, Ast.Statement.Return expected) {
         test(tokens, expected, Parser::parseStatement);
     }
@@ -432,6 +496,26 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
+    void testReturnStatementError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseStatement);
+    }
+
+    private static Stream<Arguments> testReturnStatementError() {
+        return Stream.of(
+            Arguments.of("Missing value",
+                Arrays.asList(
+                    // RETURN;
+                    new Token(Token.Type.IDENTIFIER, "RETURN", 0),
+                    new Token(Token.Type.OPERATOR, ";", 6)
+                ),
+                "Invalid Primary Expression",
+                6
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testLiteralExpression(String test, List<Token> tokens, Ast.Expression.Literal expected) {
         test(tokens, expected, Parser::parseExpression);
     }
@@ -441,6 +525,10 @@ final class ParserTests {
             Arguments.of("Boolean Literal",
                 Arrays.asList(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
                 new Ast.Expression.Literal(Boolean.TRUE)
+            ),
+            Arguments.of("Nil Literal",
+                Arrays.asList(new Token(Token.Type.IDENTIFIER, "NIL", 0)),
+                new Ast.Expression.Literal(null)
             ),
             Arguments.of("Integer Literal",
                 Arrays.asList(new Token(Token.Type.INTEGER, "1", 0)),
@@ -501,6 +589,36 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
+    void testGroupExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testGroupExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing )",
+                Arrays.asList(
+                    // (expr
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1)
+                ),
+                "Missing: )",
+                5
+            ),
+            Arguments.of("Wrong ]",
+                Arrays.asList(
+                    // (expr]
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1),
+                    new Token(Token.Type.OPERATOR, "]", 5)
+                ),
+                "Missing: )",
+                5
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testBinaryExpression(String test, List<Token> tokens, Ast.Expression.Binary expected) {
         test(tokens, expected, Parser::parseExpression);
     }
@@ -554,6 +672,94 @@ final class ParserTests {
                     new Ast.Expression.Access(Optional.empty(), "expr1"),
                     new Ast.Expression.Access(Optional.empty(), "expr2")
                 )
+            ),
+            Arguments.of("Binary Multiple +/*",
+                Arrays.asList(
+                    // expr1 + expr2 * expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "+", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "*", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                    )
+                )
+            ),
+            Arguments.of("Binary Multiple +/* Rev",
+                Arrays.asList(
+                    // expr1 * expr2 + expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "*", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "+", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            ),
+            Arguments.of("Binary Multiple AND OR",
+                Arrays.asList(
+                    // expr1 * expr2 + expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "AND", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "OR", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("OR",
+                    new Ast.Expression.Binary("AND",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            ),
+            Arguments.of("Binary Multiple == !=",
+                Arrays.asList(
+                    // expr1 * expr2 + expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "==", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "!=", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("!=",
+                    new Ast.Expression.Binary("==",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testBinaryExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testBinaryExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Operand",
+                Arrays.asList(
+                    // expr -
+                    new Token(Token.Type.IDENTIFIER, "expr", 0),
+                    new Token(Token.Type.OPERATOR, "-", 5)
+                ),
+                "Invalid Length. Remaining: 0 Expected: 1",
+                6
             )
         );
     }
@@ -628,6 +834,29 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ")", 11)
                 ),
                 new Ast.Expression.Function(Optional.of(new Ast.Expression.Access(Optional.empty(), "obj")), "method", Arrays.asList())
+            )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testFunctionExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testError(tokens, expectedMessage, expectedIndex, Parser::parseExpression);
+    }
+
+    private static Stream<Arguments> testFunctionExpressionError() {
+        return Stream.of(
+            Arguments.of("Trailing Comma",
+                Arrays.asList(
+                    // name(expr,)
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.IDENTIFIER, "expr", 5),
+                    new Token(Token.Type.OPERATOR, ",", 9),
+                    new Token(Token.Type.IDENTIFIER, ")", 10)
+                ),
+                "Missing: )",
+                11
             )
         );
     }

@@ -151,7 +151,7 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        // TODO: Clean up
+        // TODO: Clean up; while not END, check END ptrn is redundant, loop will go till END or actual end, no need for keyword check
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
         List<Ast.Statement> elseStatements = new ArrayList<>();
@@ -192,9 +192,10 @@ public final class Parser {
         }
         keywordCheck(")");
         List<Ast.Statement> statements = new ArrayList<>();
-        while (!match("END")) {
+        while (!peek("END")) {
             statements.add(parseStatement());
         }
+        keywordCheck("END");
         return new Ast.Statement.For(initialization, expression, increment, statements);
     }
 
