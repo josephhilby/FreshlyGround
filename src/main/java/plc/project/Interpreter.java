@@ -97,11 +97,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // otherwise return variable in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        if (ast.getReceiver().isPresent()) {
-            Ast.Expression receiver = ast.getReceiver().get();
-            return Environment.create(receiver);
+        if (ast.getReceiver().isEmpty()) {
+            return scope.lookupVariable(ast.getName()).getValue();
         }
-        return Environment.create(ast.getName());
+        Environment.PlcObject receiver = visit(ast.getReceiver().get());
+        return receiver.getField(ast.getName()).getValue();
     }
 
     @Override

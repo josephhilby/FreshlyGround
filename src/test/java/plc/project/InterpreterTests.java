@@ -348,9 +348,11 @@ final class InterpreterTests {
     void testAccessExpression(String test, Ast ast, Object expected) {
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
+
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
+
         test(ast, expected, scope);
     }
 
