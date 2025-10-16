@@ -37,7 +37,7 @@ It enables a top-down (recursive-descent) parser that runs in linear time. The p
 
 - Source Code → `Lexer.java` → Array of Tokens
 - Array of Tokens → `Parser.java` → Abstract Syntax Tree (AST)
-- AST → `Interpreter.java` → 
+- AST → `Interpreter.java` → Singular Object (PlcObject)
 
 ### Lexical Tokens
 At the start of the pipeline is the lexer. This will take a source code file and lex it into an array of tokens following 

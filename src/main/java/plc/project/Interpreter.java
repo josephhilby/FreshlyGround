@@ -38,7 +38,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getValue().isPresent()) {
+            scope.defineVariable(ast.getName(), false, visit(ast.getValue().get()));
+        } else {
+            scope.defineVariable(ast.getName(), false, Environment.NIL);
+        }
+
+        return Environment.NIL;
     }
 
     @Override
@@ -66,9 +72,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Ast.Expression.Literal(literal=Object | null)
+    // Returns the literal value
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getLiteral() != null) {
+            return Environment.create(ast.getLiteral());
+        }
+        return Environment.NIL;
     }
 
     @Override
@@ -81,9 +92,16 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Ast.Expression.Access(receiver=Ast.Expression | Optional.empty, name=string)
+    // has a receiver, evaluate and return
+    // otherwise return variable in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getReceiver().isPresent()) {
+            Ast.Expression receiver = ast.getReceiver().get();
+            return Environment.create(receiver);
+        }
+        return Environment.create(ast.getName());
     }
 
     @Override
