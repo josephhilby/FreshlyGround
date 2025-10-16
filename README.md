@@ -37,6 +37,7 @@ It enables a top-down (recursive-descent) parser that runs in linear time. The p
 
 - Source Code → `Lexer.java` → Array of Tokens
 - Array of Tokens → `Parser.java` → Abstract Syntax Tree (AST)
+- AST → `Interpreter.java` → 
 
 ### Lexical Tokens
 At the start of the pipeline is the lexer. This will take a source code file and lex it into an array of tokens following 
@@ -221,7 +222,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 LET x = 10;
 ```
 In this example source code, as with all source code in this language, the entry point will be `source`. This will then
-match the pattern `"LET" identifier "=" expression ";"`, where the `identifier` will map to `x`, and the `expression`
+match the `field` pattern `"LET" identifier "=" expression ";"`, where the `identifier` will map to `x`, and the `expression`
 will follow the recursive chain: 
 
 > `expression` → `logical_expression` → `comparison_expression` → `additive_expression` → `multiplicative_expression` 
@@ -284,7 +285,8 @@ DEF main() DO
     print("Hello", 42);
 END
 ```
-Again, start at `source`...
+Again, start at `source`, however this time the `method` pattern will be matched. As before the tokens will match to their respective
+parts, and the AST will be constructed.
 
 ```yaml
 Ast.Source
