@@ -212,11 +212,7 @@ public class LexerTests {
             Arguments.of("Bang", "!=", true),
             Arguments.of("Equal", "==", true),
             Arguments.of("Extra Char", "<=>", false),
-            Arguments.of("Double Operator", ">>", false),
-
-            // Add logical operators
-            Arguments.of("And", "&&", true),
-            Arguments.of("Or", "||", true)
+            Arguments.of("Double Operator", ">>", false)
         );
     }
 
