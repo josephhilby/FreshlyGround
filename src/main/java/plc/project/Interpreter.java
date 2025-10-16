@@ -2,6 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
@@ -102,22 +103,32 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         // pre-order traversal
         String operator = ast.getOperator();
         Environment.PlcObject left = visit(ast.getLeft());
+
+        Object lv = left.getValue();
+        if (operator.equals("OR") && Boolean.parseBoolean(lv.toString())) {
+            return Environment.create(true);
+        }
+
         Environment.PlcObject right = visit(ast.getRight());
 
-        // handle type mismatch and get initial value for right
-        Object rv = requireType(left.getValue().getClass(), right);
+        // handle type mismatch and get initial values
+        Object rv = requireType(lv.getClass(), right);
 
-        // switch
+        // switchcase for datatype
         Environment.PlcObject result = Environment.NIL;
-        switch (rv) {
+        switch (lv) {
             case BigInteger i:
-                BigInteger li = BigInteger.class.cast(left.getValue());
-                BigInteger ri = BigInteger.class.cast(rv);
-                result = handleNum(li, ri,  operator);
+                result = handleInt(lv, rv,  operator);
+                break;
             case BigDecimal d:
-                BigDecimal ld = BigDecimal.class.cast(left.getValue());
-                BigDecimal rd = BigDecimal.class.cast(rv);
-                result = handleNum(ld, rd, operator);
+                result = handleDec(lv, rv, operator);
+                break;
+            case String s:
+                result = handleStr(lv, rv, operator);
+                break;
+            case Boolean b:
+                result = handleBool(lv, rv, operator);
+                break;
             default:
                 break;
         }
@@ -125,19 +136,96 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     // helper
-    private Environment.PlcObject handleNum(BigInteger left, BigInteger right, String operator) {
+    private Environment.PlcObject handleBool(Object lv, Object rv, String operator) {
+        Boolean l = Boolean.parseBoolean(lv.toString());
+        Boolean r = Boolean.parseBoolean(rv.toString());
+
+        switch (operator) {
+            case "AND":
+                return Environment.create(l && r);
+            case "OR":
+                return Environment.create(l || r);
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    // helper
+    private Environment.PlcObject handleStr(Object lv, Object rv, String operator) {
+        String str = lv.toString();
+        String str2 = rv.toString();
+
         switch (operator) {
             case "+":
-                return Environment.create(left.add(right));
+                return Environment.create(str + str2);
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    // helper
+    private Environment.PlcObject handleInt(Object left, Object right, String operator) {
+        BigInteger l = (BigInteger) left;
+        BigInteger r = (BigInteger) right;
+
+        switch (operator) {
+            case "+":
+                return Environment.create(l.add(r));
             case "-":
-                return Environment.create(left.subtract(right));
+                return Environment.create(l.subtract(r));
             case "*":
-                return Environment.create(left.multiply(right));
+                return Environment.create(l.multiply(r));
             case "/":
-                if (right.compareTo(BigInteger.ZERO) == 0) {
-                    throw new ArithmeticException("Division by zero");
+                if (l.compareTo(BigInteger.ZERO) == 0) {
+                    throw new ArithmeticException("Cannot divide by zero");
                 }
-                return Environment.create(left.divide(right));
+                return Environment.create(l.divide(r));
+            case "==":
+                return Environment.create(l.compareTo(r) == 0);
+            case "!=":
+                return Environment.create(l.compareTo(r) != 0);
+            case ">=":
+                return Environment.create(l.compareTo(r) >= 0);
+            case "<=":
+                return Environment.create(l.compareTo(r) <= 0);
+            case ">":
+                return Environment.create(l.compareTo(r) > 0);
+            case "<":
+                return Environment.create(l.compareTo(r) < 0);
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    // helper
+    private Environment.PlcObject handleDec(Object left, Object right, String operator) {
+        BigDecimal l = (BigDecimal) left;
+        BigDecimal r = (BigDecimal) right;
+
+        switch (operator) {
+            case "+":
+                return Environment.create(l.add(r));
+            case "-":
+                return Environment.create(l.subtract(r));
+            case "*":
+                return Environment.create(l.multiply(r));
+            case "/":
+                if (l.compareTo(BigDecimal.ZERO) == 0) {
+                    throw new ArithmeticException("Cannot divide by zero");
+                }
+                return Environment.create(l.divide(r, RoundingMode.HALF_EVEN));
+            case "==":
+                return Environment.create(l.compareTo(r) == 0);
+            case "!=":
+                return Environment.create(l.compareTo(r) != 0);
+            case ">=":
+                return Environment.create(l.compareTo(r) >= 0);
+            case "<=":
+                return Environment.create(l.compareTo(r) <= 0);
+            case ">":
+                return Environment.create(l.compareTo(r) > 0);
+            case "<":
+                return Environment.create(l.compareTo(r) < 0);
             default:
                 throw new UnsupportedOperationException();
         }
