@@ -197,22 +197,26 @@ public class LexerTests {
 
     private static Stream<Arguments> testOperator() {
         return Stream.of(
-                // Any other single character, excluding whitespace
-                Arguments.of("Character", "(", true),
-                Arguments.of("Unicode Character", "★", true),
-                Arguments.of("Symbol", "$", true),
-                Arguments.of("Plus", "+", true),
-                Arguments.of("Literal", "'", false),
-                Arguments.of("Space", " ", false),
-                Arguments.of("Tab", "\t", false),
-                Arguments.of("Formfeed", "\f", true),
+            // Any other single character, excluding whitespace
+            Arguments.of("Character", "(", true),
+            Arguments.of("Unicode Character", "★", true),
+            Arguments.of("Symbol", "$", true),
+            Arguments.of("Plus", "+", true),
+            Arguments.of("Literal", "'", false),
+            Arguments.of("Space", " ", false),
+            Arguments.of("Tab", "\t", false),
+            Arguments.of("Formfeed", "\f", true),
 
-                // Comparison (<=, >=, !=, ==) operators are special cases
-                Arguments.of("Comparison", "<=", true),
-                Arguments.of("Bang", "!=", true),
-                Arguments.of("Equal", "==", true),
-                Arguments.of("Extra Char", "<=>", false),
-                Arguments.of("Double Operator", ">>", false)
+            // Comparison (<=, >=, !=, ==) operators are special cases
+            Arguments.of("Comparison", "<=", true),
+            Arguments.of("Bang", "!=", true),
+            Arguments.of("Equal", "==", true),
+            Arguments.of("Extra Char", "<=>", false),
+            Arguments.of("Double Operator", ">>", false),
+
+            // Add logical operators
+            Arguments.of("And", "&&", true),
+            Arguments.of("Or", "||", true)
         );
     }
 
