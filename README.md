@@ -24,7 +24,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-FreshlyGround is a **novel programming language** whose source code is interpreted into **Java** for 
+FreshlyGround is a **novel programming language** whose source code is interpreted into **Java 21** for 
 execution on the **Java Virtual Machine (JVM)**. This project was developed for **COP 4020** at 
 the **University of Florida** and follows the methodology outlined in the 
 book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).

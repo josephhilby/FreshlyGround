@@ -1,5 +1,8 @@
 package plc.project;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     private Scope scope = new Scope(null);
@@ -82,19 +85,67 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
+    // Ast.Expression.Group(expression=Ast.Expression)
+    // evaluates the contained expression, returning its value.
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return visit(ast.getExpression());
     }
 
+    // Ast.Expression.Binary(operator=String,
+    //                      left=Ast.Expression,
+    //                      right=Ast.Expression)
+    // Evaluates arguments based on the specific binary operator,
+    // returning the appropriate result for the operation
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+        // pre-order traversal
+        String operator = ast.getOperator();
+        Environment.PlcObject left = visit(ast.getLeft());
+        Environment.PlcObject right = visit(ast.getRight());
+
+        // handle type mismatch and get initial value for right
+        Object rv = requireType(left.getValue().getClass(), right);
+
+        // switch
+        Environment.PlcObject result = Environment.NIL;
+        switch (rv) {
+            case BigInteger i:
+                BigInteger li = BigInteger.class.cast(left.getValue());
+                BigInteger ri = BigInteger.class.cast(rv);
+                result = handleNum(li, ri,  operator);
+            case BigDecimal d:
+                BigDecimal ld = BigDecimal.class.cast(left.getValue());
+                BigDecimal rd = BigDecimal.class.cast(rv);
+                result = handleNum(ld, rd, operator);
+            default:
+                break;
+        }
+        return result;
+    }
+
+    // helper
+    private Environment.PlcObject handleNum(BigInteger left, BigInteger right, String operator) {
+        switch (operator) {
+            case "+":
+                return Environment.create(left.add(right));
+            case "-":
+                return Environment.create(left.subtract(right));
+            case "*":
+                return Environment.create(left.multiply(right));
+            case "/":
+                if (right.compareTo(BigInteger.ZERO) == 0) {
+                    throw new ArithmeticException("Division by zero");
+                }
+                return Environment.create(left.divide(right));
+            default:
+                throw new UnsupportedOperationException();
+        }
     }
 
     // Ast.Expression.Access(receiver=Ast.Expression | Optional.empty, name=string)
     // has a receiver, evaluate and return
-    // otherwise return variable in current scope
+    // otherwise, return variable in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isEmpty()) {
