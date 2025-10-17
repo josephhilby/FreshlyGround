@@ -32,11 +32,17 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     // Ast.Field(String name, boolean constant, Optional<Ast.Expression> value)
-    // Define variable in current scope
-    // NIL if no initial value is defined
+    // Define variable (or const) in current scope
+    // NIL if no initial value
+    // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Field ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getValue().isPresent()) {
+            scope.defineVariable(ast.getName(), ast.getConstant(), visit(ast.getValue().get()));
+        } else {
+            scope.defineVariable(ast.getName(), ast.getConstant(), Environment.NIL);
+        }
+        return Environment.NIL;
     }
 
     // Ast.Method(String name, List<String> parameters, List<Statement> statements)
