@@ -124,7 +124,21 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.For ast) {
-        throw new UnsupportedOperationException(); //TODO
+        visit(ast.getInitialization());
+
+        while (requireType(Boolean.class, visit(ast.getCondition()))) {
+            try {
+                scope = new Scope(scope);
+                for (Ast.Statement statement : ast.getStatements()) {
+                    visit(statement);
+                }
+            } finally {
+                scope = scope.getParent();
+            }
+
+            visit(ast.getIncrement());
+        }
+        return Environment.NIL;
     }
 
     // Ast.Statement.While(condition=Ast.Expression, statements=List<Statement>)

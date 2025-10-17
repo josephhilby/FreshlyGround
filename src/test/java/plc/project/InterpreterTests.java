@@ -21,6 +21,25 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testSource(String test, Ast.Source ast, Object expected) {
+        // Scope{ parent=null,
+        //        variables={},
+        //        functions={}
+        // }
+        //
+        // DEF main() DO RETURN 0; END
+        // -> 0,
+        //    Scope{ parent=null,
+        //           variables={},
+        //           functions={ "main/0" }
+        //    }
+        //
+        // LET x = 1; LET y = 10; DEF main() DO x + y; END
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "x": {1 Scope{}}, "y": {10 Scope{}} },
+        //           functions={ "main/0" }
+        //    }
+        // Note: x + y is evaluated but not returned (no RETURN statement)
         test(ast, expected, new Scope(null));
     }
 
@@ -49,6 +68,24 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testField(String test, Ast.Field ast, Object expected) {
+        // Scope{ parent=null,
+        //        variables={},
+        //        functions={}
+        // }
+        //
+        // LET name;
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "name": {nil Scope{}} },
+        //           functions={}
+        //    }
+        //
+        // LET name = 1;
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "name": {1 Scope{}} },
+        //           functions={}
+        //    }
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
     }
@@ -62,12 +99,27 @@ final class InterpreterTests {
 
     @ParameterizedTest
     @MethodSource
-    // DEF main() DO RETURN 0; END
-    // -> NIL, scope = {main = 0}, Note: main always resolves to 0
-
-    // DEF square(x) DO RETURN x * x; END
-    // -> NIL, scope = {square = 100}, Note: x = 10
     void testMethod(String test, Ast.Method ast, List<Environment.PlcObject> args, Object expected) {
+        // Scope{ parent=null,
+        //        variables={},
+        //        functions={}
+        // }
+        //
+        // DEF main() DO RETURN 0; END
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={},
+        //           functions={ "main/0" }
+        //    }
+        // Note: calling main() -> 0
+        //
+        // DEF square(x) DO RETURN x * x; END
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={},
+        //           functions={ "square/1" }
+        //    }
+        // Note: calling square(10) -> 100
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupFunction(ast.getName(), args.size()).invoke(args).getValue());
     }
@@ -97,7 +149,8 @@ final class InterpreterTests {
     @Test
     void testExpressionStatement() {
         // print("Hello, World!");
-        // -> NIL, %System.out.println("Hello, World!");%
+        // -> NIL,
+        //    %System.out.println("Hello, World!");%
         PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
@@ -114,13 +167,24 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Object expected) {
-        // scope = {}
+        // Scope{ parent=null,
+        //        variables={},
+        //        functions={}
+        // }
+        //
         // LET name;
-        // -> NIL, scope = {name = NIL}
-
-        // scope = {}
-        // LET name = 1
-        // -> NIL, scope = {name = 1}
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "name": {nil Scope{}} },
+        //           functions={}
+        //    }
+        //
+        // LET name = 1;
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "name": {1 Scope{}} },
+        //           functions={}
+        //    }
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
     }
@@ -140,9 +204,17 @@ final class InterpreterTests {
 
     @Test
     void testVariableAssignmentStatement() {
-        // scope = {variable = "variable"}
+        // Scope{ parent=null,
+        //        variables={ "variable": {"variable" Scope{}} },
+        //        functions={}
+        // }
+        //
         // variable = 1;
-        // -> NIL, scope = {variable = 1}
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "variable": {1 Scope{}} },
+        //           functions={}
+        //    }
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
 
@@ -155,10 +227,29 @@ final class InterpreterTests {
 
     @Test
     void testFieldAssignmentStatement() {
-        // scope = {object = "object"}
-        // scope_object = {field = "object.field"}
+        // Scope{ parent=null,
+        //        variables={
+        //          "object": Scope{
+        //            parent=null,
+        //            variables={ "field": {"object.field" Scope{}} },
+        //            functions={}
+        //          }
+        //        },
+        //        functions={}
+        // }
+        //
         // object.field = 1;
-        // -> NIL, scope = {object = "object"}, scope_object = {field = 1}
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={
+        //             "object": Scope{
+        //               parent=null,
+        //               variables={ "field": {1 Scope{}} },
+        //               functions={}
+        //             }
+        //           },
+        //           functions={}
+        //    }
         Scope scope = new Scope(null);
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
@@ -174,13 +265,24 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testIfStatement(String test, Ast.Statement.If ast, Object expected) {
-        // scope = {num = NIL}
+        // Scope{ parent=null,
+        //        variables={ "num": {nil Scope{}} },
+        //        functions={}
+        // }
+        //
         // IF TRUE DO num = 1; END
-        // -> NIL, scope = {num = 1}
-
-        // scope = {num = NIL}
-        // IF FALSE DO ELSE num = 10 END
-        // -> NIL, scope = {num = 10}
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "num": {1 Scope{}} },
+        //           functions={}
+        //    }
+        //
+        // IF FALSE DO ELSE num = 10; END
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "num": {10 Scope{}} },
+        //           functions={}
+        //    }
         Scope scope = new Scope(null);
         scope.defineVariable("num", false, Environment.NIL);
 
@@ -212,9 +314,17 @@ final class InterpreterTests {
 
     @Test
     void testForStatement() {
-        // scope = {sum = 0, num = NIL}
+        // Scope{ parent=null,
+        //        variables={ "sum": {0 Scope{}}, "num": {nil Scope{}} },
+        //        functions={}
+        // }
+        //
         // FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END
-        // -> NIL, scope = {sum = 10, num = 5}
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "sum": {10 Scope{}}, "num": {5 Scope{}} },
+        //           functions={}
+        //    }
         Scope scope = new Scope(null);
         scope.defineVariable("sum", false, Environment.create(BigInteger.ZERO));
         scope.defineVariable("num", false, Environment.NIL);
@@ -257,9 +367,17 @@ final class InterpreterTests {
 
     @Test
     void testWhileStatement() {
-        // scope = {num = 0}
+        // -> Scope{ parent=null,
+        //           variables={ "num": {0 Scope{}} },
+        //           functions={}
+        //    }
+        //
         // WHILE num < 10 DO num = num + 1; END
-        // -> NIL, scope = {num = 10}
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={ "num": {10 Scope{}} },
+        //           functions={}
+        //    }
         Scope scope = new Scope(null);
         scope.defineVariable("num", false, Environment.create(BigInteger.ZERO));
 
@@ -385,11 +503,26 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testAccessExpression(String test, Ast ast, Object expected) {
-        // variable, scope = {variable = "my variable"}
+        // variable
+        // -> Scope{ parent=null,
+        //           variables={"variable" Scope{}},
+        //           functions={}
+        //     }
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
 
-        // object.field, scope = {object = {field = "object.field"}}
+        // object.field
+        // -> Scope{ parent=null,
+        //           variables={
+        //             "variable": {"variable Scope{}},
+        //             "object":  Scope{
+        //               parent=null,
+        //               variables={ "field": {"object.field Scope{}} },
+        //               functions={}
+        //             }
+        //           },
+        //           functions={}
+        //    }
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
@@ -413,11 +546,25 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, Ast ast, Object expected) {
-        // function(), scope = {function = ...}
+        // function()
+        // -> Scope{ parent=null,
+        //           variables={},
+        //           functions={ "function/0" }
+        //    }
         Scope scope = new Scope(null);
         scope.defineFunction("function", 0, args -> Environment.create("function"));
 
-        // object.method(), scope = {object = {method = ...}}
+        // object.method()
+        // -> Scope{ parent=null,
+        //           variables={
+        //             "object": Scope{
+        //               parent=null,
+        //               variables={},
+        //               functions={ "method/1" }
+        //             }
+        //           },
+        //           functions={ "function/0" }
+        //    }
         Scope object = new Scope(null);
         object.defineFunction("method", 1, args -> Environment.create("object.method"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
