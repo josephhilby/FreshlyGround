@@ -40,6 +40,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    //
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
         if (ast.getValue().isPresent()) {
@@ -47,37 +48,90 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         } else {
             scope.defineVariable(ast.getName(), false, Environment.NIL);
         }
-
         return Environment.NIL;
     }
 
+    // Ast.Statement.Assignment(receiver=Ast.Expression | Optional.empty, value=Ast.Expression)
+    // Ensure receiver is Ast.Expression.Access
+    // If receiver has receiver, evaluate and return
+    // Else, return variable in the current scope
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
+            throw new UnsupportedOperationException();
+        }
+        while (scope.getParent() != null) {
+            try {
+                Ast.Expression.Access access = (Ast.Expression.Access) ast.getReceiver();
+                if (access.getReceiver().isEmpty()) {
+                    scope.lookupVariable(access.getName()).setValue(visit(ast.getValue()));
+                }
+                Environment.PlcObject receiver = visit(access.getReceiver().get());
+                receiver.setField(access.getName(), visit(ast.getValue()));
+            } finally {
+                scope = scope.getParent();
+            }
+        }
+        return Environment.NIL;
     }
 
+    // Ast.Statement.If(condition=Ast.Expression,
+    //                  thenStatements=List<Statement>,
+    //                  elseStatements=List<Statement>)
+    // Condition evaluates to Boolean
+    // Inside new scope,
+    //     If true, evaluate thenStatement(s),
+    //     Else, evaluate elseStatement(s).
+    // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Ast.Statement.For(initialization=Statement,
+    //                   condition=Ast.Expression,
+    //                   increment=Statement,
+    //                   statements=List<Statement>)
+    // Init
+    // Condition evaluates to Boolean
+    // Inside new scope,
+    //     If true, evaluate statement(s)
+    // Inc
+    // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.For ast) {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Ast.Statement.While(condition=Ast.Expression, statements=List<Statement>)
+    // Condition evaluates to Boolean
+    // Inside new scope,
+    //     If true, evaluate statement(s)
+    // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.While ast) {
-        throw new UnsupportedOperationException(); //TODO
+        while (requireType(Boolean.class, visit(ast.getCondition()))) {
+            try {
+                scope = new Scope(scope);
+                for (Ast.Statement statement : ast.getStatements()) {
+                    visit(statement);
+                }
+            } finally {
+                scope = scope.getParent();
+            }
+        }
+        return Environment.NIL;
     }
 
+    // Ast.Statement.Return(value=Ast.Expression)
+    // Evaluate the value and throw Return exception
     @Override
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+        throw new Return(visit(ast.getValue()));
     }
 
     // Ast.Expression.Literal(literal=Object | null)
-    // Returns the literal value
+    // Return the literal value
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
         if (ast.getLiteral() != null) {
@@ -87,52 +141,49 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     // Ast.Expression.Group(expression=Ast.Expression)
-    // evaluates the contained expression, returning its value.
+    // Evaluate the contained expression
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
         return visit(ast.getExpression());
     }
 
     // Ast.Expression.Binary(operator=String,
-    //                      left=Ast.Expression,
-    //                      right=Ast.Expression)
-    // Evaluates arguments based on the specific binary operator,
-    // returning the appropriate result for the operation
+    //                       left=Ast.Expression,
+    //                       right=Ast.Expression)
+    // Evaluate argument based on operator,
+    // Return appropriate result for operation
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
+        // TODO: function still to big, split into handler
         // pre-order traversal
         String operator = ast.getOperator();
         Environment.PlcObject left = visit(ast.getLeft());
 
+        // interupt for OR short circuit
         Object lv = left.getValue();
         if (operator.equals("OR") && Boolean.parseBoolean(lv.toString())) {
             return Environment.create(true);
         }
 
+        // finish pre-order
         Environment.PlcObject right = visit(ast.getRight());
 
         // handle type mismatch and get initial values
         Object rv = requireType(lv.getClass(), right);
 
         // switchcase for datatype
-        Environment.PlcObject result = Environment.NIL;
         switch (lv) {
             case BigInteger i:
-                result = handleInt(lv, rv,  operator);
-                break;
+                return handleInt(lv, rv,  operator);
             case BigDecimal d:
-                result = handleDec(lv, rv, operator);
-                break;
+                return handleDec(lv, rv, operator);
             case String s:
-                result = handleStr(lv, rv, operator);
-                break;
+                return handleStr(lv, rv, operator);
             case Boolean b:
-                result = handleBool(lv, rv, operator);
-                break;
+                return handleBool(lv, rv, operator);
             default:
-                break;
+                throw new UnsupportedOperationException();
         }
-        return result;
     }
 
     // helper
@@ -152,12 +203,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     // helper
     private Environment.PlcObject handleStr(Object lv, Object rv, String operator) {
-        String str = lv.toString();
+        String str1 = lv.toString();
         String str2 = rv.toString();
 
         switch (operator) {
             case "+":
-                return Environment.create(str + str2);
+                return Environment.create(str1 + str2);
             default:
                 throw new UnsupportedOperationException();
         }
@@ -232,8 +283,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     // Ast.Expression.Access(receiver=Ast.Expression | Optional.empty, name=string)
-    // has a receiver, evaluate and return
-    // otherwise, return variable in current scope
+    // If receiver, evaluate and return
+    // Else, return variable in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isEmpty()) {

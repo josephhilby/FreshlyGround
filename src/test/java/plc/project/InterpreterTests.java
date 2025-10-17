@@ -141,6 +141,7 @@ final class InterpreterTests {
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
+        // object.field = 1;
         test(new Ast.Statement.Assignment(
                 new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")),"field"),
                 new Ast.Expression.Literal(BigInteger.ONE)

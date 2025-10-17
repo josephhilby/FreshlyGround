@@ -140,7 +140,8 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 > │                        thenStatements=statement(s), 
 > │                        elseStatements=statement(s))
 > │
-> ├─ "FOR" identifier "IN" expression "DO" { statement } "END"
+> ├─ "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" 
+> │   │                     { statement } "END"
 > │   └─> Ast.Statement.For(initialization=Declaration(name=identifier, 
 > │                                                    value=Optional.empty
 > │                                                    ), 
