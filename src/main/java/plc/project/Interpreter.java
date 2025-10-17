@@ -3,6 +3,8 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
@@ -20,7 +22,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return scope;
     }
 
-    // Ast.Source(fields=List<Field>, methods=List<Method>)
+    // Ast.Source(List<Field> fields, List<Method> methods)
     // Evaluates globals, then functions
     // Return result of calling the main/0
     // If no main function, evaluation fails
@@ -29,7 +31,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
-    // Ast.Field(constant=boolean, name=String, value=Optional<Ast.Expression>)
+    // Ast.Field(String name, boolean constant, Optional<Ast.Expression> value)
     // Define variable in current scope
     // NIL if no initial value is defined
     @Override
@@ -37,7 +39,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
-    // Ast.Method(name=String, parameters=List<String>, statements=List<Statement>)
+    // Ast.Method(String name, List<String> parameters, List<Statement> statements)
     // Define function in current scope
     // Lambda (callback)
     //    Set scope to child of current scope
@@ -51,15 +53,16 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         throw new UnsupportedOperationException(); //TODO
     }
 
-    // Ast.Statement.Expression(expression=Ast.Expression)
+    // Ast.Statement.Expression(Ast.Expression expression)
     // Evaluate expression
     // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.Expression ast) {
-        throw new UnsupportedOperationException(); //TODO
+        visit(ast.getExpression());
+        return Environment.NIL;
     }
 
-    // Ast.Statement.Declaration(name=String, value=Optional<Ast.Expression>)
+    // Ast.Statement.Declaration(String name, Optional<Ast.Expression> value)
     // Define variable in current scope
     // NIL if no initial value
     // Return NIL
@@ -73,7 +76,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.Assignment(receiver=Ast.Expression.Access, value=Ast.Expression)
+    // Ast.Statement.Assignment(Ast.Expression receiver, Ast.Expression value)
     // Ensure receiver is Ast.Expression.Access
     // If receiver has receiver, evaluate and return
     // Else, return variable in the current scope
@@ -82,26 +85,22 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
             throw new UnsupportedOperationException();
         }
-        Scope originalScope = scope;
-        while (scope.getParent() != null) {
-            try {
-                Ast.Expression.Access access = (Ast.Expression.Access) ast.getReceiver();
-                if (access.getReceiver().isEmpty()) {
-                    scope.lookupVariable(access.getName()).setValue(visit(ast.getValue()));
-                }
-                Environment.PlcObject receiver = visit(access.getReceiver().get());
-                receiver.setField(access.getName(), visit(ast.getValue()));
-            } finally {
-                scope = scope.getParent();
-            }
+        Ast.Expression.Access access = (Ast.Expression.Access) ast.getReceiver();
+        Environment.PlcObject value = visit(ast.getValue());
+
+        if (access.getReceiver().isPresent()) {
+            Environment.PlcObject receiver = requireType(Environment.PlcObject.class, visit(access.getReceiver().get()));
+            receiver.setField(access.getName(), value);
+        } else {
+            Environment.Variable variable = scope.lookupVariable(access.getName());
+            variable.setValue(value);
         }
-        scope = originalScope;
         return Environment.NIL;
     }
 
-    // Ast.Statement.If(condition=Ast.Expression,
-    //                  thenStatements=List<Statement>,
-    //                  elseStatements=List<Statement>)
+    // Ast.Statement.If(Ast.Expression condition,
+    //                  List<Statement> thenStatements,
+    //                  List<Statement> elseStatements)
     // Condition evaluates to Boolean
     // Inside new scope,
     //     If true, evaluate thenStatement(s),
@@ -109,13 +108,24 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
-        throw new UnsupportedOperationException(); //TODO
+        boolean condition = requireType(Boolean.class, visit(ast.getCondition()));
+        List<Ast.Statement> list = condition ? ast.getThenStatements() : ast.getElseStatements();
+
+        try {
+            scope = new Scope(scope);
+            for (Ast.Statement statement : list) {
+                visit(statement);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+        return Environment.NIL;
     }
 
-    // Ast.Statement.For(initialization=Statement,
-    //                   condition=Ast.Expression,
-    //                   increment=Statement,
-    //                   statements=List<Statement>)
+    // Ast.Statement.For(Statement initialization,
+    //                   Ast.Expression condition,
+    //                   Statement increment,
+    //                   List<Statement> statements)
     // Init
     // Condition evaluates to Boolean
     // Inside new scope,
@@ -141,7 +151,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.While(condition=Ast.Expression, statements=List<Statement>)
+    // Ast.Statement.While(Ast.Expression condition, List<Statement> statements)
     // Condition evaluates to Boolean
     // Inside new scope,
     //     If true, evaluate statement(s)
@@ -161,14 +171,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.Return(value=Ast.Expression)
+    // Ast.Statement.Return(Ast.Expression value)
     // Evaluate the value and throw Return exception
     @Override
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
         throw new Return(visit(ast.getValue()));
     }
 
-    // Ast.Expression.Literal(literal=Object | null)
+    // Ast.Expression.Literal(Object literal)
     // Return the literal value
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
@@ -178,14 +188,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Expression.Group(expression=Ast.Expression)
+    // Ast.Expression.Group(Ast.Expression expression)
     // Evaluate the contained expression
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
         return visit(ast.getExpression());
     }
 
-    // Ast.Expression.Binary(operator=String, left=Ast.Expression, right=Ast.Expression)
+    // Ast.Expression.Binary(String operator, Ast.Expression left, Ast.Expression right)
     // Evaluate argument based on operator,
     // Return result
     @Override
@@ -318,21 +328,33 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
     }
 
-    // Ast.Expression.Access(receiver=Ast.Expression | Optional.empty, name=string)
+    // Ast.Expression.Access(Optional<Ast.Expression> receiver, String name)
     // If receiver, evaluate and return
     // Else, return variable in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        if (ast.getReceiver().isEmpty()) {
-            return scope.lookupVariable(ast.getName()).getValue();
+        if (ast.getReceiver().isPresent()) {
+            Environment.PlcObject receiver = visit(ast.getReceiver().get());
+            return receiver.getField(ast.getName()).getValue();
         }
-        Environment.PlcObject receiver = visit(ast.getReceiver().get());
-        return receiver.getField(ast.getName()).getValue();
+        return scope.lookupVariable(ast.getName()).getValue();
     }
 
+    // Ast.Expression.Function(Optional<Ast.Expression> receiver, String name, List<Ast.Expression> arguments)
+    // If receiver, evaluate and return
+    // Else, return value of function in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        List<Environment.PlcObject> arguments = new ArrayList<>(ast.getArguments().size());
+        for (Ast.Expression argument : ast.getArguments()) {
+            arguments.add(visit(argument));
+        }
+        if (ast.getReceiver().isPresent()) {
+            Environment.PlcObject receiver = visit(ast.getReceiver().get());
+            return receiver.callMethod(ast.getName(), arguments);
+        }
+
+        return scope.lookupFunction(ast.getName(), arguments.size()).invoke(arguments);
     }
 
     /**
