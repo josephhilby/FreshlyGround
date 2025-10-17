@@ -122,8 +122,8 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >source ─> Ast.Source(fields=field(s), methods=method(s))
 >
 >field
-> └─ "LET" identifier [ "=" expression ] ";"
->     └─> Ast.Field(constant=true, name=identifier, value=expression)
+> └─ "LET" [ CONST ] identifier [ "=" expression ] ";"
+>     └─> Ast.Field(constant=boolean, name=identifier, value=expression)
 >  
 > method
 > └─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"

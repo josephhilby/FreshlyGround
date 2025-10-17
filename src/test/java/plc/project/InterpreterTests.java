@@ -62,6 +62,11 @@ final class InterpreterTests {
 
     @ParameterizedTest
     @MethodSource
+    // DEF main() DO RETURN 0; END
+    // -> NIL, scope = {main = 0}, Note: main always resolves to 0
+
+    // DEF square(x) DO RETURN x * x; END
+    // -> NIL, scope = {square = 100}, Note: x = 10
     void testMethod(String test, Ast.Method ast, List<Environment.PlcObject> args, Object expected) {
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupFunction(ast.getName(), args.size()).invoke(args).getValue());
@@ -91,6 +96,8 @@ final class InterpreterTests {
 
     @Test
     void testExpressionStatement() {
+        // print("Hello, World!");
+        // -> NIL, %System.out.println("Hello, World!");%
         PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
@@ -107,6 +114,13 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Object expected) {
+        // scope = {}
+        // LET name;
+        // -> NIL, scope = {name = NIL}
+
+        // scope = {}
+        // LET name = 1
+        // -> NIL, scope = {name = 1}
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
     }
@@ -126,8 +140,12 @@ final class InterpreterTests {
 
     @Test
     void testVariableAssignmentStatement() {
+        // scope = {variable = "variable"}
+        // variable = 1;
+        // -> NIL, scope = {variable = 1}
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
+
         test(new Ast.Statement.Assignment(
                 new Ast.Expression.Access(Optional.empty(),"variable"),
                 new Ast.Expression.Literal(BigInteger.ONE)
@@ -137,11 +155,15 @@ final class InterpreterTests {
 
     @Test
     void testFieldAssignmentStatement() {
+        // scope = {object = "object"}
+        // scope_object = {field = "object.field"}
+        // object.field = 1;
+        // -> NIL, scope = {object = "object"}, scope_object = {field = 1}
         Scope scope = new Scope(null);
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
-        // object.field = 1;
+
         test(new Ast.Statement.Assignment(
                 new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")),"field"),
                 new Ast.Expression.Literal(BigInteger.ONE)
@@ -152,8 +174,16 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testIfStatement(String test, Ast.Statement.If ast, Object expected) {
+        // scope = {num = NIL}
+        // IF TRUE DO num = 1; END
+        // -> NIL, scope = {num = 1}
+
+        // scope = {num = NIL}
+        // IF FALSE DO ELSE num = 10 END
+        // -> NIL, scope = {num = 10}
         Scope scope = new Scope(null);
         scope.defineVariable("num", false, Environment.NIL);
+
         test(ast, Environment.NIL.getValue(), scope);
         Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue());
     }
@@ -182,9 +212,13 @@ final class InterpreterTests {
 
     @Test
     void testForStatement() {
+        // scope = {sum = 0, num = NIL}
+        // FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END
+        // -> NIL, scope = {sum = 10, num = 5}
         Scope scope = new Scope(null);
         scope.defineVariable("sum", false, Environment.create(BigInteger.ZERO));
         scope.defineVariable("num", false, Environment.NIL);
+
         test(new Ast.Statement.For(
                 new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(), "num"), new Ast.Expression.Literal(BigInteger.ZERO)),
                 new Ast.Expression.Binary("<",
@@ -223,8 +257,12 @@ final class InterpreterTests {
 
     @Test
     void testWhileStatement() {
+        // scope = {num = 0}
+        // WHILE num < 10 DO num = num + 1; END
+        // -> NIL, scope = {num = 10}
         Scope scope = new Scope(null);
         scope.defineVariable("num", false, Environment.create(BigInteger.ZERO));
+
         test(new Ast.Statement.While(
                 new Ast.Expression.Binary("<",
                         new Ast.Expression.Access(Optional.empty(),"num"),
@@ -347,9 +385,11 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testAccessExpression(String test, Ast ast, Object expected) {
+        // variable, scope = {variable = "my variable"}
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
 
+        // object.field, scope = {object = {field = "object.field"}}
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
@@ -373,11 +413,15 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, Ast ast, Object expected) {
+        // function(), scope = {function = ...}
         Scope scope = new Scope(null);
         scope.defineFunction("function", 0, args -> Environment.create("function"));
+
+        // object.method(), scope = {object = {method = ...}}
         Scope object = new Scope(null);
         object.defineFunction("method", 1, args -> Environment.create("object.method"));
         scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
+
         test(ast, expected, scope);
     }
 
