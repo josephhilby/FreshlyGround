@@ -109,8 +109,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     //                  List<Statement> elseStatements)
     // Condition evaluates to Boolean
     // Inside new scope,
-    //     If true, evaluate thenStatement(s),
-    //     Else, evaluate elseStatement(s).
+    //     If true, evaluate thenStatement(s)
+    //     Else, evaluate elseStatement(s)
     // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
@@ -202,7 +202,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     // Ast.Expression.Binary(String operator, Ast.Expression left, Ast.Expression right)
-    // Evaluate argument based on operator,
+    // Evaluate argument based on operator
     // Return result
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
@@ -211,7 +211,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         String operator = ast.getOperator();
         Environment.PlcObject left = visit(ast.getLeft());
 
-        // interupt for OR short circuit
+        // interrupt for OR short circuit
         Object lv = left.getValue();
         if (operator.equals("OR") && Boolean.parseBoolean(lv.toString())) {
             return Environment.create(true);

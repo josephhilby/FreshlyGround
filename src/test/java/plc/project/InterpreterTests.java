@@ -92,6 +92,7 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testField() {
         return Stream.of(
+                // TODO: add test with CONST
                 Arguments.of("Declaration", new Ast.Field("name", false, Optional.empty()), Environment.NIL.getValue()),
                 Arguments.of("Initialization", new Ast.Field("name", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))), BigInteger.ONE)
         );
