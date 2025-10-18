@@ -88,10 +88,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // Else, return variable in the current scope
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
-        if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
-            throw new UnsupportedOperationException();
-        }
-        Ast.Expression.Access access = (Ast.Expression.Access) ast.getReceiver();
+        Ast.Expression.Access access = requireNode(Ast.Expression.Access.class, ast.getReceiver());
         Environment.PlcObject value = visit(ast.getValue());
 
         if (access.getReceiver().isPresent()) {
@@ -206,129 +203,121 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // Return result
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
-        // TODO: function still to big, split into handler
-        // pre-order traversal
+        // pre-order traversal: node, left, right
         String operator = ast.getOperator();
-        Environment.PlcObject left = visit(ast.getLeft());
+        Object left = visit(ast.getLeft()).getValue();
 
         // interrupt for OR short circuit
-        Object lv = left.getValue();
-        if (operator.equals("OR") && Boolean.parseBoolean(lv.toString())) {
+        if (operator.equals("OR") && Boolean.parseBoolean(left.toString())) {
             return Environment.create(true);
         }
 
         // finish pre-order
-        Environment.PlcObject right = visit(ast.getRight());
+        Object right = visit(ast.getRight()).getValue();
 
-        // handle type mismatch and get initial values
-        Object rv = requireType(lv.getClass(), right);
+        // handle type mismatch
+        if (left.getClass() != right.getClass()) {
+            throw new UnsupportedOperationException();
+        }
 
-        // switchcase for datatype
-        switch (lv) {
-            case BigInteger i:
-                return handleInt(lv, rv,  operator);
-            case BigDecimal d:
-                return handleDec(lv, rv, operator);
-            case String s:
-                return handleStr(lv, rv, operator);
-            case Boolean b:
-                return handleBool(lv, rv, operator);
+        return dispatch(left, right, operator);
+    }
+
+    // helper
+    private Environment.PlcObject dispatch(Object left, Object right, String operator) {
+        switch (left) {
+            case BigInteger li:
+                return handleInt(li, (BigInteger) right, operator);
+            case BigDecimal ld:
+                return handleDec(ld, (BigDecimal) right, operator);
+            case String ls:
+                return handleStr(ls, (String) right, operator);
+            case Boolean lb:
+                return handleBool(lb, (Boolean) right, operator);
             default:
                 throw new UnsupportedOperationException();
         }
     }
 
     // helper
-    private Environment.PlcObject handleBool(Object lv, Object rv, String operator) {
-        Boolean l = Boolean.parseBoolean(lv.toString());
-        Boolean r = Boolean.parseBoolean(rv.toString());
-
-        switch (operator) {
+    private Environment.PlcObject handleBool(Boolean left, Boolean right, String op) {
+        switch (op) {
             case "AND":
-                return Environment.create(l && r);
+                return Environment.create(left && right);
             case "OR":
-                return Environment.create(l || r);
+                return Environment.create(left || right);
             default:
                 throw new UnsupportedOperationException();
         }
     }
 
     // helper
-    private Environment.PlcObject handleStr(Object lv, Object rv, String operator) {
-        String str1 = lv.toString();
-        String str2 = rv.toString();
-
-        switch (operator) {
+    private Environment.PlcObject handleStr(String left, String right, String op) {
+        switch (op) {
             case "+":
-                return Environment.create(str1 + str2);
+                return Environment.create(left + right);
             default:
                 throw new UnsupportedOperationException();
         }
     }
 
     // helper
-    private Environment.PlcObject handleInt(Object left, Object right, String operator) {
-        BigInteger l = (BigInteger) left;
-        BigInteger r = (BigInteger) right;
-
-        switch (operator) {
+    private Environment.PlcObject handleInt(BigInteger left, BigInteger right, String op) {
+        switch (op) {
             case "+":
-                return Environment.create(l.add(r));
+                return Environment.create(left.add(right));
             case "-":
-                return Environment.create(l.subtract(r));
+                return Environment.create(left.subtract(right));
             case "*":
-                return Environment.create(l.multiply(r));
+                return Environment.create(left.multiply(right));
             case "/":
-                if (l.compareTo(BigInteger.ZERO) == 0) {
+                if (left.compareTo(BigInteger.ZERO) == 0) {
                     throw new ArithmeticException("Cannot divide by zero");
                 }
-                return Environment.create(l.divide(r));
+                return Environment.create(left.divide(right));
             case "==":
-                return Environment.create(l.compareTo(r) == 0);
+                return Environment.create(left.compareTo(right) == 0);
             case "!=":
-                return Environment.create(l.compareTo(r) != 0);
+                return Environment.create(left.compareTo(right) != 0);
             case ">=":
-                return Environment.create(l.compareTo(r) >= 0);
+                return Environment.create(left.compareTo(right) >= 0);
             case "<=":
-                return Environment.create(l.compareTo(r) <= 0);
+                return Environment.create(left.compareTo(right) <= 0);
             case ">":
-                return Environment.create(l.compareTo(r) > 0);
+                return Environment.create(left.compareTo(right) > 0);
             case "<":
-                return Environment.create(l.compareTo(r) < 0);
+                return Environment.create(left.compareTo(right) < 0);
             default:
                 throw new UnsupportedOperationException();
         }
     }
 
     // helper
-    private Environment.PlcObject handleDec(Object left, Object right, String operator) {
-        BigDecimal l = (BigDecimal) left;
-        BigDecimal r = (BigDecimal) right;
-
-        switch (operator) {
+    private Environment.PlcObject handleDec(BigDecimal left, BigDecimal right, String op) {
+        switch (op) {
             case "+":
-                return Environment.create(l.add(r));
+                return Environment.create(left.add(right));
             case "-":
-                return Environment.create(l.subtract(r));
+                return Environment.create(left.subtract(right));
             case "*":
-                return Environment.create(l.multiply(r));
+                return Environment.create(left.multiply(right));
             case "/":
-                if (l.compareTo(BigDecimal.ZERO) == 0) {
+                if (left.compareTo(BigDecimal.ZERO) == 0) {
                     throw new ArithmeticException("Cannot divide by zero");
                 }
-                return Environment.create(l.divide(r, RoundingMode.HALF_EVEN));
+                return Environment.create(left.divide(right, RoundingMode.HALF_EVEN));
             case "==":
-                return Environment.create(l.compareTo(r) == 0);
+                return Environment.create(left.compareTo(right) == 0);
             case "!=":
-                return Environment.create(l.compareTo(r) != 0);
+                return Environment.create(left.compareTo(right) != 0);
             case ">=":
-                return Environment.create(l.compareTo(r) >= 0);
+                return Environment.create(left.compareTo(right) >= 0);
             case "<=":
-                return Environment.create(l.compareTo(r) <= 0);
+                return Environment.create(left.compareTo(right) <= 0);
             case ">":
-                return Environment.create(l.compareTo(r) > 0);
+                return Environment.create(left.compareTo(right) > 0);
             case "<":
-                return Environment.create(l.compareTo(r) < 0);
+                return Environment.create(left.compareTo(right) < 0);
             default:
                 throw new UnsupportedOperationException();
         }
@@ -351,6 +340,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // Else, return value of function in current scope
     @Override
     public Environment.PlcObject visit(Ast.Expression.Function ast) {
+        // Note: arity != arguments.size, checked elsewhere
         List<Environment.PlcObject> arguments = new ArrayList<>(ast.getArguments().size());
         for (Ast.Expression argument : ast.getArguments()) {
             arguments.add(visit(argument));
@@ -372,6 +362,16 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         } else {
             throw new RuntimeException("Expected type " + type.getName() + ", received " + object.getValue().getClass().getName() + ".");
         }
+    }
+
+    /**
+     * Helper function to ensure ast node is of the appropriate type
+     */
+    private static <T> T requireNode(Class<T> type, Ast node) {
+        if (type.isInstance(node)) {
+            return type.cast(node);
+        }
+        throw new RuntimeException("Expected node " + type.getName() + ", received " + node.getClass().getName() + ".");
     }
 
     /**
