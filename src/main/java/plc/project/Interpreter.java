@@ -12,9 +12,46 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
+
+        // print
         scope.defineFunction("print", 1, args -> {
             System.out.println(args.get(0).getValue());
             return Environment.NIL;
+        });
+
+        // ln(x)
+        scope.defineFunction("logarithm", 1, args -> {
+            // ln(value) = exponent
+            BigDecimal value = requireType(BigDecimal.class, args.get(0));
+            BigDecimal exponent = BigDecimal.valueOf(Math.log(value.doubleValue()));
+            return Environment.create(exponent);
+        });
+
+        // (decimal) x -> (base_y) x, 0 < y <= 10
+        scope.defineFunction("converter", 2, args -> {
+           int n = 0;
+           ArrayList<BigInteger> quotients = new ArrayList<>();
+           ArrayList<BigInteger> remainders = new ArrayList<>();
+
+           BigInteger decimal = requireType(BigInteger.class, args.get(0));
+           BigInteger base = requireType(BigInteger.class, args.get(1));
+
+           quotients.add(decimal);
+
+           do {
+               quotients.add(quotients.get(n).divide(base));
+               remainders.add(
+                   quotients.get(n).subtract(quotients.get(n+1).multiply(base))
+               );
+               n++;
+           } while (quotients.get(n).compareTo(BigInteger.ZERO) > 0);
+
+           StringBuilder number = new StringBuilder();
+           for (int i = 0; i < remainders.size(); i++) {
+               number.insert(0, remainders.get(i).toString());
+           }
+
+           return Environment.create(number.toString());
         });
     }
 
@@ -28,7 +65,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     // If no main function, evaluation fails
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        for (Ast.Field field : ast.getFields()) {
+            visit(field);
+        }
+        for (Ast.Method method : ast.getMethods()) {
+            visit(method);
+        }
+        List<Environment.PlcObject> args = new ArrayList<>();
+        return scope.lookupFunction("main", 0).invoke(args);
     }
 
     // Ast.Field(String name, boolean constant, Optional<Ast.Expression> value)
@@ -47,16 +91,34 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     // Ast.Method(String name, List<String> parameters, List<Statement> statements)
     // Define function in current scope
-    // Lambda (callback)
-    //    Set scope to child of current scope
-    //    Define variable(s) for param(s), assume correct arity
-    //    Evaluate
-    //    Restore scope
-    //    Return in Return exception, else NIL
+    //    Lambda (callback)
+    //       Set scope to child of current scope
+    //       Define variable(s) for param(s), assume correct arity
+    //       Evaluate expressions(s)
+    //       Catch Return, else NIL
+    //       Restore scope
     // Return NIL
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        throw new UnsupportedOperationException(); //TODO
+        scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+           try {
+               scope = new Scope(scope);
+               for (String name : ast.getParameters()) {
+                   for (Environment.PlcObject value : args) {
+                       scope.defineVariable(name, false, value);
+                   }
+               }
+               for (Ast.Statement statement : ast.getStatements()) {
+                   visit(statement);
+               }
+           } catch (Return ret) {
+               return ret.value;
+           } finally {
+               scope = scope.getParent();
+           }
+           return Environment.NIL;
+        });
+        return Environment.NIL;
     }
 
     // Ast.Statement.Expression(Ast.Expression expression)
@@ -92,7 +154,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         Environment.PlcObject value = visit(ast.getValue());
 
         if (access.getReceiver().isPresent()) {
-            Environment.PlcObject receiver = requireType(Environment.PlcObject.class, visit(access.getReceiver().get()));
+            Environment.PlcObject receiver = visit(access.getReceiver().get());
             receiver.setField(access.getName(), value);
         } else {
             Environment.Variable variable = scope.lookupVariable(access.getName());

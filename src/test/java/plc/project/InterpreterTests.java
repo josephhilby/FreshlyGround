@@ -575,18 +575,70 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testFunctionExpression() {
         return Stream.of(
-                Arguments.of("Function",
-                        new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList()),
-                        "function"
-                ),
-                Arguments.of("Method",
-                        new Ast.Expression.Function(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "method", Arrays.asList()),
-                        "object.method"
-                ),
-                Arguments.of("Print",
-                        new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
-                        Environment.NIL.getValue()
-                )
+            Arguments.of("Function",
+                new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList()),
+                "function"
+            ),
+            Arguments.of("Method",
+                new Ast.Expression.Function(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "method", Arrays.asList()),
+                "object.method"
+            ),
+            Arguments.of("Print",
+                new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(new Ast.Expression.Literal("Hello, World!"))),
+                Environment.NIL.getValue()
+            )
+        );
+    }
+
+    @Test
+    void testLogarithmExpression() {
+        Scope scope = new Scope(null);
+        test(new Ast.Expression.Function(Optional.empty(),
+            "logarithm",
+            Arrays.asList(new Ast.Expression.Literal(BigDecimal.valueOf(Math.E)))),
+            BigDecimal.valueOf(1.0),
+            scope
+        );
+    }
+
+    @Test
+    void testLogarithmExpressionError() {
+        Scope scope = new Scope(null);
+        test(new Ast.Expression.Function(Optional.empty(),
+                "logarithm",
+                Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(3)))),
+            null,
+            scope
+        );
+    }
+
+    @Test
+    void testConversionExpression() {
+        Scope scope = new Scope(null);
+        test(new Ast.Expression.Function(
+            Optional.empty(),
+            "converter",
+            Arrays.asList(
+                new Ast.Expression.Literal(BigInteger.valueOf(13)),
+                new Ast.Expression.Literal(BigInteger.valueOf(2)))
+            ),
+            "1101",
+            scope
+        );
+    }
+
+    @Test
+    void testConversionExpressionError() {
+        Scope scope = new Scope(null);
+        test(new Ast.Expression.Function(
+            Optional.empty(),
+            "logarithm",
+            Arrays.asList(
+                new Ast.Expression.Literal(13),
+                new Ast.Expression.Literal(2))
+            ),
+            null,
+            scope
         );
     }
 
@@ -599,5 +651,4 @@ final class InterpreterTests {
         }
         return interpreter.getScope();
     }
-
 }
