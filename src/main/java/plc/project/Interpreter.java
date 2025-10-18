@@ -59,10 +59,23 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return scope;
     }
 
-    // Ast.Source(List<Field> fields, List<Method> methods)
-    // Evaluates globals, then functions
-    // Return result of calling the main/0
-    // If no main function, evaluation fails
+    /**
+     * Visits the root {@link Ast.Source} node of the program.
+     * <p>
+     * This method is responsible for evaluating all global field declarations
+     * and registering all method definitions within the current {@code scope}.
+     * Once globals and functions have been processed, it attempts to invoke
+     * the program’s entry point — the {@code main} method with zero parameters.
+     * </p>
+     *
+     * <p>If no {@code main()} method is defined, an exception will be thrown
+     * when {@code lookupFunction("main", 0)} fails.</p>
+     *
+     * @param ast the abstract syntax tree (AST) source node containing
+     *            the program’s top-level fields and methods
+     * @return the result of invoking {@code main()} with no arguments
+     * @throws RuntimeException if no zero-parameter {@code main()} function exists
+     */
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
         for (Ast.Field field : ast.getFields()) {
@@ -75,10 +88,22 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return scope.lookupFunction("main", 0).invoke(args);
     }
 
-    // Ast.Field(String name, boolean constant, Optional<Ast.Expression> value)
-    // Define variable (or const) in current scope
-    // NIL if no initial value
-    // Return NIL
+    /**
+     * Visits a {@link Ast.Field} node and defines a corresponding variable
+     * or constant in the current {@code scope}.
+     * <p>
+     * If the field has an initializer expression, it is evaluated and used
+     * as the variable’s initial value. Otherwise, the variable is initialized
+     * to {@link Environment#NIL}.
+     * </p>
+     *
+     * <p>The method always returns {@code Environment.NIL}, as field
+     * declarations themselves do not produce a value.</p>
+     *
+     * @param ast the field node containing the variable name, constant flag,
+     *            and optional initializer expression
+     * @return {@link Environment#NIL}, since field declarations have no runtime value
+     */
     @Override
     public Environment.PlcObject visit(Ast.Field ast) {
         if (ast.getValue().isPresent()) {
@@ -89,15 +114,29 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Method(String name, List<String> parameters, List<Statement> statements)
-    // Define function in current scope
-    //    Lambda (callback)
-    //       Set scope to child of current scope
-    //       Define variable(s) for param(s), assume correct arity
-    //       Evaluate expressions(s)
-    //       Catch Return, else NIL
-    //       Restore scope
-    // Return NIL
+    /**
+     * Visits a {@link Ast.Method} node and defines a new function within the
+     * current {@code scope}.
+     * <p>
+     * The function is represented as a lambda (callback) that, when invoked:
+     * </p>
+     * <ol>
+     *   <li>Creates a new child {@link Scope} extending the current one.</li>
+     *   <li>Defines local variables for each parameter, binding them to the
+     *       provided argument values (assuming correct arity).</li>
+     *   <li>Evaluates each statement in the method body sequentially.</li>
+     *   <li>If a {@code return} statement is encountered, returns its value.</li>
+     *   <li>Otherwise, returns {@link Environment#NIL} after all statements execute.</li>
+     * </ol>
+     *
+     * <p>The method itself (i.e., during AST visitation) returns
+     * {@link Environment#NIL} because defining a function does not yield
+     * a runtime value.</p>
+     *
+     * @param ast the method node containing the function name, parameter list,
+     *            and body statements
+     * @return {@link Environment#NIL}, since method declarations have no direct value
+     */
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
@@ -121,19 +160,43 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.Expression(Ast.Expression expression)
-    // Evaluate expression
-    // Return NIL
+    /**
+     * Visits an {@link Ast.Statement.Expression} node and evaluates its
+     * contained {@link Ast.Expression}.
+     * <p>
+     * Expression statements are executed for their side effects (e.g., function
+     * calls or assignments) rather than for producing a value. As such, the result
+     * of the expression is evaluated and then discarded.
+     * </p>
+     *
+     * <p>The method always returns {@link Environment#NIL}, since expression
+     * statements do not yield a value in the surrounding context.</p>
+     *
+     * @param ast the statement node containing the expression to be evaluated
+     * @return {@link Environment#NIL}, as expression statements have no value
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.Expression ast) {
         visit(ast.getExpression());
         return Environment.NIL;
     }
 
-    // Ast.Statement.Declaration(String name, Optional<Ast.Expression> value)
-    // Define variable in current scope
-    // NIL if no initial value
-    // Return NIL
+    /**
+     * Visits an {@link Ast.Statement.Declaration} node and defines a new variable
+     * in the current {@code scope}.
+     * <p>
+     * If the declaration includes an initializer expression, it is evaluated
+     * and used as the variable’s initial value. Otherwise, the variable is
+     * initialized to {@link Environment#NIL}.
+     * </p>
+     *
+     * <p>The declaration itself does not produce a runtime value, so this method
+     * always returns {@link Environment#NIL}.</p>
+     *
+     * @param ast the declaration statement containing the variable name and
+     *            optional initializer expression
+     * @return {@link Environment#NIL}, since declarations have no runtime value
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
         if (ast.getValue().isPresent()) {
@@ -144,10 +207,28 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.Assignment(Ast.Expression receiver, Ast.Expression value)
-    // Ensure receiver is Ast.Expression.Access
-    // If receiver has receiver, evaluate and return
-    // Else, return variable in the current scope
+    /**
+     * Visits an {@link Ast.Statement.Assignment} node and performs an assignment
+     * operation to either a variable or an object field.
+     * <p>
+     * The method first ensures that the left-hand side (receiver) of the
+     * assignment is an {@link Ast.Expression.Access}. It then evaluates the
+     * right-hand side (value) expression and assigns the resulting value as follows:
+     * </p>
+     * <ul>
+     *   <li>If the access expression has its own receiver (e.g., {@code object.field}),
+     *       the corresponding field of that receiver object is updated.</li>
+     *   <li>Otherwise, the assignment targets a variable in the current {@code scope}.</li>
+     * </ul>
+     *
+     * <p>Regardless of target type, the method returns {@link Environment#NIL},
+     * since assignments do not produce a standalone value.</p>
+     *
+     * @param ast the assignment statement containing the receiver (LHS)
+     *             and value (RHS) expressions
+     * @return {@link Environment#NIL}, since assignments have no direct value
+     * @throws RuntimeException if the receiver is not an {@link Ast.Expression.Access}
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.Assignment ast) {
         Ast.Expression.Access access = requireNode(Ast.Expression.Access.class, ast.getReceiver());
@@ -163,14 +244,27 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.If(Ast.Expression condition,
-    //                  List<Statement> thenStatements,
-    //                  List<Statement> elseStatements)
-    // Condition evaluates to Boolean
-    // Inside new scope,
-    //     If true, evaluate thenStatement(s)
-    //     Else, evaluate elseStatement(s)
-    // Return NIL
+    /**
+     * Visits an {@link Ast.Statement.If} node and conditionally evaluates
+     * one of two statement blocks based on a Boolean condition.
+     * <p>
+     * The condition expression is first evaluated and required to produce a
+     * {@link Boolean} value. Then, within a new {@link Scope}:
+     * </p>
+     * <ul>
+     *   <li>If the condition evaluates to {@code true}, all statements in
+     *       {@code thenStatements} are executed sequentially.</li>
+     *   <li>Otherwise, all statements in {@code elseStatements} are executed.</li>
+     * </ul>
+     *
+     * <p>The {@code if} statement itself does not produce a value and therefore
+     * always returns {@link Environment#NIL}.</p>
+     *
+     * @param ast the {@code if} statement node containing the condition,
+     *            then-block, and optional else-block
+     * @return {@link Environment#NIL}, since conditional statements have no value
+     * @throws RuntimeException if the condition does not evaluate to a Boolean
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
         boolean condition = requireType(Boolean.class, visit(ast.getCondition()));
@@ -187,16 +281,34 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.For(Statement initialization,
-    //                   Ast.Expression condition,
-    //                   Statement increment,
-    //                   List<Statement> statements)
-    // Init
-    // Condition evaluates to Boolean
-    // Inside new scope,
-    //     If true, evaluate statement(s)
-    // Inc
-    // Return NIL
+    /**
+     * Visits an {@link Ast.Statement.For} node and executes a loop consisting of
+     * initialization, condition checking, body execution, and incrementation.
+     * <p>
+     * The {@code for} loop is evaluated as follows:
+     * </p>
+     * <ol>
+     *   <li>Execute the initialization statement once before the loop begins.</li>
+     *   <li>Evaluate the loop condition, which must produce a {@link Boolean} value.</li>
+     *   <li>While the condition is {@code true}:
+     *     <ul>
+     *       <li>Create a new {@link Scope} for the loop body.</li>
+     *       <li>Execute each statement within the loop body sequentially.</li>
+     *       <li>After the body completes, restore the previous scope and
+     *           execute the increment statement.</li>
+     *     </ul>
+     *   </li>
+     *   <li>When the condition evaluates to {@code false}, the loop terminates.</li>
+     * </ol>
+     *
+     * <p>The {@code for} statement itself does not yield a runtime value, so this
+     * method always returns {@link Environment#NIL}.</p>
+     *
+     * @param ast the {@code for} statement node containing the initialization,
+     *            condition, increment, and body statements
+     * @return {@link Environment#NIL}, since loops have no standalone value
+     * @throws RuntimeException if the condition does not evaluate to a Boolean
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.For ast) {
         visit(ast.getInitialization());
@@ -216,11 +328,33 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.While(Ast.Expression condition, List<Statement> statements)
-    // Condition evaluates to Boolean
-    // Inside new scope,
-    //     If true, evaluate statement(s)
-    // Return NIL
+    /**
+     * Visits an {@link Ast.Statement.While} node and repeatedly executes
+     * a block of statements while a Boolean condition remains {@code true}.
+     * <p>
+     * The {@code while} loop is evaluated as follows:
+     * </p>
+     * <ol>
+     *   <li>Evaluate the loop condition, which must produce a {@link Boolean} value.</li>
+     *   <li>While the condition evaluates to {@code true}:
+     *     <ul>
+     *       <li>Create a new {@link Scope} for the loop body.</li>
+     *       <li>Execute each statement in the loop body sequentially.</li>
+     *       <li>After the body finishes, restore the previous scope and
+     *           re-evaluate the condition.</li>
+     *     </ul>
+     *   </li>
+     *   <li>When the condition becomes {@code false}, the loop terminates.</li>
+     * </ol>
+     *
+     * <p>The {@code while} statement itself does not yield a runtime value and
+     * always returns {@link Environment#NIL}.</p>
+     *
+     * @param ast the {@code while} statement node containing the loop condition
+     *            and body statements
+     * @return {@link Environment#NIL}, since loops do not produce a value
+     * @throws RuntimeException if the condition does not evaluate to a Boolean
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.While ast) {
         while (requireType(Boolean.class, visit(ast.getCondition()))) {
@@ -236,15 +370,49 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Statement.Return(Ast.Expression value)
-    // Evaluate the value and throw Return exception
+    /**
+     * Visits an {@link Ast.Statement.Return} node and performs a function return
+     * by evaluating the associated expression and throwing a {@link Return} exception.
+     * <p>
+     * In this interpreter, function returns are implemented using an exception-based
+     * control flow mechanism. When a {@code return} statement is encountered:
+     * </p>
+     * <ol>
+     *   <li>The return expression is evaluated to obtain its {@link Environment.PlcObject} value.</li>
+     *   <li>A new {@link Return} exception is thrown, carrying that value.</li>
+     *   <li>This exception is caught by the enclosing function’s lambda defined in
+     *       {@link #visit(Ast.Method)}, which then returns the contained value to the caller.</li>
+     * </ol>
+     *
+     * <p>Since control flow is transferred via exception, this method never returns normally.</p>
+     *
+     * @param ast the {@code return} statement node containing the expression to evaluate
+     * @return never returns normally; this method always throws a {@link Return} exception
+     * @throws Return the exception carrying the evaluated return value
+     */
     @Override
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
         throw new Return(visit(ast.getValue()));
     }
 
-    // Ast.Expression.Literal(Object literal)
-    // Return the literal value
+    /**
+     * Visits an {@link Ast.Expression.Literal} node and returns its corresponding
+     * runtime value within the {@link Environment}.
+     * <p>
+     * Literal expressions represent constant values directly embedded in the source
+     * code (e.g., numbers, strings, booleans, etc.). When evaluated:
+     * </p>
+     * <ul>
+     *   <li>If the literal is non-{@code null}, an {@link Environment.PlcObject}
+     *       is created wrapping the literal value.</li>
+     *   <li>If the literal is {@code null}, {@link Environment#NIL} is returned
+     *       to represent the absence of a value.</li>
+     * </ul>
+     *
+     * @param ast the literal expression node containing the underlying value
+     * @return an {@link Environment.PlcObject} wrapping the literal value,
+     *         or {@link Environment#NIL} if the literal is {@code null}
+     */
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
         if (ast.getLiteral() != null) {
@@ -253,16 +421,50 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         return Environment.NIL;
     }
 
-    // Ast.Expression.Group(Ast.Expression expression)
-    // Evaluate the contained expression
+    /**
+     * Visits an {@link Ast.Expression.Group} node and evaluates its contained
+     * expression.
+     * <p>
+     * Group expressions exist primarily to enforce evaluation order, such as
+     * through parentheses in arithmetic or logical expressions (e.g.,
+     * {@code (a + b) * c}). The grouping itself has no runtime effect beyond
+     * ensuring the inner expression is evaluated as a single unit.
+     * </p>
+     *
+     * @param ast the group expression node containing the inner expression
+     * @return the result of evaluating the contained expression
+     */
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
         return visit(ast.getExpression());
     }
 
-    // Ast.Expression.Binary(String operator, Ast.Expression left, Ast.Expression right)
-    // Evaluate argument based on operator
-    // Return result
+    /**
+     * Visits an {@link Ast.Expression.Binary} node and evaluates a binary
+     * operation between two sub-expressions.
+     * <p>
+     * The method performs a pre-order traversal, evaluating the left operand
+     * first, followed by (optionally) the right operand depending on the operator.
+     * It supports short-circuiting for logical {@code OR} operations and delegates
+     * operator-specific behavior to {@link #dispatch(Object, Object, String)}.
+     * </p>
+     * <p>
+     * Evaluation proceeds as follows:
+     * </p>
+     * <ol>
+     *   <li>Evaluate the left operand and retrieve its value.</li>
+     *   <li>If the operator is {@code OR} and the left operand is {@code true},
+     *       short-circuit by returning {@code true} without evaluating the right operand.</li>
+     *   <li>Otherwise, evaluate the right operand.</li>
+     *   <li>If the operand types do not match, throw an {@link RuntimeException}.</li>
+     *   <li>Delegate to {@link #dispatch(Object, Object, String)} to compute the final result.</li>
+     * </ol>
+     *
+     * @param ast the binary expression node containing the operator and its left
+     *            and right sub-expressions
+     * @return an {@link Environment.PlcObject} containing the result of the binary operation
+     * @throws RuntimeException if the operand types are incompatible
+     */
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
         // pre-order traversal: node, left, right
@@ -279,13 +481,84 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         // handle type mismatch
         if (left.getClass() != right.getClass()) {
-            throw new UnsupportedOperationException();
+            throw new RuntimeException();
         }
 
         return dispatch(left, right, operator);
     }
 
-    // helper
+    /**
+     * Visits an {@link Ast.Expression.Access} node and retrieves the value of
+     * a variable or an object field.
+     * <p>
+     * Access expressions represent variable lookups or field accesses depending
+     * on whether a receiver expression is present:
+     * </p>
+     * <ul>
+     *   <li>If a receiver expression is present (e.g., {@code object.field}),
+     *       the receiver is evaluated first, and the named field’s value is returned.</li>
+     *   <li>If no receiver is present, the variable is looked up directly in the
+     *       current {@link Scope} and its value is returned.</li>
+     * </ul>
+     *
+     * <p>In both cases, this method retrieves and returns the evaluated
+     * {@link Environment.PlcObject} value associated with the given name.</p>
+     *
+     * @param ast the access expression node containing an optional receiver
+     *            and the identifier name to retrieve
+     * @return the {@link Environment.PlcObject} value of the accessed variable or field
+     * @throws RuntimeException if the variable or field cannot be found in the current scope
+     */
+    @Override
+    public Environment.PlcObject visit(Ast.Expression.Access ast) {
+        if (ast.getReceiver().isPresent()) {
+            Environment.PlcObject receiver = visit(ast.getReceiver().get());
+            return receiver.getField(ast.getName()).getValue();
+        }
+        return scope.lookupVariable(ast.getName()).getValue();
+    }
+
+    /**
+     * Visits an {@link Ast.Expression.Function} node and performs a function or
+     * method call, evaluating all argument expressions before invocation.
+     * <p>
+     * Function expressions may represent either:
+     * </p>
+     * <ul>
+     *   <li><b>Method calls</b> — when a receiver expression is present (e.g.,
+     *       {@code object.method(arg1, arg2)}). The receiver is evaluated first,
+     *       and the named method is invoked on that object.</li>
+     *   <li><b>Function calls</b> — when no receiver is present. The function is
+     *       looked up in the current {@link Scope} by name and arity, and then invoked.</li>
+     * </ul>
+     *
+     * <p>All argument expressions are evaluated in order before the call occurs.
+     * Arity validation (i.e., ensuring the number of arguments matches the
+     * function’s parameter count) is handled elsewhere.</p>
+     *
+     * @param ast the function expression node containing an optional receiver,
+     *            the function name, and a list of argument expressions
+     * @return the {@link Environment.PlcObject} result returned by the invoked function or method
+     * @throws RuntimeException if the target function or method cannot be found in the current scope
+     */
+    @Override
+    public Environment.PlcObject visit(Ast.Expression.Function ast) {
+        // Note: arity != arguments.size, checked elsewhere
+        List<Environment.PlcObject> arguments = new ArrayList<>(ast.getArguments().size());
+        for (Ast.Expression argument : ast.getArguments()) {
+            arguments.add(visit(argument));
+        }
+        if (ast.getReceiver().isPresent()) {
+            Environment.PlcObject receiver = visit(ast.getReceiver().get());
+            return receiver.callMethod(ast.getName(), arguments);
+        }
+
+        return scope.lookupFunction(ast.getName(), arguments.size()).invoke(arguments);
+    }
+
+    /**
+     * Helper function to dispatch {@link #visit(Ast.Expression.Binary ast)} request according to datatype.
+     */
     private Environment.PlcObject dispatch(Object left, Object right, String operator) {
         switch (left) {
             case BigInteger li:
@@ -297,11 +570,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case Boolean lb:
                 return handleBool(lb, (Boolean) right, operator);
             default:
-                throw new UnsupportedOperationException();
+                throw new RuntimeException();
         }
     }
 
-    // helper
+    /**
+     * Helper function to handle boolean {@link #visit(Ast.Expression.Binary ast)} request.
+     */
     private Environment.PlcObject handleBool(Boolean left, Boolean right, String op) {
         switch (op) {
             case "AND":
@@ -309,21 +584,25 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "OR":
                 return Environment.create(left || right);
             default:
-                throw new UnsupportedOperationException();
+                throw new RuntimeException();
         }
     }
 
-    // helper
+    /**
+     * Helper function to handle string {@link #visit(Ast.Expression.Binary ast)} request.
+     */
     private Environment.PlcObject handleStr(String left, String right, String op) {
         switch (op) {
             case "+":
                 return Environment.create(left + right);
             default:
-                throw new UnsupportedOperationException();
+                throw new RuntimeException();
         }
     }
 
-    // helper
+    /**
+     * Helper function to handle integer {@link #visit(Ast.Expression.Binary ast)} request.
+     */
     private Environment.PlcObject handleInt(BigInteger left, BigInteger right, String op) {
         switch (op) {
             case "+":
@@ -350,11 +629,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "<":
                 return Environment.create(left.compareTo(right) < 0);
             default:
-                throw new UnsupportedOperationException();
+                throw new RuntimeException();
         }
     }
 
-    // helper
+    /**
+     * Helper function to handle decimal {@link #visit(Ast.Expression.Binary ast)} request.
+     */
     private Environment.PlcObject handleDec(BigDecimal left, BigDecimal right, String op) {
         switch (op) {
             case "+":
@@ -381,42 +662,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "<":
                 return Environment.create(left.compareTo(right) < 0);
             default:
-                throw new UnsupportedOperationException();
+                throw new RuntimeException();
         }
-    }
-
-    // Ast.Expression.Access(Optional<Ast.Expression> receiver, String name)
-    // If receiver, evaluate and return
-    // Else, return variable in current scope
-    @Override
-    public Environment.PlcObject visit(Ast.Expression.Access ast) {
-        if (ast.getReceiver().isPresent()) {
-            Environment.PlcObject receiver = visit(ast.getReceiver().get());
-            return receiver.getField(ast.getName()).getValue();
-        }
-        return scope.lookupVariable(ast.getName()).getValue();
-    }
-
-    // Ast.Expression.Function(Optional<Ast.Expression> receiver, String name, List<Ast.Expression> arguments)
-    // If receiver, evaluate and return
-    // Else, return value of function in current scope
-    @Override
-    public Environment.PlcObject visit(Ast.Expression.Function ast) {
-        // Note: arity != arguments.size, checked elsewhere
-        List<Environment.PlcObject> arguments = new ArrayList<>(ast.getArguments().size());
-        for (Ast.Expression argument : ast.getArguments()) {
-            arguments.add(visit(argument));
-        }
-        if (ast.getReceiver().isPresent()) {
-            Environment.PlcObject receiver = visit(ast.getReceiver().get());
-            return receiver.callMethod(ast.getName(), arguments);
-        }
-
-        return scope.lookupFunction(ast.getName(), arguments.size()).invoke(arguments);
     }
 
     /**
-     * Helper function to ensure an object is of the appropriate type.
+     * Helper function to ensure an {@link Environment.PlcObject} is of the appropriate type.
      */
     private static <T> T requireType(Class<T> type, Environment.PlcObject object) {
         if (type.isInstance(object.getValue())) {
@@ -427,7 +678,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Helper function to ensure ast node is of the appropriate type
+     * Helper function to ensure an {@link Ast} node is of the appropriate type
      */
     private static <T> T requireNode(Class<T> type, Ast node) {
         if (type.isInstance(node)) {
@@ -437,7 +688,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Exception class for returning values.
+     * Helper exception for returning {@link #visit(Ast.Method)} values.
      */
     private static class Return extends RuntimeException {
 

@@ -152,6 +152,13 @@ final class InterpreterTests {
         // print("Hello, World!");
         // -> NIL,
         //    %System.out.println("Hello, World!");%
+        //
+        // log(1);
+        // -> NIL,
+        //    Scope{ parent=null,
+        //           variables={},
+        //           functions={ "log/1" }
+        //    }
         PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
@@ -229,12 +236,10 @@ final class InterpreterTests {
     @Test
     void testFieldAssignmentStatement() {
         // Scope{ parent=null,
-        //        variables={
-        //          "object": Scope{
-        //            parent=null,
-        //            variables={ "field": {"object.field" Scope{}} },
-        //            functions={}
-        //          }
+        //        variables={ "object": Scope{ parent=null,
+        //                                     variables={ "field": {"object.field" Scope{}} },
+        //                                     functions={}
+        //                              }
         //        },
         //        functions={}
         // }
@@ -242,12 +247,10 @@ final class InterpreterTests {
         // object.field = 1;
         // -> NIL,
         //    Scope{ parent=null,
-        //           variables={
-        //             "object": Scope{
-        //               parent=null,
-        //               variables={ "field": {1 Scope{}} },
-        //               functions={}
-        //             }
+        //           variables={ "object": Scope{ parent=null,
+        //                                        variables={ "field": {1 Scope{}} },
+        //                                        functions={}
+        //                                 }
         //           },
         //           functions={}
         //    }
@@ -504,23 +507,22 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testAccessExpression(String test, Ast ast, Object expected) {
+        // TODO: Canvas test page says this should be (Variable: variable, scope = {variable = 1}), (Field: object.field, scope = {object = PlcObject{field = 1}})
         // variable
         // -> Scope{ parent=null,
         //           variables={"variable" Scope{}},
         //           functions={}
-        //     }
+        //    }
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
 
         // object.field
         // -> Scope{ parent=null,
-        //           variables={
-        //             "variable": {"variable Scope{}},
-        //             "object":  Scope{
-        //               parent=null,
-        //               variables={ "field": {"object.field Scope{}} },
-        //               functions={}
-        //             }
+        //           variables={ "variable": {"variable Scope{}},
+        //                       "object":  Scope{ parent=null,
+        //                                         variables={ "field": {"object.field Scope{}} },
+        //                                         functions={}
+        //                      }
         //           },
         //           functions={}
         //    }
@@ -548,21 +550,32 @@ final class InterpreterTests {
     @MethodSource
     void testFunctionExpression(String test, Ast ast, Object expected) {
         // function()
-        // -> Scope{ parent=null,
+        // -> 1,
+        //    Scope{ parent=null,
         //           variables={},
         //           functions={ "function/0" }
         //    }
         Scope scope = new Scope(null);
         scope.defineFunction("function", 0, args -> Environment.create("function"));
 
+        // log(2)
+        // -> 2,
+        //    Scope{ parent=null,
+        //           variables={},
+        //           functions={ "log/1" }
+        //    }
+        // Stub: log(1), scope = {log/1 = ...} (returns the argument, 1), changed arg to 2 for clarity
+        scope.defineFunction("log", 1, args -> {
+            BigInteger arg1 = (BigInteger) args.get(0).getValue();
+            return Environment.create(arg1);
+        });
+
         // object.method()
         // -> Scope{ parent=null,
-        //           variables={
-        //             "object": Scope{
-        //               parent=null,
-        //               variables={},
-        //               functions={ "method/1" }
-        //             }
+        //           variables={ "object": Scope{ parent=null,
+        //                                        variables={},
+        //                                        functions={ "method/1" }
+        //                                 }
         //           },
         //           functions={ "function/0" }
         //    }
@@ -578,6 +591,10 @@ final class InterpreterTests {
             Arguments.of("Function",
                 new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList()),
                 "function"
+            ),
+            Arguments.of("Log",
+                new Ast.Expression.Function(Optional.empty(), "log", Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(2)))),
+                BigInteger.valueOf(2)
             ),
             Arguments.of("Method",
                 new Ast.Expression.Function(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "method", Arrays.asList()),

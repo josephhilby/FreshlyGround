@@ -132,7 +132,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >
 >```text
 >statement
-> ├─ "LET" [ CONST ] identifier [ "=" expression ] ";"
+> ├─ "LET" identifier [ "=" expression ] ";"
 > │   └─> Ast.Statement.Declaration(name=identifier, value=expression)
 > │
 > ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
