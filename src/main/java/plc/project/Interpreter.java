@@ -557,7 +557,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Helper function to dispatch {@link #visit(Ast.Expression.Binary ast)} request according to datatype.
+     * Helper function to dispatch a {@link #visit(Ast.Expression.Binary ast)} request to the appropriate
+     * handler, according to datatype.
      */
     private Environment.PlcObject dispatch(Object left, Object right, String operator) {
         switch (left) {
@@ -575,7 +576,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Helper function to handle boolean {@link #visit(Ast.Expression.Binary ast)} request.
+     * Helper function to handle boolean {@link #visit(Ast.Expression.Binary ast)} requests.
      */
     private Environment.PlcObject handleBool(Boolean left, Boolean right, String op) {
         switch (op) {
@@ -589,7 +590,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Helper function to handle string {@link #visit(Ast.Expression.Binary ast)} request.
+     * Helper function to handle string {@link #visit(Ast.Expression.Binary ast)} requests.
      */
     private Environment.PlcObject handleStr(String left, String right, String op) {
         switch (op) {
@@ -601,7 +602,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Helper function to handle integer {@link #visit(Ast.Expression.Binary ast)} request.
+     * Helper function to handle integer {@link #visit(Ast.Expression.Binary ast)} requests.
      */
     private Environment.PlcObject handleInt(BigInteger left, BigInteger right, String op) {
         switch (op) {
@@ -634,7 +635,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     /**
-     * Helper function to handle decimal {@link #visit(Ast.Expression.Binary ast)} request.
+     * Helper function to handle decimal {@link #visit(Ast.Expression.Binary ast)} requests.
      */
     private Environment.PlcObject handleDec(BigDecimal left, BigDecimal right, String op) {
         switch (op) {

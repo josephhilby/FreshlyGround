@@ -167,10 +167,10 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class ParserTestData {
-    private ParserTestData() {}
+public class FooTestData {
+    private FooTestData() {}
     public static final String source = new String("LET i = -1;\nLET inc = 2;\nDEF foo() DO\n    WHILE i != 1 DO\n        IF i > 0 DO\n            print(\"bar\");\n        END\n        i = i + inc;\n    END\nEND");
-    public static final List<Token> input = Arrays.asList(
+    public static final List<Token> tokens = Arrays.asList(
 
             //LET i = -1;
             new Token(Token.Type.IDENTIFIER, "LET", 0),
@@ -232,7 +232,7 @@ public class ParserTestData {
             new Token(Token.Type.IDENTIFIER, "END",145)
     );
 
-    public static final Ast.Source expected = new Ast.Source(
+    public static final Ast.Source tree = new Ast.Source(
             Arrays.asList(
                     new Ast.Field("i", false, Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(-1)))),
                     new Ast.Field("inc", false, Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(2))))

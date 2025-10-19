@@ -31,17 +31,14 @@ book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
 
 <!-- DESIGN AND THEORY -->
 ## Design and Theory
-### Context Free Grammar
-The context free grammar (CFG) of this project is presented in Extended Backus–Naur Form (EBNF).
-It enables a top-down (recursive-descent) parser that runs in linear time. The pipeline:
-
+### The Pipeline
 - Source Code → `Lexer.java` → Array of Tokens
 - Array of Tokens → `Parser.java` → Abstract Syntax Tree (AST)
-- AST → `Interpreter.java` → Singular Object (PlcObject)
+- AST → `Interpreter.java` → Scope Object
 
 ### Lexical Tokens
 At the start of the pipeline is the lexer. This will take a source code file and lex it into an array of tokens following 
-the rules below. These tokens will then act 
+the rules below. 
 
 ```regexp 
 identifier := [A-Za-z_] [A-Za-z0-9_-]*
@@ -53,12 +50,18 @@ character  := ^' ([^'\n\r\\] | 'escape') '$
 string     := ^" ([^"\n\r\\] | 'escape')* "$
 escape     := ^\\ [bnrt'"\\]$
 ```
-**Note:**
-Extra spaces and placeholder words ('escape', 'any character'), were added for clarity. To use these as regex patterns they will need to be removed.
 
-### Syntax Map
+### Context Free Grammar Tree
+The context free grammar (CFG) of this project is presented in Extended Backus–Naur Form (EBNF).
+It enables a top-down (recursive-descent) parser to run in linear time. This parser takes the original 
+array of tokens (**Σ**) and places them as leaf nodes into a tree structure. This tree is assembled by
+starting at a predetermined root (**S**) and placing each token by traversing and constructing internal
+nodes (**N**) according to a set of rules (**P**).
+ 
+
+#### Extended Backus–Naur Form
 *CFG* = (*Σ*, *N*, *P*, *S*), where:
-- **Σ** – terminal symbols (array of tokens produced by the lexer)
+- **Σ** – terminal symbols (tokens produced by the lexer)
 - **N** – non-terminal symbols (see `source`, `statement`, `expression` below)
 - **P** – production rules (right side of `::=`)
 - **S** – start symbol (`source`), which constitutes the instantiation of the AST
@@ -66,7 +69,7 @@ Extra spaces and placeholder words ('escape', 'any character'), were added for c
 **Note:** 
 In the syntax rules below, each line should be read as `non-terminal symbol ::= production rule`.
 
-### Syntax Rules
+#### Syntax Rules
 >```ebnf
 >source                    ::= { field } { method }
 >
@@ -114,6 +117,9 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >- `[ … ]` = optional (zero or one)
 >- `|` = alternative
 >- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
+
+### Interpretation to Java 21
+
 
 <!-- PRACTICAL IMPLEMENTATION -->
 ## Practical Implementation
@@ -264,7 +270,7 @@ Ast.Source
 └─ methods: []
 ```
 
-Finally, in Java, this can be written as:
+Finally, in code, this can be structured as:
 
 ```java
 Ast ast =
@@ -272,18 +278,36 @@ Ast ast =
         List.of(
             new Ast.Field(
                 "x",
-                true,
-                Optional.of(new Ast.Expression.Literal(10))
+                false,
+                Optional.of(new Ast.Expression.Literal(BigInteger.TEN))
             )
         ),
         List.of()
     );
 ```
 
+This structure can then be interpreted by traversing the tree. Starting at the source and recursively moving down, the 
+interpreter constructs a scope object:
+
+```java
+Scope{ parent    = Scope{ }, 
+       variables = { x = Variable{
+                                   name  = 'x', 
+                                   value = Object{ 
+                                                   scope = Scope{ }, 
+                                                   value = 10 
+                                                  } 
+                                 } 
+       },
+       functions = {}
+}
+```
+**Note:** `Scope{ parent = null, variables = {}, functions = {} }` has been shortened to `Scope{ }` for readability.
+
 ### Example 2:
 ```
 DEF main() DO
-    print("Hello", 42);
+    print("Hello Wrold");
 END
 ```
 Again, start at `source`, however this time the `method` pattern will be matched. As before the tokens will match to their respective
@@ -303,9 +327,7 @@ Ast.Source
             ├─ name: "print"
             └─ arguments: [
                 Ast.Expression.Literal,
-                └─ literal: "Hello"
-                Ast.Expression.Literal
-                └─ literal: 42
+                └─ literal: "Hello World"
                 ]
         ]
     ]
@@ -314,7 +336,7 @@ Ast.Source
 ```java
 Ast program =
     new Ast.Source(
-        List.of(), // no fields
+        List.of(),
         List.of(
             new Ast.Method(
                 "main",
@@ -325,8 +347,7 @@ Ast program =
                             Optional.empty(),
                             "print",
                             List.of(
-                                new Ast.Expression.Literal("Hello"),
-                                new Ast.Expression.Literal(42)
+                                new Ast.Expression.Literal("Hello World")
                             )
                         )
                     )
@@ -334,4 +355,14 @@ Ast program =
             )
         )
     );
+```
+
+The AST can then be interpreted and a scope object constructed:
+
+```java
+-> NIL,
+Scope{ parent=Scope{parent=null, variables={}, functions={} }, 
+       variables={name=Variable{name='x', value=Object{scope=Scope{parent=null, variables={}, functions={}}, value=10}}},
+       functions={print/1=Function{name='print', arity=1, function=plc.project.Interpreter$$Lambda/0x000000b801103ac8@4659191b}}}}
+}
 ```

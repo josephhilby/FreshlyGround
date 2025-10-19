@@ -94,8 +94,8 @@ final class ParserTests {
                 )
             ),
             Arguments.of("Large Code Snippet",
-                ParserTestData.input,
-                ParserTestData.expected
+                FooTestData.tokens,
+                FooTestData.tree
             )
         );
     }

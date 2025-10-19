@@ -135,7 +135,6 @@ public final class Parser {
      */
     // "LET" identifier [ "=" expression ] ";"
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        // TODO: Clean up
         String identifier = currentToken().getLiteral();
         Optional<Ast.Expression> expression = Optional.empty();
 
@@ -154,7 +153,6 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     public Ast.Statement.If parseIfStatement() throws ParseException {
-        // TODO: Clean up; while not END, check END ptrn is redundant, loop will go till END or actual end, no need for keyword check
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
         List<Ast.Statement> elseStatements = new ArrayList<>();
@@ -180,20 +178,22 @@ public final class Parser {
      */
     // "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
     public Ast.Statement.For parseForStatement() throws ParseException {
-        // TODO: Clean up
         keywordCheck("(");
         Ast.Statement initialization = null;
         if (typeCheck(Token.Type.IDENTIFIER, false)) {
             initialization = parseLoopStatement();
         }
         keywordCheck(";");
+
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
+
         Ast.Statement increment = null;
         if (typeCheck(Token.Type.IDENTIFIER, false)) {
             increment = parseLoopStatement();
         }
         keywordCheck(")");
+
         List<Ast.Statement> statements = new ArrayList<>();
         while (!peek("END")) {
             statements.add(parseStatement());

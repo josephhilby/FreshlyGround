@@ -238,7 +238,7 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
                 )),
-                Arguments.of("Example 3", LexerTestData.source, LexerTestData.tokens),
+                Arguments.of("Example 3", FooTestData.source, FooTestData.tokens),
                 Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "LET", 0),
                         new Token(Token.Type.IDENTIFIER, "x", 4),
