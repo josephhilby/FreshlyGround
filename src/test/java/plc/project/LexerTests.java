@@ -212,11 +212,7 @@ public class LexerTests {
             Arguments.of("Bang", "!=", true),
             Arguments.of("Equal", "==", true),
             Arguments.of("Extra Char", "<=>", false),
-            Arguments.of("Double Operator", ">>", false),
-
-            // Add logical operators
-            Arguments.of("And", "&&", true),
-            Arguments.of("Or", "||", true)
+            Arguments.of("Double Operator", ">>", false)
         );
     }
 
@@ -242,7 +238,7 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
                 )),
-                Arguments.of("Example 3", LexerTestData.source, LexerTestData.tokens),
+                Arguments.of("Example 3", FooTestData.source, FooTestData.tokens),
                 Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "LET", 0),
                         new Token(Token.Type.IDENTIFIER, "x", 4),

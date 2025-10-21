@@ -587,4 +587,75 @@ public abstract class Ast {
         }
 
     }
+
+    public interface Visitor<T> {
+
+        default T visit(Ast ast) {
+            if (ast instanceof Ast.Source) {
+                return visit((Ast.Source) ast);
+            } else if (ast instanceof Ast.Field) {
+                return visit((Ast.Field) ast);
+            } else if (ast instanceof Ast.Method) {
+                return visit((Ast.Method) ast);
+            } else if (ast instanceof Ast.Statement.Expression) {
+                return visit((Ast.Statement.Expression) ast);
+            } else if (ast instanceof Ast.Statement.Declaration) {
+                return visit((Ast.Statement.Declaration) ast);
+            } else if (ast instanceof Ast.Statement.Assignment) {
+                return visit((Ast.Statement.Assignment) ast);
+            } else if (ast instanceof Ast.Statement.If) {
+                return visit((Ast.Statement.If) ast);
+            } else if (ast instanceof Ast.Statement.For) {
+                return visit((Ast.Statement.For) ast);
+            } else if (ast instanceof Ast.Statement.While) {
+                return visit((Ast.Statement.While) ast);
+            } else if (ast instanceof Ast.Statement.Return) {
+                return visit((Ast.Statement.Return) ast);
+            } else if (ast instanceof Ast.Expression.Literal) {
+                return visit((Ast.Expression.Literal) ast);
+            } else if (ast instanceof Ast.Expression.Group) {
+                return visit((Ast.Expression.Group) ast);
+            } else if (ast instanceof Ast.Expression.Binary) {
+                return visit((Ast.Expression.Binary) ast);
+            } else if (ast instanceof Ast.Expression.Access) {
+                return visit((Ast.Expression.Access) ast);
+            } else if (ast instanceof Ast.Expression.Function) {
+                return visit((Ast.Expression.Function) ast);
+            } else {
+                throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
+            }
+        }
+
+        T visit(Ast.Source ast);
+
+        T visit(Ast.Field ast);
+
+        T visit(Ast.Method ast);
+
+        T visit(Ast.Statement.Expression ast);
+
+        T visit(Ast.Statement.Declaration ast);
+
+        T visit(Ast.Statement.Assignment ast);
+
+        T visit(Ast.Statement.If ast);
+
+        T visit(Ast.Statement.For ast);
+
+        T visit(Ast.Statement.While ast);
+
+        T visit(Ast.Statement.Return ast);
+
+        T visit(Ast.Expression.Literal ast);
+
+        T visit(Ast.Expression.Group ast);
+
+        T visit(Ast.Expression.Binary ast);
+
+        T visit(Ast.Expression.Access ast);
+
+        T visit(Ast.Expression.Function ast);
+
+    }
+
 }
