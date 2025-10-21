@@ -6,24 +6,20 @@ import java.util.List;
 /**
  * The lexer is responsible for converting a raw input stream of characters
  * into a sequence of tokens for later parsing. Its operation is centered around
- * three core components:
+ * two core components:
  *
  * <ul>
  *   <li>{@link #lex()} — repeatedly calls {@link #lexToken()} to produce tokens,
  *       automatically skipping over whitespace and comments.</li>
- *   <li>{@link #lexToken()} — performs the actual tokenization of the next
- *       lexical unit in the input stream.</li>
  *   <li>{@link CharStream} — maintains the lexer’s state, including the current
  *       position, character buffer, and literal construction.</li>
  * </ul>
  *
+ * <p>To use the lexer call {@code List<Token> tokens = new Lexer(source_code).lex()}<p/>
+ *
  * <p>If the lexer encounters invalid syntax (e.g., an unterminated string or
  * malformed literal), it must throw a {@link ParseException} at the character
  * index where the error occurred.</p>
- *
- * <p>Utility methods {@link #peek(String...)} and {@link #match(String...)} are
- * provided to simplify token recognition and should be used whenever possible
- * to keep the implementation concise and reliable.</p>
  */
 public final class Lexer {
 
@@ -57,7 +53,7 @@ public final class Lexer {
     }
 
     /**
-     * Determines the type of the next token and delegates to the corresponding
+     * Determines the next token type and calls the corresponding
      * lexing routine.
      *
      * <p>Since whitespace is already handled by {@link #lex()}, the current
@@ -85,19 +81,14 @@ public final class Lexer {
     }
 
     /**
-     * Lexes an identifier token from the input stream.
+     * Consumes all consecutive characters that match its
+     * grammar rule and emits a {@link Token.Type#IDENTIFIER}.
      * <p>
      * Grammar rule:
      * </p>
      * <pre>
      * identifier ::= [A-Za-z_] [A-Za-z0-9_-]*
      * </pre>
-     * <p>
-     * Identifiers begin with a letter or underscore, followed by any combination
-     * of letters, digits, underscores, or hyphens. This method consumes all
-     * consecutive characters that match this pattern and emits an
-     * {@link Token.Type#IDENTIFIER}.
-     * </p>
      *
      * @return a {@link Token} representing the lexed identifier
      */
@@ -107,28 +98,19 @@ public final class Lexer {
     }
 
     /**
-     * Lexes a numeric literal from the input stream.
+     * Consumes all consecutive characters that match its
+     * grammar rule and emits: {@link Token.Type#INTEGER} or
+     * {@link Token.Type#DECIMAL}.
      * <p>
      * Grammar rule:
      * </p>
      * <pre>
      * number ::= [+-]? [0-9]+ ( '.' [0-9]+ )?
      * </pre>
-     * <p>
-     * A number may optionally begin with a sign ({@code +} or {@code -}),
-     * followed by one or more digits. If a decimal point appears and is followed
-     * by at least one digit, the token is classified as
-     * {@link Token.Type#DECIMAL}; otherwise, it is classified as
-     * {@link Token.Type#INTEGER}.
-     * </p>
-     *
-     * <p>Leading zeros and signed zero cases are validated by
-     * {@link #checkLeadingZeros()} and {@link #checkSignedZero(boolean)} before
-     * consuming digits.</p>
-     *
      * @param signed {@code true} if the number includes a leading sign,
      *               {@code false} otherwise
      * @return a {@link Token} representing either an integer or decimal literal
+     * @throws ParseException if the  is malformed
      */
     public Token lexNumber(boolean signed) {
         checkLeadingZeros();
@@ -142,23 +124,14 @@ public final class Lexer {
     }
 
     /**
-     * Lexes a character literal from the input stream.
+     * Consumes all consecutive characters that match its
+     * grammar rule and emits a {@link Token.Type#CHARACTER}.
      * <p>
      * Grammar rule:
      * </p>
      * <pre>
      * character ::= "'" ( [^'\n\r] | escape ) "'"
      * </pre>
-     * <p>
-     * A character literal begins and ends with single quotes and contains either
-     * a single non-quote, non-newline character or a valid escape sequence
-     * (e.g., {@code '\n'}, {@code '\\'}, {@code '\''}). This method validates
-     * that the literal is properly formed and emits a
-     * {@link Token.Type#CHARACTER} token.
-     * </p>
-     *
-     * <p>If the literal is empty, unclosed, or invalid, a
-     * {@link ParseException} is thrown via {@link #lexError(String)}.</p>
      *
      * @return a {@link Token} representing the parsed character literal
      * @throws ParseException if the character literal is malformed or unterminated
@@ -293,10 +266,6 @@ public final class Lexer {
     /**
      * A helper class maintaining the input string, current index of the char
      * stream, and the current length of the token being matched.
-     *
-     * You should rely on peek/match for state management in nearly all cases.
-     * The only field you need to access is {@link #index} for any {@link
-     * ParseException} which is thrown.
      */
     public static final class CharStream {
 

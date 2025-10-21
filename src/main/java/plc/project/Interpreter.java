@@ -6,6 +6,19 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The interpreter takes a structured representation of the program, the Abstract
+ * Syntax Tree (AST), created by the parser and traverses it via pre-order
+ * traversal.
+ *
+ * The parser has a similar architecture to the lexer, just with {@link Token}s
+ * instead of characters. As before, {@link } and {@link
+ * } are helpers to make the implementation easier.
+ *
+ * This type of parser is called <em>recursive descent</em>. Each rule in our
+ * grammar will have it's own function, and reference to other rules correspond
+ * to calling those functions.
+ */
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     private Scope scope;
@@ -139,23 +152,22 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        Scope definingScope = scope;
+        Scope parent = scope;
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
-           Scope saved = scope;
-           try {
-               scope = new Scope(definingScope);
-               List<String> parameters = ast.getParameters();
-               for (int i = 0; i < parameters.size(); i++) {
-                   scope.defineVariable(parameters.get(i), false, args.get(i));
-               }
-               for (Ast.Statement statement : ast.getStatements()) {
-                   visit(statement);
-               }
-           } catch (Return ret) {
-               return ret.value;
-           } finally {
-               scope = saved;
-           }
+            try {
+                scope = new Scope(parent);
+                List<String> parameters = ast.getParameters();
+                for (int i = 0; i < parameters.size(); i++) {
+                    scope.defineVariable(parameters.get(i), false, args.get(i));
+                }
+                for (Ast.Statement statement : ast.getStatements()) {
+                    visit(statement);
+                }
+            } catch (Return ret) {
+                return ret.value;
+            } finally {
+                scope = scope.getParent();
+            }
            return Environment.NIL;
         });
         return Environment.NIL;
