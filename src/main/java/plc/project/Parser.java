@@ -27,6 +27,7 @@ public final class Parser {
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
+
     /**
      * Parses the {@code source} rule.
      */
@@ -56,7 +57,6 @@ public final class Parser {
      */
     // field ::= "LET" [ CONST ] identifier [ "=" expression ] ";"
     public Ast.Field parseField() throws ParseException {
-        // TODO: Clean up
         String identifier = currentToken().getLiteral();
         boolean constant = match("CONST");
         Optional<Ast.Expression> expression = Optional.empty();
@@ -86,6 +86,7 @@ public final class Parser {
             do {
                 String parameter = currentToken().getLiteral();
                 identifiers.add(parameter);
+                tokens.advance();
             } while (match(","));
         }
         keywordCheck(")");
