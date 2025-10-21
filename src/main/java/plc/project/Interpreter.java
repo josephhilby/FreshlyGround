@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
-    private Scope scope = new Scope(null);
+    private Scope scope;
 
     public Interpreter(Scope parent) {
         scope = new Scope(parent);
@@ -27,7 +27,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             return Environment.create(exponent);
         });
 
-        // (decimal) x -> (base_y) x, 0 < y <= 10
+        // (base_10) x -> (base_y) x, 0 < y <= 10
         scope.defineFunction("converter", 2, args -> {
            int n = 0;
            ArrayList<BigInteger> quotients = new ArrayList<>();
@@ -139,13 +139,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
+        Scope definingScope = scope;
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+           Scope saved = scope;
            try {
-               scope = new Scope(scope);
-               for (String name : ast.getParameters()) {
-                   for (Environment.PlcObject value : args) {
-                       scope.defineVariable(name, false, value);
-                   }
+               scope = new Scope(definingScope);
+               List<String> parameters = ast.getParameters();
+               for (int i = 0; i < parameters.size(); i++) {
+                   scope.defineVariable(parameters.get(i), false, args.get(i));
                }
                for (Ast.Statement statement : ast.getStatements()) {
                    visit(statement);
@@ -153,7 +154,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
            } catch (Return ret) {
                return ret.value;
            } finally {
-               scope = scope.getParent();
+               scope = saved;
            }
            return Environment.NIL;
         });
@@ -614,7 +615,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 return Environment.create(left.multiply(right));
             case "/":
                 if (left.compareTo(BigInteger.ZERO) == 0) {
-                    throw new ArithmeticException("Cannot divide by zero");
+                    throw new RuntimeException("Cannot divide by zero");
                 }
                 return Environment.create(left.divide(right));
             case "==":
@@ -647,7 +648,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 return Environment.create(left.multiply(right));
             case "/":
                 if (left.compareTo(BigDecimal.ZERO) == 0) {
-                    throw new ArithmeticException("Cannot divide by zero");
+                    throw new RuntimeException("Cannot divide by zero");
                 }
                 return Environment.create(left.divide(right, RoundingMode.HALF_EVEN));
             case "==":
