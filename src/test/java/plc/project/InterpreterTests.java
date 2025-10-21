@@ -61,7 +61,8 @@ final class InterpreterTests {
                                         new Ast.Expression.Access(Optional.empty(), "x"),
                                         new Ast.Expression.Access(Optional.empty(), "y")                                ))
                         )))
-                ), Environment.NIL.getValue())
+                ), Environment.NIL.getValue()),
+                Arguments.of("Foo", FooTestData.tree_main, Environment.NIL.getValue())
         );
     }
 

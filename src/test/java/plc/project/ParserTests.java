@@ -67,6 +67,30 @@ final class ParserTests {
                     )))
                 )
             ),
+            Arguments.of("Method with Params",
+                Arrays.asList(
+                    // DEF name(x,y,z) DO stmt; END
+                    new Token(Token.Type.IDENTIFIER, "DEF", 0),
+                    new Token(Token.Type.IDENTIFIER, "name", 4),
+                    new Token(Token.Type.OPERATOR, "(", 8),
+                    new Token(Token.Type.OPERATOR, "x", 9),
+                    new Token(Token.Type.OPERATOR, ",", 10),
+                    new Token(Token.Type.OPERATOR, "y", 11),
+                    new Token(Token.Type.OPERATOR, ",", 12),
+                    new Token(Token.Type.OPERATOR, "z", 13),
+                    new Token(Token.Type.OPERATOR, ")", 14),
+                    new Token(Token.Type.IDENTIFIER, "DO", 16),
+                    new Token(Token.Type.IDENTIFIER, "stmt", 19),
+                    new Token(Token.Type.OPERATOR, ";", 23),
+                    new Token(Token.Type.IDENTIFIER, "END", 25)
+                ),
+                new Ast.Source(
+                    Arrays.asList(),
+                    Arrays.asList(new Ast.Method("name", Arrays.asList("x", "y", "z"), Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                    )))
+                )
+            ),
             Arguments.of("Field Method",
                 Arrays.asList(
                     // LET name = expr;␊DEF name() DO stmt; END
