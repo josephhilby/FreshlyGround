@@ -6,6 +6,19 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The interpreter takes a structured representation of the program, the Abstract
+ * Syntax Tree (AST), created by the parser and traverses it via pre-order
+ * traversal.
+ *
+ * The parser has a similar architecture to the lexer, just with {@link Token}s
+ * instead of characters. As before, {@link } and {@link
+ * } are helpers to make the implementation easier.
+ *
+ * This type of parser is called <em>recursive descent</em>. Each rule in our
+ * grammar will have it's own function, and reference to other rules correspond
+ * to calling those functions.
+ */
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     private Scope scope;
@@ -116,12 +129,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     /**
      * Visits a {@link Ast.Method} node and defines a new function within the
-     * current {@code scope}.
+     * current {@link Scope}.
      * <p>
      * The function is represented as a lambda (callback) that, when invoked:
      * </p>
      * <ol>
-     *   <li>Creates a new child {@link Scope} extending the current one.</li>
+     *   <li>Creates a new child {@code Scope} extending the defining scope,
+     *       not the invoking scope.</li>
      *   <li>Defines local variables for each parameter, binding them to the
      *       provided argument values (assuming correct arity).</li>
      *   <li>Evaluates each statement in the method body sequentially.</li>
@@ -129,33 +143,28 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      *   <li>Otherwise, returns {@link Environment#NIL} after all statements execute.</li>
      * </ol>
      *
-     * <p>The method itself (i.e., during AST visitation) returns
-     * {@link Environment#NIL} because defining a function does not yield
-     * a runtime value.</p>
-     *
      * @param ast the method node containing the function name, parameter list,
      *            and body statements
      * @return {@link Environment#NIL}, since method declarations have no direct value
      */
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        Scope definingScope = scope;
+        Scope parent = scope;
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
-           Scope saved = scope;
-           try {
-               scope = new Scope(definingScope);
-               List<String> parameters = ast.getParameters();
-               for (int i = 0; i < parameters.size(); i++) {
-                   scope.defineVariable(parameters.get(i), false, args.get(i));
-               }
-               for (Ast.Statement statement : ast.getStatements()) {
-                   visit(statement);
-               }
-           } catch (Return ret) {
-               return ret.value;
-           } finally {
-               scope = saved;
-           }
+            try {
+                scope = new Scope(parent);
+                List<String> parameters = ast.getParameters();
+                for (int i = 0; i < parameters.size(); i++) {
+                    scope.defineVariable(parameters.get(i), false, args.get(i));
+                }
+                for (Ast.Statement statement : ast.getStatements()) {
+                    visit(statement);
+                }
+            } catch (Return ret) {
+                return ret.value;
+            } finally {
+                scope = scope.getParent();
+            }
            return Environment.NIL;
         });
         return Environment.NIL;
@@ -453,10 +462,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      * Evaluation proceeds as follows:
      * </p>
      * <ol>
+     *   <li>Capture the operator.</li>
      *   <li>Evaluate the left operand and retrieve its value.</li>
      *   <li>If the operator is {@code OR} and the left operand is {@code true},
-     *       short-circuit by returning {@code true} without evaluating the right operand.</li>
-     *   <li>Otherwise, evaluate the right operand.</li>
+     *       short-circuit by returning {@code true}.</li>
+     *   <li>Evaluate the right operand and retrieve its value.</li>
      *   <li>If the operand types do not match, throw an {@link RuntimeException}.</li>
      *   <li>Delegate to {@link #dispatch(Object, Object, String)} to compute the final result.</li>
      * </ol>
@@ -468,19 +478,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
-        // pre-order traversal: node, left, right
         String operator = ast.getOperator();
         Object left = visit(ast.getLeft()).getValue();
 
-        // interrupt for OR short circuit
         if (operator.equals("OR") && Boolean.parseBoolean(left.toString())) {
             return Environment.create(true);
         }
 
-        // finish pre-order
         Object right = visit(ast.getRight()).getValue();
 
-        // handle type mismatch
         if (left.getClass() != right.getClass()) {
             throw new RuntimeException();
         }
