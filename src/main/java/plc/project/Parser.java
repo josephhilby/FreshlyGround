@@ -55,47 +55,64 @@ public final class Parser {
      * Parses the {@code field} rule. This method should only be called if the
      * next tokens start a field, aka {@code LET}.
      */
-    // field ::= "LET" [ CONST ] identifier [ "=" expression ] ";"
+    // field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
+    //            LET CONST name : type = expression;
     public Ast.Field parseField() throws ParseException {
-        String identifier = currentToken().getLiteral();
         boolean constant = match("CONST");
+        String name = currentToken().getLiteral();
+        typeCheck(Token.Type.IDENTIFIER);
+
+        keywordCheck(":");
+        String type = currentToken().getLiteral();
+        typeCheck(Token.Type.IDENTIFIER);
         Optional<Ast.Expression> expression = Optional.empty();
 
-        typeCheck(Token.Type.IDENTIFIER);
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
         keywordCheck(";");
-        return new Ast.Field(identifier, constant, expression);
+        return new Ast.Field(name, type, constant, expression);
     }
 
     /**
      * Parses the {@code method} rule. This method should only be called if the
      * next tokens start a method, aka {@code DEF}.
      */
-    // method ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
+    // method ::= "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO" { statement } "END"
+    //             DEF name(parameter : parameterType) : returnType DO statement(s) END
     public Ast.Method parseMethod() throws ParseException {
         // TODO: Clean up
-        String identifier = currentToken().getLiteral();
-        List<String> identifiers = new ArrayList<>();
+        String name = currentToken().getLiteral();
+        typeCheck(Token.Type.IDENTIFIER);
+
+        List<String> parameters = new ArrayList<>();
+        List<String> parameterTypes = new ArrayList<>();
+        Optional<String> returnType = Optional.empty();
         List<Ast.Statement> statements = new ArrayList<>();
 
-        typeCheck(Token.Type.IDENTIFIER);
         keywordCheck("(");
         if (!peek(")")) {
             do {
                 String parameter = currentToken().getLiteral();
-                identifiers.add(parameter);
-                tokens.advance();
+                typeCheck(Token.Type.IDENTIFIER);
+                keywordCheck(":");
+                String parameterType = currentToken().getLiteral();
+                typeCheck(Token.Type.IDENTIFIER);
+                parameters.add(parameter);
+                parameterTypes.add(parameterType);
             } while (match(","));
         }
         keywordCheck(")");
+        if (match(":")) {
+            returnType = Optional.of(currentToken().getLiteral());
+            typeCheck(Token.Type.IDENTIFIER);
+        }
         keywordCheck("DO");
         while (!peek("END")) {
             statements.add(parseStatement());
         }
         keywordCheck("END");
-        return new Ast.Method(identifier, identifiers, statements);
+        return new Ast.Method(name, parameters, parameterTypes, returnType, statements);
     }
 
     /**
@@ -134,17 +151,25 @@ public final class Parser {
      * method should only be called if the next tokens start a declaration
      * statement, aka {@code LET}.
      */
-    // "LET" identifier [ "=" expression ] ";"
+    // "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
+    //  LET name : type = expression;
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        String identifier = currentToken().getLiteral();
+        String name = currentToken().getLiteral();
+        typeCheck(Token.Type.IDENTIFIER);
+
+        Optional<String> type = Optional.empty();
         Optional<Ast.Expression> expression = Optional.empty();
 
-        typeCheck(Token.Type.IDENTIFIER);
+        if (match(":")) {
+            type = Optional.of(currentToken().getLiteral());
+            typeCheck(Token.Type.IDENTIFIER);
+        }
+
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
         keywordCheck(";");
-        return new Ast.Statement.Declaration(identifier, expression);
+        return new Ast.Statement.Declaration(name, type, expression);
     }
 
     /**

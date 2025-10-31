@@ -82,14 +82,14 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >```ebnf
 >source                    ::= { field } { method }
 >
->field                     ::= "LET" [ CONST ] identifier [ "=" expression ] ";"
+>field                     ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
 >
->method                    ::= "DEF" identifier "(" [ identifier { "," identifier } ] ")"
->                            "DO" { statement } "END"
+>method                    ::= "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")"
+>                            [ ":" identifier ] "DO" { statement } "END"
 >```
 >
 >```ebnf
->statement                 ::= "LET" identifier [ "=" expression ] ";"
+>statement                 ::= "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
 >                            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
 >                            | "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
 >                            | "WHILE" expression "DO" { statement } "END"
@@ -137,17 +137,17 @@ TODO
 >source ─> Ast.Source(fields=field(s), methods=method(s))
 >
 >field
-> └─ "LET" [ CONST ] identifier [ "=" expression ] ";"
+> └─ "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
 >     └─> Ast.Field(constant=boolean, name=identifier, value=expression)
 >  
 > method
-> └─ "DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"
+> └─ "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO" { statement } "END"
 >     └─> Ast.Method(name=identifier, parameters=identifier(s), statements=statement(s))
 >```
 >
 >```text
 >statement
-> ├─ "LET" identifier [ "=" expression ] ";"
+> ├─ "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
 > │   └─> Ast.Statement.Declaration(name=identifier, value=expression)
 > │
 > ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
