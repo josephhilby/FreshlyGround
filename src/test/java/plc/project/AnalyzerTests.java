@@ -1,6 +1,7 @@
 package plc.project;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -290,18 +291,18 @@ public final class AnalyzerTests {
         return Stream.of(
                 Arguments.of("Logical AND Valid",
                         // TRUE AND FALSE
-                        new Ast.Expression.Binary("&&",
+                        new Ast.Expression.Binary("AND",
                                 new Ast.Expression.Literal(Boolean.TRUE),
                                 new Ast.Expression.Literal(Boolean.FALSE)
                         ),
-                        init(new Ast.Expression.Binary("&&",
+                        init(new Ast.Expression.Binary("AND",
                                 init(new Ast.Expression.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
                                 init(new Ast.Expression.Literal(Boolean.FALSE), ast -> ast.setType(Environment.Type.BOOLEAN))
                         ), ast -> ast.setType(Environment.Type.BOOLEAN))
                 ),
                 Arguments.of("Logical AND Invalid",
                         // TRUE AND "FALSE"
-                        new Ast.Expression.Binary("&&",
+                        new Ast.Expression.Binary("AND",
                                 new Ast.Expression.Literal(Boolean.TRUE),
                                 new Ast.Expression.Literal("FALSE")
                         ),
@@ -366,6 +367,87 @@ public final class AnalyzerTests {
                 )
         );
     }
+
+    @Test
+    public void testFor() {
+        // FOR (num = 1; num < 5; num = num + 1) function(num); END
+
+        Scope scope = new Scope(null);
+        scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
+        scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
+
+        Ast.Statement.Assignment init = new Ast.Statement.Assignment(
+            new Ast.Expression.Access(Optional.empty(), "num"),
+            new Ast.Expression.Literal(BigInteger.ONE));
+
+        Ast.Expression.Binary cond = new Ast.Expression.Binary(
+            "<",
+            new Ast.Expression.Access(Optional.empty(), "num"),
+            new Ast.Expression.Literal(BigInteger.valueOf(5)));
+
+        Ast.Statement.Assignment incr = new Ast.Statement.Assignment(
+            new Ast.Expression.Access(Optional.empty(), "num"),
+            new Ast.Expression.Binary(
+                "+",
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Literal(BigInteger.ONE)));
+
+        Ast.Statement.For astFor = new Ast.Statement.For(
+            init,
+            cond,
+            incr,
+            Arrays.asList(
+                new Ast.Statement.Expression(
+                    new Ast.Expression.Function(
+                        Optional.empty(),
+                        "function",
+                        Arrays.asList(new Ast.Expression.Access(Optional.empty(), "num"))
+                    )
+                )
+            )
+        );
+        Ast.Statement.For expected = new Ast.Statement.For(
+            init,
+            cond,
+            incr,
+            Arrays.asList(
+                new Ast.Statement.Expression(
+                    init(
+                        new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(
+                                    new Ast.Expression.Access(Optional.empty(), "num"),
+                                    ast -> ast.setVariable(
+                                        new Environment.Variable(
+                                            "num",
+                                            "num",
+                                            Environment.Type.INTEGER,
+                                            false,
+                                            Environment.NIL
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        ast -> ast.setFunction(
+                            new Environment.Function(
+                                "function",
+                                "function",
+                                Arrays.asList(Environment.Type.INTEGER),
+                                Environment.Type.INTEGER,
+                                args -> Environment.NIL
+                            )
+                        )
+                    )
+                )
+            )
+        );
+
+        test(astFor, expected, scope);
+    }
+
 
     @ParameterizedTest(name = "{0}")
     @MethodSource

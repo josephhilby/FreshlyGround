@@ -178,6 +178,7 @@ public final class Parser {
      * {@code IF}.
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
+    //  IF condition DO thenStatements ELSE elseStatements END
     public Ast.Statement.If parseIfStatement() throws ParseException {
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
@@ -203,6 +204,7 @@ public final class Parser {
      * {@code FOR}.
      */
     // "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
+    //  FOR (initialization; condition; increment) statements END
     public Ast.Statement.For parseForStatement() throws ParseException {
         keywordCheck("(");
         Ast.Statement initialization = null;
@@ -234,6 +236,7 @@ public final class Parser {
      * {@code WHILE}.
      */
     // "WHILE" expression "DO" { statement } "END"
+    //  WHILE condition DO statements END
     public Ast.Statement.While parseWhileStatement() throws ParseException {
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
@@ -252,6 +255,7 @@ public final class Parser {
      * {@code RETURN}.
      */
     // "RETURN" expression ";"
+    //  RETURN value;
     public Ast.Statement.Return parseReturnStatement() throws ParseException {
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
@@ -259,6 +263,7 @@ public final class Parser {
     }
 
     // expression "=" expression ";"
+    // receiver = value;
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
         Ast.Expression value = parseExpression();
         keywordCheck(";");
@@ -266,12 +271,14 @@ public final class Parser {
     }
 
     // expression ";"
+    // receiver;
     public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws ParseException {
         keywordCheck(";");
         return new Ast.Statement.Expression(expression);
     }
 
     // identifier "=" expression
+    // receiver = value
     private Ast.Statement.Assignment parseLoopStatement() throws ParseException {
         Ast.Expression receiver = parseExpression();
         keywordCheck("=");
@@ -328,6 +335,8 @@ public final class Parser {
      */
     // secondary_expression ::= primary_expression
     //      { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
+    //
+    // receiver.literal(parameters)
     public Ast.Expression parseSecondaryExpression() throws ParseException {
         Ast.Expression receiver = parsePrimaryExpression();
         while (match(".")) {
@@ -344,12 +353,12 @@ public final class Parser {
      * not strictly necessary.
      */
     // primary_expression ::=
-    //     "NIL"
-    //     | "TRUE" | "FALSE"
-    //     | integer | decimal
-    //     | character | string
-    //     | "(" expression ")"
-    //     | identifier [ "(" [ expression { "," expression } ] ")" ]
+    //     "NIL"              |
+    //     "TRUE" | "FALSE"   |
+    //     integer | decimal  |
+    //     character | string |
+    //     "(" expression ")" |
+    //     identifier [ "(" [ expression { "," expression } ] ")" ]
     public Ast.Expression parsePrimaryExpression() throws ParseException {
         return parsePrimaryExpression(Optional.empty());
     }
@@ -393,6 +402,7 @@ public final class Parser {
         }
 
         // "(" expression ")"
+        // (expression)
         if (match("(")) {
             Ast.Expression expression = parseExpression();
             keywordCheck(")");
@@ -400,6 +410,7 @@ public final class Parser {
         }
 
         // identifier [ "(" [ expression { "," expression } ] ")" ]
+        // receiver.literal(parameters)
         if (match(Token.Type.IDENTIFIER)) {
             List<Ast.Expression> expressions = new ArrayList<>();
             if (match("(", ")")) {
