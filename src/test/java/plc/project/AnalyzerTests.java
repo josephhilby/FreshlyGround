@@ -373,7 +373,7 @@ public final class AnalyzerTests {
         // FOR (num = 1; num < 5; num = num + 1) function(num); END
 
         Scope scope = new Scope(null);
-        scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
+        scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL);
         scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
 
         Ast.Statement.Assignment init = new Ast.Statement.Assignment(
