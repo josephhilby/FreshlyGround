@@ -24,13 +24,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return scope;
     }
 
-    // throws a RuntimeException if: no 'main/0' type INT
-    // visit fields, then visit methods, return null
-    //
     // [ fields ] [ methods ]
     @Override
     public Void visit(Ast.Source ast) {
-
+        // visit fields, then visit methods, return null
         for (Ast.Field field : ast.getFields()) {
             visit(field);
         }
@@ -39,6 +36,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(method);
         }
 
+        // throws a RuntimeException if: no 'main/0' type INT
         Environment.Function main = scope.lookupFunction("main", 0);
         if (main.getReturnType() != Environment.Type.INTEGER) {
             throw new RuntimeException("main() return type must be an integer");
@@ -47,11 +45,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // throws a RuntimeException if: value exists AND not assignable to field (requireAssignable)
-    //                              or constant and no value assigned.
-    // visit the value (if present), define variable in current scope, set variable, return null
-    //
-    // LET [ CONST ] name : typeName [ = value ];
+    // LET [ constant ] name : typeName [ = value ];
     @Override
     public Void visit(Ast.Field ast) {
         boolean constant = ast.getConstant();
@@ -59,7 +53,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
         String typeName = ast.getTypeName();
         Optional<Ast.Expression> value = ast.getValue();
 
-        // check value exists and assignable then visit
+        // visit the value, if exists
+        // throws a RuntimeException if: value not assignable declared type
         if (value.isPresent()) {
             visit(value.get());
 
@@ -68,22 +63,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(target, actual);
         }
 
-        // throw error if constant and no value
+        // throws a RuntimeException if: constant and no value assigned
         if (constant && value.isEmpty()) {
-            throw new RuntimeException("constant must not be empty");
+            throw new RuntimeException("CONST must have a value");
         }
 
-        // define and set
+        // define variable in current scope, then set
         Environment.Variable variable = scope.defineVariable(name, name, Environment.getType(typeName), constant, Environment.NIL);
         ast.setVariable(variable);
         return null;
     }
 
-    // define and set function in current scope, visits function arguments and statements in new scope,
-    // saves returnType, return null
-    //
     // DEF name([ parameter : paramType ]) [ : returnType ]
-    // DO statements END
+    //   DO statements END
     @Override
     public Void visit(Ast.Method ast) {
         String name = ast.getName();
@@ -97,7 +89,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             paramTypes.add(Environment.getType(type));
         }
 
-        // check and set return type
+        // check and save return type
         if (ast.getReturnTypeName().isPresent()) {
             returnType = Environment.getType(ast.getReturnTypeName().get());
         }
@@ -106,34 +98,35 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Environment.Function function = scope.defineFunction(name, name, paramTypes, returnType, args -> Environment.NIL);
         ast.setFunction(function);
 
-        // define arguments and visit statements in new scope
-        defineArguments(parameters, paramTypes, statements);
+        // visit statements (including parameters) in new scope
+        visitAllStatements(parameters, paramTypes, statements);
         return null;
     }
 
-    private void defineArguments(List<String> parameters, List<Environment.Type> paramTypes, List<Ast.Statement> statements) {
+    // helper
+    private void visitAllStatements(List<String> parameters, List<Environment.Type> paramTypes, List<Ast.Statement> statements) {
         try {
             scope = new Scope(scope);
+
             for (int i = 0; i < parameters.size(); i++) {
                 scope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false, Environment.NIL);
             }
+
             for (Ast.Statement statement : statements) {
                 visit(statement);
             }
+
         } finally {
             scope = scope.getParent();
         }
     }
 
-    // throws a RuntimeException if: the expression is not an Ast.Expression.Function
-    // validate the expression statement, return null
-    //
     // expression [ = expression ];
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        // check expression is Ast.Expression.Function
+        // throws a RuntimeException if: the expression is not an Ast.Expression.Function
         if (!(ast.getExpression() instanceof Ast.Expression.Function)) {
-            throw new RuntimeException("expression must be a function");
+            throw new RuntimeException("Expression must be a function");
         }
 
         // visit expression
@@ -141,71 +134,72 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // throws a RuntimeException if: value exists AND not assignable to field (subtype of field).
-    // visit the value (if present), define variable in current scope, return null
-    //
     // LET name [ : type ] [ = value ];
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
         String name = ast.getName();
         Environment.Type type;
 
-        // check that there is type or value
+        // throws a RuntimeException if: no value AND no type
         if (ast.getValue().isEmpty() && ast.getTypeName().isEmpty()) {
-            throw new RuntimeException("Must have type of value");
+            throw new RuntimeException("Must have declared type or value");
         }
 
         // visit value (if present) then set type
         if (ast.getValue().isPresent()) {
             visit(ast.getValue().get());
             type = ast.getValue().get().getType();
+
         } else {
             type = Environment.getType(ast.getTypeName().get());
         }
 
-        // if type and value, check assignable
+        // throws a RuntimeException if: value exists AND not assignable to variable
         if (ast.getValue().isPresent() && ast.getTypeName().isPresent()) {
             requireAssignable(Environment.getType(ast.getTypeName().get()), ast.getValue().get().getType());
         }
 
-        // define and set variable
-        scope.defineVariable(name, name, type, false, Environment.NIL);
-        ast.setVariable(scope.lookupVariable(name));
+        // define and set variable in current scope
+        Environment.Variable variable = scope.defineVariable(name, name, type, false, Environment.NIL);
+        ast.setVariable(variable);
         return null;
     }
 
-    // throws a RuntimeException if: receiver is not Access, value is not assignable to field, change to const
-    // validate statement, return null
-    //
     // receiver = value;
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
+        // throws a RuntimeException if: receiver is not Access
         if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
-            throw new RuntimeException("receiver must be an access expression");
+            throw new RuntimeException("Receiver must be an access expression");
         }
+
         visit(ast.getReceiver());
         visit(ast.getValue());
+
+        // throws a RuntimeException if: value is not assignable to receiver
         requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
         return null;
     }
 
-    // throws a RuntimeException if: condition not Bool, thenStatements empty
-    // visit then and else statements inside new scope for each, return null
-    //
     // IF condition DO statements [ ELSE statements ] END
     @Override
     public Void visit(Ast.Statement.If ast) {
         Ast.Expression condition = ast.getCondition();
 
         visit(condition);
+
+        // throws a RuntimeException if: condition not Bool
         requireAssignable(Environment.Type.BOOLEAN, condition.getType());
 
+        // throws a RuntimeException if: thenStatements empty
         if (ast.getThenStatements().isEmpty()) {
             throw new RuntimeException("IF block must contain at least one then statement");
         }
 
+        // visit then statements inside new scope
         visitStatements(ast.getThenStatements());
 
+        // if existed, visit else statements inside new scope
         if (!ast.getElseStatements().isEmpty()) {
             visitStatements(ast.getElseStatements());
         }
@@ -213,52 +207,53 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // throws a RuntimeException if: identifier exists AND not Comparable, condition not Bool,
-    //                               expression in inc NOT same as identifier, statements empty
-    // validate FOR statement, return null
-    //
     // FOR ([ initialization ]; condition; [ increment ])
-    // statements END
+    //   statements END
     @Override
     public Void visit(Ast.Statement.For ast) {
         Ast.Statement.Assignment initialization;
-        Ast.Statement.Assignment incriment;
+        Ast.Statement.Assignment increment;
+
+        // throws a RuntimeException if: statements empty
         if (ast.getStatements().isEmpty()) {
             throw new RuntimeException("FOR block must contain at least one statement");
         }
 
+        visitStatements(ast.getStatements());
+
         if (ast.getInitialization() != null) {
             visit(ast.getInitialization());
             initialization = (Ast.Statement.Assignment) ast.getInitialization();
+
+            // throws a RuntimeException if: initialization exists AND not Comparable
             requireAssignable(Environment.Type.COMPARABLE, initialization.getReceiver().getType());
 
             if (ast.getIncrement() != null) {
                 visit(ast.getIncrement());
-                incriment = (Ast.Statement.Assignment) ast.getIncrement();
-                requireAssignable(initialization.getReceiver().getType(), incriment.getReceiver().getType());
+                increment = (Ast.Statement.Assignment) ast.getIncrement();
+
+                // throws a RuntimeException if: initialization AND increment exists AND NOT same type
+                requireAssignable(initialization.getReceiver().getType(), increment.getReceiver().getType());
             }
         }
 
         visit(ast.getCondition());
+
+        // throws a RuntimeException if: condition not Bool
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
-
-        if (ast.getIncrement() != null && ast.getInitialization() == null) {
-            visit(ast.getIncrement());
-        }
-
-        visitStatements(ast.getStatements());
 
         return null;
     }
 
-    // throws a RuntimeException if: value is not Boolean
-    // visits WHILE statements in new scope, return null
-    //
     // WHILE condition DO statements END
     @Override
     public Void visit(Ast.Statement.While ast) {
         visit(ast.getCondition());
+
+        // throws a RuntimeException if: value is not Boolean
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        // visits WHILE statements in new scope
         visitStatements(ast.getStatements());
 
         return null;
@@ -268,177 +263,208 @@ public final class Analyzer implements Ast.Visitor<Void> {
     private void visitStatements(List<Ast.Statement> statements) {
         try {
             scope = new Scope(scope);
+
             for (Ast.Statement statement : statements) {
                 visit(statement);
             }
+
         } finally {
             scope = scope.getParent();
         }
     }
 
-    // throws a RuntimeException if: value NOT assignable to func. return type (set in visit(Ast.Method))
-    // return null
-    //
     // RETURN value;
     @Override
     public Void visit(Ast.Statement.Return ast) {
         visit(ast.getValue());
         Environment.Type actualReturn = ast.getValue().getType();
+
+        // throws a RuntimeException if: value NOT assignable to return type
         requireAssignable(returnType, actualReturn);
+
         return null;
     }
 
-    // throws a RuntimeException if: int or double out of range
-    // validate and set literal type, return null
     @Override
     public Void visit(Ast.Expression.Literal ast) {
 
         var literal = ast.getLiteral();
 
+        // validate and set literal type
         if (literal instanceof String) {
             ast.setType(Environment.Type.STRING);
+
         } else if (literal instanceof Character) {
             ast.setType(Environment.Type.CHARACTER);
+
         } else if (literal instanceof Boolean) {
             ast.setType(Environment.Type.BOOLEAN);
+
         } else if (literal == Environment.NIL) {
             ast.setType(Environment.Type.NIL);
+
         } else if (literal instanceof BigInteger bigInteger) {
             if (bigInteger.intValueExact() > Integer.MAX_VALUE ||
                 bigInteger.intValueExact() < Integer.MIN_VALUE) {
-                throw new RuntimeException("INT overflow or underflow");
+
+                // throws a RuntimeException if: INT out of range
+                throw new RuntimeException("INT Overflow or Underflow");
             }
             ast.setType(Environment.Type.INTEGER);
+
         } else if (literal instanceof BigDecimal bigDecimal) {
             if (bigDecimal.doubleValue() > Double.MAX_VALUE ||
                 bigDecimal.doubleValue() < Double.MIN_VALUE) {
-                throw new RuntimeException("DOUBLE overflow or underflow");
+
+                // throws a RuntimeException if: DOUBLE out of range
+                throw new RuntimeException("DOUBLE Overflow or Underflow");
             }
             ast.setType(Environment.Type.DECIMAL);
+
         } else {
+            // throws a RuntimeException if: Unknown Type
             throw new RuntimeException("Unknown Type");
         }
         return null;
     }
 
-    // throws a RuntimeException if: expression not a binary expression
-    // return null
     @Override
     public Void visit(Ast.Expression.Group ast) {
+        // throws a RuntimeException if: expression not a binary expression
         if (!(ast.getExpression() instanceof Ast.Expression.Binary)) {
             throw new RuntimeException("Group expression must be binary");
         }
+
         visit(ast.getExpression());
         ast.setType(ast.getExpression().getType());
+
         return null;
     }
 
-    // throws a RuntimeException if: all errant casts
-    // AND / OR, both bool, set result bool
-    // ==, !=, <,..., both comp, set result comp
-    // +, either string, set result string
-    // +,-,*,/ both same (int or dec), set result int or dec
-    // return null
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        // TODO cleanup
         String operator = ast.getOperator();
         visit(ast.getLeft());
         visit(ast.getRight());
 
-        if (operator.equals("AND") || operator.equals("OR")) {
-            requireAssignable(Environment.Type.BOOLEAN, ast.getLeft().getType());
-            requireAssignable(Environment.Type.BOOLEAN, ast.getRight().getType());
-            ast.setType(Environment.Type.BOOLEAN);
-        } else if (operator.equals("==") ||
-                   operator.equals("!=") ||
-                   operator.equals("<") ||
-                   operator.equals(">") ||
-                   operator.equals("<=") ||
-                   operator.equals(">=")) {
+        Environment.Type leftType = ast.getLeft().getType();
+        Environment.Type rightType = ast.getRight().getType();
 
-            requireAssignable(Environment.Type.COMPARABLE, ast.getLeft().getType());
-            requireAssignable(Environment.Type.COMPARABLE, ast.getRight().getType());
+        // throws a RuntimeException if: all errant casts
+        if (check(operator, "AND", "OR")) {
+            requireAssignables(Environment.Type.BOOLEAN, leftType, rightType);
             ast.setType(Environment.Type.BOOLEAN);
-        } else if (operator.equals("+") && (ast.getLeft().getType() == Environment.Type.STRING || ast.getRight().getType() == Environment.Type.STRING)) {
+
+        } else if (check(operator, "==", "!=", "<=", ">=", "<", ">")) {
+            requireAssignables(Environment.Type.COMPARABLE, leftType, rightType);
+            ast.setType(Environment.Type.BOOLEAN);
+
+        } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
             ast.setType(Environment.Type.STRING);
-        } else if (operator.equals("+") || operator.equals("-") || operator.equals("*") || operator.equals("/")) {
-            if (ast.getLeft().getType() == Environment.Type.INTEGER) {
-                requireAssignable(Environment.Type.INTEGER, ast.getLeft().getType());
-                requireAssignable(Environment.Type.INTEGER, ast.getRight().getType());
+
+        } else if (check(operator, "+", "-", "*", "/")) {
+            if (check(Environment.Type.INTEGER, leftType)) {
+                requireAssignables(Environment.Type.INTEGER, leftType, rightType);
                 ast.setType(Environment.Type.INTEGER);
-            } else if (ast.getLeft().getType() == Environment.Type.DECIMAL) {
-                requireAssignable(Environment.Type.DECIMAL, ast.getLeft().getType());
-                requireAssignable(Environment.Type.DECIMAL, ast.getRight().getType());
+
+            } else if (check(Environment.Type.DECIMAL, leftType)) {
+                requireAssignables(Environment.Type.DECIMAL, leftType, rightType);
                 ast.setType(Environment.Type.DECIMAL);
             }
+
         } else {
-            throw new RuntimeException("Unknown operator: " + operator);
+            // throws a RuntimeException if: Unknown Operator
+            throw new RuntimeException("Unknown Operator: " + operator);
         }
+
         return null;
     }
 
-    // throws a RuntimeException if: ...
-    // validate access expression and set variable
-    //    set type of the expression to type of variable
-    //    variable field of receiver if present, otherwise variable of current scope
-    // return null
-    //
-    // receiver.identifier
+    // helper
+    private boolean check(Environment.Type expectedType, Environment.Type... actualTypes) {
+        for (Environment.Type actualType : actualTypes) {
+            if (expectedType.equals(actualType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // helper
+    private boolean check(String operator, String... literals) {
+        for (String literal : literals) {
+            if (operator.equals(literal)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // [ receiver. ] variable
     @Override
     public Void visit(Ast.Expression.Access ast) {
+        Environment.Variable variable;
+        // if receiver, visit
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
-            ast.setVariable(receiver.getType().getField(ast.getName()));
+            variable = receiver.getType().getField(ast.getName());
+
         } else {
-            ast.setVariable(scope.lookupVariable(ast.getName()));
+            variable = scope.lookupVariable(ast.getName());
         }
+
+        // set variable
+        ast.setVariable(variable);
+
         return null;
     }
 
-    // validate and set function
-    //     set function to return type
-    //     function of receiver if present, otherwise function of current scope
-    // checks provided arguments are assignable to parameter types
-    // return null
-    //
-    // receiver.identifier([ arguments ])
+    // [ receiver.] function([ arguments ])
     @Override
     public Void visit(Ast.Expression.Function ast) {
-        // TODO clean up (recursion?)
-        int i = 0;
         Environment.Function function;
         List<Ast.Expression> arguments = ast.getArguments();
         List<Environment.Type> parameterTypes;
+        int i = 0;
 
+        // if receiver, visit AND increment arguments (account for invoking object)
         if (ast.getReceiver().isPresent()) {
-            visit(ast.getReceiver().get());
-            function = ast.getReceiver().get().getType().getFunction(ast.getName(), ast.getArguments().size());
+            Ast.Expression receiver = ast.getReceiver().get();
+            visit(receiver);
+            function = receiver.getType().getFunction(ast.getName(), ast.getArguments().size());
             i++;
+
         } else {
             function = scope.lookupFunction(ast.getName(), ast.getArguments().size());
         }
 
-        parameterTypes = function.getParameterTypes();
+        // set function
+        ast.setFunction(function);
 
+        // checks provided arguments are assignable to parameter types
+        parameterTypes = function.getParameterTypes();
         while (i < arguments.size()) {
             visit(arguments.get(i));
             requireAssignable(parameterTypes.get(i), arguments.get(i).getType());
             i++;
         }
 
-        ast.setFunction(function);
         return null;
     }
 
+    // helper
+    public static void requireAssignables(Environment.Type target, Environment.Type... actuals) {
+        for (Environment.Type actual : actuals) {
+            requireAssignable(target, actual);
+        }
+    }
 
+    // accept if:
+    // 1. two types are the same
+    // 2. target is ANY
+    // 3. target is COMPARABLE, if INT, DEC, CHAR, STRING
     public static void requireAssignable(Environment.Type target, Environment.Type actual) {
-        // accept if:
-        // 1. two types are the same
-        // 2. target is ANY
-        // 3. target is COMPARABLE, if INT, DEC, CHAR, STRING
-        // else RuntimeException
         if (target == actual ||
             target == Environment.Type.ANY ||
            (target == Environment.Type.COMPARABLE && actual == Environment.Type.INTEGER) ||
@@ -447,6 +473,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
            (target == Environment.Type.COMPARABLE && actual == Environment.Type.STRING)) {
             return;
         }
+
+        // else RuntimeException
         throw new RuntimeException("Type mismatch");
     }
 
