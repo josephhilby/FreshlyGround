@@ -13,7 +13,7 @@ import java.util.Optional;
  */
 public final class Analyzer implements Ast.Visitor<Void> {
     public Scope scope;
-    private Ast.Method method;
+    private Environment.Type returnType;
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
@@ -30,10 +30,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // [ fields ] [ methods ]
     @Override
     public Void visit(Ast.Source ast) {
-        Environment.Function main = scope.lookupFunction("main", 0);
-        if (main.getReturnType() != Environment.Type.INTEGER) {
-            throw new RuntimeException("main() return type must be an integer");
-        }
 
         for (Ast.Field field : ast.getFields()) {
             visit(field);
@@ -42,6 +38,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
         for (Ast.Method method : ast.getMethods()) {
             visit(method);
         }
+
+        Environment.Function main = scope.lookupFunction("main", 0);
+        if (main.getReturnType() != Environment.Type.INTEGER) {
+            throw new RuntimeException("main() return type must be an integer");
+        }
+
         return null;
     }
 
@@ -59,11 +61,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // check value exists and assignable then visit
         if (value.isPresent()) {
+            visit(value.get());
+
             Environment.Type actual = value.get().getType();
             Environment.Type target = Environment.getType(typeName);
             requireAssignable(target, actual);
-
-            visit(value.get());
         }
 
         // throw error if constant and no value
@@ -84,13 +86,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // DO statements END
     @Override
     public Void visit(Ast.Method ast) {
-        // save method for later use
-        method = ast;
-
         String name = ast.getName();
         List<String> parameters = ast.getParameters();
         List<Environment.Type> paramTypes = new ArrayList<>();
-        Environment.Type returnType = Environment.Type.NIL;
+        returnType = Environment.Type.NIL;
         List<Ast.Statement> statements = ast.getStatements();
 
         // check and set parameter types
@@ -166,7 +165,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // if type and value, check assignable
         if (ast.getValue().isPresent() && ast.getTypeName().isPresent()) {
-            requireAssignable(Environment.getType(ast.getTypeName().get()),ast.getValue().get().getType());
+            requireAssignable(Environment.getType(ast.getTypeName().get()), ast.getValue().get().getType());
         }
 
         // define and set variable
@@ -184,8 +183,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
             throw new RuntimeException("receiver must be an access expression");
         }
-        visit(ast.getValue());
         visit(ast.getReceiver());
+        visit(ast.getValue());
         requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
         return null;
     }
@@ -196,14 +195,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // IF condition DO statements [ ELSE statements ] END
     @Override
     public Void visit(Ast.Statement.If ast) {
+        Ast.Expression condition = ast.getCondition();
+
+        visit(condition);
+        requireAssignable(Environment.Type.BOOLEAN, condition.getType());
+
         if (ast.getThenStatements().isEmpty()) {
-            throw new RuntimeException("if statement must contain at least one statement");
+            throw new RuntimeException("IF block must contain at least one then statement");
         }
-        visit(ast.getCondition());
-        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
 
         visitStatements(ast.getThenStatements());
-        visitStatements(ast.getElseStatements());
+
+        if (!ast.getElseStatements().isEmpty()) {
+            visitStatements(ast.getElseStatements());
+        }
 
         return null;
     }
@@ -216,10 +221,31 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // statements END
     @Override
     public Void visit(Ast.Statement.For ast) {
-        visit(ast.getInitialization());
+        Ast.Statement.Assignment initialization;
+        Ast.Statement.Assignment incriment;
+        if (ast.getStatements().isEmpty()) {
+            throw new RuntimeException("FOR block must contain at least one statement");
+        }
+
+        if (ast.getInitialization() != null) {
+            visit(ast.getInitialization());
+            initialization = (Ast.Statement.Assignment) ast.getInitialization();
+            requireAssignable(Environment.Type.COMPARABLE, initialization.getReceiver().getType());
+
+            if (ast.getIncrement() != null) {
+                visit(ast.getIncrement());
+                incriment = (Ast.Statement.Assignment) ast.getIncrement();
+                requireAssignable(initialization.getReceiver().getType(), incriment.getReceiver().getType());
+            }
+        }
+
         visit(ast.getCondition());
-        visit(ast.getIncrement());
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        if (ast.getIncrement() != null && ast.getInitialization() == null) {
+            visit(ast.getIncrement());
+        }
+
         visitStatements(ast.getStatements());
 
         return null;
@@ -256,9 +282,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // RETURN value;
     @Override
     public Void visit(Ast.Statement.Return ast) {
-        // TODO test this, it should not work
-        Environment.Type returnType = Environment.getType(method.getReturnTypeName().get());
-        requireAssignable(returnType, ast.getValue().getType());
+        visit(ast.getValue());
+        Environment.Type actualReturn = ast.getValue().getType();
+        requireAssignable(returnType, actualReturn);
         return null;
     }
 
@@ -266,8 +292,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // validate and set literal type, return null
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        // TODO cleanup
+
         var literal = ast.getLiteral();
+
         if (literal instanceof String) {
             ast.setType(Environment.Type.STRING);
         } else if (literal instanceof Character) {
@@ -276,18 +303,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
             ast.setType(Environment.Type.BOOLEAN);
         } else if (literal == Environment.NIL) {
             ast.setType(Environment.Type.NIL);
-        } else if (literal instanceof BigInteger) {
-            BigInteger bigInteger = (BigInteger) literal;
-            if (bigInteger.intValueExact() > Integer.MAX_VALUE || bigInteger.intValueExact() < Integer.MIN_VALUE) {
+        } else if (literal instanceof BigInteger bigInteger) {
+            if (bigInteger.intValueExact() > Integer.MAX_VALUE ||
+                bigInteger.intValueExact() < Integer.MIN_VALUE) {
                 throw new RuntimeException("INT overflow or underflow");
             }
             ast.setType(Environment.Type.INTEGER);
-        } else if (literal instanceof BigDecimal) {
-            BigDecimal bigDecimal = (BigDecimal) literal;
-            if (bigDecimal.doubleValue() > Double.MAX_VALUE || bigDecimal.doubleValue() < Double.MIN_VALUE) {
+        } else if (literal instanceof BigDecimal bigDecimal) {
+            if (bigDecimal.doubleValue() > Double.MAX_VALUE ||
+                bigDecimal.doubleValue() < Double.MIN_VALUE) {
                 throw new RuntimeException("DOUBLE overflow or underflow");
             }
             ast.setType(Environment.Type.DECIMAL);
+        } else {
+            throw new RuntimeException("Unknown Type");
         }
         return null;
     }
@@ -377,6 +406,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // receiver.identifier([ arguments ])
     @Override
     public Void visit(Ast.Expression.Function ast) {
+        // TODO clean up (recursion?)
         int i = 0;
         Environment.Function function;
         List<Ast.Expression> arguments = ast.getArguments();
@@ -407,7 +437,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         // accept if:
         // 1. two types are the same
         // 2. target is ANY
-        // 3. target is COMPARABLE, to INT, DEC, CHAR, STRING, ~(COMP, ANY, BOOL, NIL)
+        // 3. target is COMPARABLE, if INT, DEC, CHAR, STRING
         // else RuntimeException
         if (target == actual ||
             target == Environment.Type.ANY ||
