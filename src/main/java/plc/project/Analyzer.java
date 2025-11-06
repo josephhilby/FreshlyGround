@@ -7,10 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * See the specification for information about what the different visit
- * methods should do.
- */
+
 public final class Analyzer implements Ast.Visitor<Void> {
     public Scope scope;
     private Environment.Type returnType;
@@ -81,7 +78,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         String name = ast.getName();
         List<String> parameters = ast.getParameters();
         List<Environment.Type> paramTypes = new ArrayList<>();
-        returnType = Environment.Type.NIL;
         List<Ast.Statement> statements = ast.getStatements();
 
         // check and set parameter types
@@ -90,6 +86,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // check and save return type
+        returnType = Environment.Type.NIL;
         if (ast.getReturnTypeName().isPresent()) {
             returnType = Environment.getType(ast.getReturnTypeName().get());
         }
@@ -169,12 +166,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
         // throws a RuntimeException if: receiver is not Access
-        if (!(ast.getReceiver() instanceof Ast.Expression.Access)) {
+        if (!(ast.getReceiver() instanceof Ast.Expression.Access receiver)) {
             throw new RuntimeException("Receiver must be an access expression");
         }
 
-        visit(ast.getReceiver());
+        visit(receiver);
         visit(ast.getValue());
+
+        // can't assign to constant
+        if (receiver.getVariable().getConstant()) {
+            throw new RuntimeException("Cannot reassign constant");
+        }
 
         // throws a RuntimeException if: value is not assignable to receiver
         requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
@@ -370,6 +372,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             } else if (check(Environment.Type.DECIMAL, leftType)) {
                 requireAssignables(Environment.Type.DECIMAL, leftType, rightType);
                 ast.setType(Environment.Type.DECIMAL);
+
+            } else {
+                throw new RuntimeException("Arithmetic Operators must have matching types, INT or DECIMAL");
             }
 
         } else {
@@ -428,7 +433,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         List<Environment.Type> parameterTypes;
         int i = 0;
 
-        // if receiver, visit AND increment arguments (account for invoking object)
+        // if receiver, visit AND increment argument starting index (account for invoking object)
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
