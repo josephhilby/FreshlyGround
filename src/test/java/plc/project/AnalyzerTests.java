@@ -389,13 +389,52 @@ public final class AnalyzerTests {
                 ),
                 null
             ),
-            Arguments.of("Invalid Statement",
-                // IF TRUE DO print(9223372036854775807); END
+            Arguments.of("Invalid Statement Overflow Int",
+                // IF TRUE DO print(MAX INT + 1); END
                 new Ast.Statement.If(
                     new Ast.Expression.Literal(Boolean.TRUE),
                     Arrays.asList(new Ast.Statement.Expression(
                         new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
-                            new Ast.Expression.Literal(BigInteger.valueOf(Long.MAX_VALUE))
+                            new Ast.Expression.Literal(BigInteger.valueOf(Integer.MAX_VALUE).add(BigInteger.ONE))
+                        ))
+                    )),
+                    Arrays.asList()
+                ),
+                null
+            ),
+            Arguments.of("Invalid Statement Underflow Int",
+                // IF TRUE DO print(MIN INT - 1); END
+                new Ast.Statement.If(
+                    new Ast.Expression.Literal(Boolean.TRUE),
+                    Arrays.asList(new Ast.Statement.Expression(
+                        new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
+                            new Ast.Expression.Literal(BigInteger.valueOf(Integer.MIN_VALUE).subtract(BigInteger.ONE))
+                        ))
+                    )),
+                    Arrays.asList()
+                ),
+                null
+            ),
+            Arguments.of("Invalid Statement Overflow Dec",
+                // IF TRUE DO print(MAX DEC + 1); END
+                new Ast.Statement.If(
+                    new Ast.Expression.Literal(Boolean.TRUE),
+                    Arrays.asList(new Ast.Statement.Expression(
+                        new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
+                            new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE).add(BigDecimal.ONE))
+                        ))
+                    )),
+                    Arrays.asList()
+                ),
+                null
+            ),
+            Arguments.of("Invalid Statement Underflow Dec",
+                // IF TRUE DO print(MIN DEC - 1); END
+                new Ast.Statement.If(
+                    new Ast.Expression.Literal(Boolean.TRUE),
+                    Arrays.asList(new Ast.Statement.Expression(
+                        new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
+                            new Ast.Expression.Literal(BigDecimal.valueOf(Double.MIN_VALUE).subtract(BigDecimal.ONE))
                         ))
                     )),
                     Arrays.asList()
@@ -528,9 +567,24 @@ public final class AnalyzerTests {
                 init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN))
             ),
             Arguments.of("Integer Valid",
-                // 2147483647
+                // MAX_INT
                 new Ast.Expression.Literal(BigInteger.valueOf(Integer.MAX_VALUE)),
                 init(new Ast.Expression.Literal(BigInteger.valueOf(Integer.MAX_VALUE)), ast -> ast.setType(Environment.Type.INTEGER))
+            ),
+            Arguments.of("Integer Valid Min",
+                // MIN_INT
+                new Ast.Expression.Literal(BigInteger.valueOf(Integer.MIN_VALUE)),
+                init(new Ast.Expression.Literal(BigInteger.valueOf(Integer.MIN_VALUE)), ast -> ast.setType(Environment.Type.INTEGER))
+            ),
+            Arguments.of("Decimal Valid",
+                // MAX_DEC
+                new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)),
+                init(new Ast.Expression.Literal(BigDecimal.valueOf(Double.MAX_VALUE)), ast -> ast.setType(Environment.Type.DECIMAL))
+            ),
+            Arguments.of("Decimal Valid Min",
+                // MIN_DEC
+                new Ast.Expression.Literal(BigDecimal.valueOf(Double.MIN_VALUE)),
+                init(new Ast.Expression.Literal(BigDecimal.valueOf(Double.MIN_VALUE)), ast -> ast.setType(Environment.Type.DECIMAL))
             ),
             Arguments.of("Integer Invalid",
                 // 9223372036854775807

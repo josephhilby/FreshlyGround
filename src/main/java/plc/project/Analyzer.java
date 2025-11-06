@@ -306,8 +306,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             ast.setType(Environment.Type.NIL);
 
         } else if (literal instanceof BigInteger bigInteger) {
-            if (bigInteger.intValueExact() > Integer.MAX_VALUE ||
-                bigInteger.intValueExact() < Integer.MIN_VALUE) {
+            if (bigInteger.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0 ||
+                bigInteger.compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) < 0) {
 
                 // throws a RuntimeException if: INT out of range
                 throw new RuntimeException("INT Overflow or Underflow");
@@ -315,8 +315,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             ast.setType(Environment.Type.INTEGER);
 
         } else if (literal instanceof BigDecimal bigDecimal) {
-            if (bigDecimal.doubleValue() > Double.MAX_VALUE ||
-                bigDecimal.doubleValue() < Double.MIN_VALUE) {
+            if (bigDecimal.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0 ||
+                bigDecimal.compareTo(BigDecimal.valueOf(Double.MIN_VALUE)) < 0) {
 
                 // throws a RuntimeException if: DOUBLE out of range
                 throw new RuntimeException("DOUBLE Overflow or Underflow");
