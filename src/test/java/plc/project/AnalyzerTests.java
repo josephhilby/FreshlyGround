@@ -42,8 +42,9 @@ public final class AnalyzerTests {
                 new Ast.Source(
                     Arrays.asList(),
                     Arrays.asList(
-                    new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                        new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO))))
+                        new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                            new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO)))
+                        )
                     )
                 ),
                 new Ast.Source(
