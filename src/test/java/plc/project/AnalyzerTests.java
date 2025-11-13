@@ -35,6 +35,7 @@ public final class AnalyzerTests {
             expected.getMethods().forEach(method -> Assertions.assertEquals(method.getFunction(), analyzer.scope.lookupFunction(method.getName(), method.getParameters().size())));
         }
     }
+
     private static Stream<Arguments> testSource() {
         return Stream.of(
             Arguments.of("Valid Main",
@@ -696,7 +697,8 @@ public final class AnalyzerTests {
             Arguments.of("Variable",
                 // variable
                 new Ast.Expression.Access(Optional.empty(), "variable"),
-                init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL)))
+                init(new Ast.Expression.Access(Optional.empty(), "variable"), ast ->
+                    ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL)))
             ),
             Arguments.of("Field",
                 // object.field
