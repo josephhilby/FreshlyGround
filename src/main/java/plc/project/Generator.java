@@ -62,7 +62,6 @@ public final class Generator implements Ast.Visitor<Void> {
 
         newline(indent);
         print("}");
-
         return null;
     }
 
@@ -225,11 +224,13 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Literal ast) {
         if (ast.getType() == Environment.Type.INTEGER) {
             print(ast.getLiteral());
+        } else if (ast.getType() == Environment.Type.DECIMAL) {
+            print(ast.getLiteral());
         } else if (ast.getType() == Environment.Type.STRING) {
             print("\"", ast.getLiteral(), "\"");
+        } else if (ast.getType() == Environment.Type.CHARACTER) {
+            print("'", ast.getLiteral(), "'");
         } else if (ast.getType() == Environment.Type.BOOLEAN) {
-            print(ast.getLiteral());
-        } else if (ast.getType() == Environment.Type.DECIMAL) {
             print(ast.getLiteral());
         } else {
             throw new RuntimeException("Unknown Type: " + ast.getType());
@@ -245,25 +246,19 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Binary ast) {
-        String operator;
+        String operator = ast.getOperator();
         // TODO this is a bad way to handle this, also test for recursive/nested bin
         switch (ast.getOperator()) {
             case "AND":
-                operator = " && ";
+                operator = "&&";
                 break;
-            case "+":
-                operator = " + ";
+            case "OR":
+                operator = "||";
                 break;
-            case "<":
-                operator = " < ";
-                break;
-            case "*":
-                operator = " * ";
-                break;
-            default:
-                throw new RuntimeException("Unknown Operator: " + ast.getOperator());
+            case "^":
+                operator = "math.pow";
         }
-        print(ast.getLeft(), operator,  ast.getRight());
+        print(ast.getLeft(), " ",operator, " ", ast.getRight());
         return null;
     }
 
