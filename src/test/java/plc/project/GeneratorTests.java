@@ -61,6 +61,94 @@ public class GeneratorTests {
         );
     }
 
+    // TODO field tests
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testFieldExpression(String test, Ast.Field ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testFieldExpression() {
+        return Stream.of(
+            Arguments.of("Field Non-Const",
+                // LET x: String;
+                init(new Ast.Field("x", "String", false, Optional.empty()),
+                    ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.STRING, false, Environment.NIL))),
+                "String x;"
+            ),
+            Arguments.of("Field Const",
+                // LET CONST y: Boolean = TRUE AND FALSE;
+                init(new Ast.Field("y", "Boolean", true, Optional.of(
+                        init(new Ast.Expression.Binary("AND",
+                            init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                            init(new Ast.Expression.Literal(false), ast -> ast.setType(Environment.Type.BOOLEAN))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN))
+                    )),
+                    ast -> ast.setVariable(new Environment.Variable("y", "y", Environment.Type.BOOLEAN, false, Environment.NIL))),
+                "final boolean y = true && false;"
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testMethodExpression(String test, Ast.Method ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testMethodExpression() {
+        return Stream.of(
+            Arguments.of("Method",
+                // DEF area(radius: Decimal): Decimal DO
+                //     RETURN 3.14 * radius * radius
+                // END
+                init(new Ast.Method("area", Arrays.asList("radius"), Arrays.asList("Decimal"), Optional.of("Decimal"), Arrays.asList(
+                    new Ast.Statement.Return(
+                        init(new Ast.Expression.Binary("*",
+                            init(new Ast.Expression.Binary("*",
+                                init(new Ast.Expression.Literal(BigDecimal.valueOf(3.14)), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                init(new Ast.Expression.Access(Optional.empty(), "radius"), ast ->
+                                    ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, false, Environment.NIL)))
+                            ), ast -> ast.setType(Environment.Type.DECIMAL)),
+                            init(new Ast.Expression.Access(Optional.empty(), "radius"), ast ->
+                                ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, false, Environment.NIL)))
+                        ), ast -> ast.setType(Environment.Type.DECIMAL))
+                    )
+                )), ast -> ast.setFunction(new Environment.Function("area", "area", Arrays.asList(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL))),
+                String.join(System.lineSeparator(),
+                    "double area(double radius) {",
+                    "    return 3.14 * radius * radius;",
+                    "}"
+                )
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testExpressionStatement(String test, Ast.Statement.Expression ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testExpressionStatement() {
+        return Stream.of(
+            Arguments.of("Expression",
+                // log("Hello World");
+                new Ast.Statement.Expression(
+                    init(new Ast.Expression.Function(Optional.empty(),"log", Arrays.asList(
+                        init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING))
+                    )), ast -> ast.setFunction(new Environment.Function("log", "log", Arrays.asList(Environment.Type.STRING), Environment.Type.NIL, args -> Environment.NIL)))
+                ),
+                "log(\"Hello World\");"
+            ),
+            Arguments.of("Initialization",
+                // 1;
+                new Ast.Statement.Expression(init(new Ast.Expression.Literal(new BigDecimal("1")),ast -> ast.setType(Environment.Type.INTEGER))),
+                "1;"
+            )
+        );
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, String expected) {
@@ -81,6 +169,29 @@ public class GeneratorTests {
                         )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, true, Environment.NIL))),
                         "double name = 1.0;"
                 )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAssignmentStatement(String test, Ast.Statement.Assignment ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testAssignmentStatement() {
+        return Stream.of(
+            Arguments.of("Assignment",
+                // variable = "Hello World";
+                new Ast.Statement.Assignment(
+                        init(new Ast.Expression.Access(Optional.empty(), "variable"),
+                            ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.STRING, false, Environment.NIL))
+                        ),
+                        init(new Ast.Expression.Literal("Hello World"),
+                            ast -> ast.setType(Environment.Type.STRING)
+                        )
+                ),
+                "variable = \"Hello World\";"
+            )
         );
     }
 
@@ -215,6 +326,38 @@ public class GeneratorTests {
                                 "}"
                         )
                 )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testWhileStatement(String test, Ast.Statement.While ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testWhileStatement() {
+        return Stream.of(
+            Arguments.of("While",
+                // FOR (num = 0; num < 5; num = num + 1)
+                //     print(num);
+                // END
+                new Ast.Statement.While(
+                    init(new Ast.Expression.Access(Optional.empty(), "condition"), ast ->
+                        ast.setVariable(new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, false, Environment.NIL))),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(init(new Ast.Expression.Access(Optional.empty(), "stmt1"),
+                            ast -> ast.setVariable(new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, true, Environment.NIL)))),
+                        new Ast.Statement.Expression(init(new Ast.Expression.Access(Optional.empty(), "stmt2"),
+                            ast -> ast.setVariable(new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true, Environment.NIL))))
+                    )
+                ),
+                String.join(System.lineSeparator(),
+                    "while (condition) {",
+                    "    stmt1;",
+                    "    stmt2;",
+                    "}"
+                )
+            )
         );
     }
 

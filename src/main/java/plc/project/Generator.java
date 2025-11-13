@@ -31,25 +31,21 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        // create a "class Main {"
         print("public class Main {");
         newline(indent);
 
-        //     declare fields -> properties
+
         newline(++indent);
 //        for (Ast.Field field : ast.getFields()) {
 //            print(field);
 //            newline(indent);
 //        }
 
-        //     declare "public static void main(String[] args) {
         print("public static void main(String[] args) {");
 
-        //         System.exit(new Main().main());
         newline(++indent);
         print("System.exit(new Main().main());");
 
-        //     }"
         newline(--indent);
         print("}");
 
@@ -61,31 +57,49 @@ public final class Generator implements Ast.Visitor<Void> {
             print(method);
         }
 
-        // print "}" to close the "class Main {"
         newline(--indent);
         newline(indent);
+
         print("}");
         return null;
     }
 
     @Override
     public Void visit(Ast.Field ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getConstant()) {
+            print("final ");
+        }
+
+        print(getJavaType(ast.getTypeName()), " ", ast.getName());
+
+        if (ast.getValue().isPresent()) {
+            print(" = ", ast.getValue().get());
+        }
+
+        print(";");
+        return null;
     }
 
-    // int main() {
-    //     System.out.println(\"Hello, World!\");
-    //     return 0;
-    // }
+
     @Override
     public Void visit(Ast.Method ast) {
         if (ast.getReturnTypeName().isPresent()) {
             print(getJavaType(ast.getReturnTypeName().get()), " ");
         }
 
-        print(ast.getName(), "(");
-        // TODO list params
-        print(") {");
+        if (ast.getParameters().isEmpty()) {
+            print(ast.getName(), "() {");
+        } else {
+            print(ast.getName(), "(");
+            for (int i = 0; i < ast.getParameters().size(); i++) {
+                print(getJavaType(ast.getParameterTypeNames().get(i)), " ", ast.getParameters().get(i));
+                if (i < ast.getParameters().size() - 1) {
+                    print(", ");
+                }
+            }
+            print(") {");
+        }
+
         // TODO list statements (done multiple times factor into helper)
         if (!ast.getStatements().isEmpty()) {
             indent++;
@@ -95,8 +109,8 @@ public final class Generator implements Ast.Visitor<Void> {
             }
             newline(--indent);
         }
-        print("}");
 
+        print("}");
         return null;
     }
 
@@ -115,13 +129,12 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         print(";");
-
         return null;
     }
 
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        print(ast.getReceiver(), " = ", ast.getValue());
+        print(ast.getReceiver(), " = ", ast.getValue(), ";");
         return null;
     }
 
@@ -140,26 +153,36 @@ public final class Generator implements Ast.Visitor<Void> {
 
         if (!ast.getElseStatements().isEmpty()) {
             print("} else {");
-            newline(++indent);
+            indent++;
             for (int i = 0; i < ast.getElseStatements().size(); i++) {
-                if (i != 0) {
-                    newline(++indent);
-                }
+                newline(indent);
                 print(ast.getElseStatements().get(i));
             }
             newline(--indent);
         }
+
         print("}");
         return null;
     }
 
     @Override
     public Void visit(Ast.Statement.For ast) {
-        Object init = (ast.getInitialization() != null) ? ast.getInitialization() : "";
-        Object incr = (ast.getIncrement() != null) ? ast.getIncrement() : "";
-        String trail = (incr != "") ? " " : "";
-        print("for ( ", init, "; ", ast.getCondition(), "; ", incr, trail, ") {");
+        print("for ( ");
+        if (ast.getInitialization() != null) {
+            print(ast.getInitialization(), " ");
+        } else {
+            print("; ");
+        }
 
+        print(ast.getCondition(), "; ");
+
+        if (ast.getIncrement() != null) {
+            // must cast as visit(Ast.Statement.Assignment) must return ";" at end.
+            Ast.Statement.Assignment increment = (Ast.Statement.Assignment) ast.getIncrement();
+            print(increment.getReceiver(), " = ", increment.getValue(), " ");
+        }
+
+        print(") {");
         if (!ast.getStatements().isEmpty()) {
             indent++;
             for (int i = 0; i < ast.getStatements().size(); i++) {
@@ -175,20 +198,18 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.While ast) {
-        print("while (", ast.getCondition(), ")");
+        print("while (", ast.getCondition(), ") {");
 
         if (!ast.getStatements().isEmpty()) {
-            newline(++indent);
+            indent++;
             for (int i = 0; i < ast.getStatements().size(); i++) {
-                if (i != 0) {
-                    newline(++indent);
-                }
-                print(ast.getStatements().get(i), ";");
+                newline(indent);
+                print(ast.getStatements().get(i));
             }
             newline(--indent);
         }
 
-        print(";");
+        print("}");
         return null;
     }
 
