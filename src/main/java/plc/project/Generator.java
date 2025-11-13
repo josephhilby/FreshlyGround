@@ -1,7 +1,6 @@
 package plc.project;
 
 import java.io.PrintWriter;
-import java.math.BigInteger;
 
 public final class Generator implements Ast.Visitor<Void> {
 
@@ -32,35 +31,38 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Source ast) {
         print("public class Main {");
+
         newline(indent);
-
-
-        newline(++indent);
-//        for (Ast.Field field : ast.getFields()) {
-//            print(field);
-//            newline(indent);
-//        }
-
-        print("public static void main(String[] args) {");
-
-        newline(++indent);
-        print("System.exit(new Main().main());");
-
-        newline(--indent);
-        print("}");
-
-        //     declare functions -> methods
-        //     one of our functions -> methods is called main()
-        newline(--indent);
-        newline(++indent);
-        for (Ast.Method method : ast.getMethods()) {
-            print(method);
+        if (!ast.getFields().isEmpty()) {
+            indent++;
+            for (Ast.Field field : ast.getFields()) {
+                newline(indent);
+                print(field);
+            }
+            newline(--indent);
         }
 
+        newline(++indent);
+        print("public static void main(String[] args) {");
+        newline(++indent);
+        print("System.exit(new Main().main());");
         newline(--indent);
-        newline(indent);
-
         print("}");
+        indent--;
+
+        newline(indent);
+        if (!ast.getMethods().isEmpty()) {
+            indent++;
+            for (Ast.Method method : ast.getMethods()) {
+                newline(indent);
+                print(method);
+            }
+            newline(--indent);
+        }
+
+        newline(indent);
+        print("}");
+
         return null;
     }
 

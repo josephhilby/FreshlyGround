@@ -29,35 +29,76 @@ public class GeneratorTests {
 
     private static Stream<Arguments> testSource() {
         return Stream.of(
-                Arguments.of("Hello, World!",
-                        // DEF main(): Integer DO
-                        //     print("Hello, World!");
-                        //     RETURN 0;
-                        // END
-                        new Ast.Source(
-                                Arrays.asList(),
-                                Arrays.asList(init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                                        new Ast.Statement.Expression(init(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
-                                                init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
-                                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
-                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
-                        ),
-                        String.join(System.lineSeparator(),
-                                "public class Main {",
-                                "",
-                                "    public static void main(String[] args) {",
-                                "        System.exit(new Main().main());",
-                                "    }",
-                                "",
-                                "    int main() {",
-                                "        System.out.println(\"Hello, World!\");",
-                                "        return 0;",
-                                "    }",
-                                "",
-                                "}"
-                        )
+            Arguments.of("Hello, World!",
+                // DEF main(): Integer DO
+                //     print("Hello, World!");
+                //     RETURN 0;
+                // END
+                new Ast.Source(
+                    Arrays.asList(),
+                    Arrays.asList(init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
+                            init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                        new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                    )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                ),
+                String.join(System.lineSeparator(),
+                    "public class Main {",
+                    "",
+                    "    public static void main(String[] args) {",
+                    "        System.exit(new Main().main());",
+                    "    }",
+                    "",
+                    "    int main() {",
+                    "        System.out.println(\"Hello, World!\");",
+                    "        return 0;",
+                    "    }",
+                    "",
+                    "}"
                 )
+            ),
+            Arguments.of("Field and Method",
+                // LET x: Integer;
+                // LET y: Integer = 10;
+                // DEF main(): Integer DO
+                //     RETURN x + y;
+                // END
+                new Ast.Source(
+                    Arrays.asList(
+                        init(new Ast.Field("x", "Integer", false, Optional.empty()),
+                        ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.INTEGER, false, Environment.NIL))),
+                        init(new Ast.Field("y", "Integer", false, Optional.of(
+                                init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
+                            )),
+                            ast -> ast.setVariable(new Environment.Variable("y", "y", Environment.Type.INTEGER, false, Environment.NIL)))
+                        ),
+                    Arrays.asList(init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                        new Ast.Statement.Return(
+                            init(new Ast.Expression.Binary("+",
+                                init(new Ast.Expression.Literal("x"), ast -> ast.setType(Environment.Type.INTEGER)),
+                                init(new Ast.Expression.Literal("y"), ast -> ast.setType(Environment.Type.INTEGER))
+                            ), ast -> ast.setType(Environment.Type.INTEGER))
+                        )
+                    )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                ),
+                String.join(System.lineSeparator(),
+                    "public class Main {",
+                    "",
+                    "    int x;",
+                    "    int y = 10;",
+                    "",
+                    "    public static void main(String[] args) {",
+                    "        System.exit(new Main().main());",
+                    "    }",
+                    "",
+                    "    int main() {",
+                    "        return x + y;",
+                    "    }",
+                    "",
+                    "}"
+                )
+            )
         );
     }
 
