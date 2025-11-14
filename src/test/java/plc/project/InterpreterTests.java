@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -21,152 +22,269 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testSource(String test, Ast.Source ast, Object expected) {
-        // Scope{ parent=null,
-        //        variables={},
-        //        functions={}
-        // }
-        //
-        // DEF main() DO RETURN 0; END
-        // -> 0,
-        //    Scope{ parent=null,
-        //           variables={},
-        //           functions={ "main/0" }
-        //    }
-        //
-        // LET x = 1; LET y = 10; DEF main() DO x + y; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "x": {1 Scope{}}, "y": {10 Scope{}} },
-        //           functions={ "main/0" }
-        //    }
-        // Note: x + y is evaluated but not returned (no RETURN statement)
-        test(ast, expected, new Scope(null));
+        Scope scope = new Scope(null);
+        test(ast, expected, scope);
     }
 
     private static Stream<Arguments> testSource() {
         return Stream.of(
-                Arguments.of("Main", new Ast.Source(
+            // DEF main() DO
+            //   RETURN 0;
+            // END
+            Arguments.of("Main",
+                new Ast.Source(
+                    Arrays.asList(),
+                    Arrays.asList(new Ast.Method(
+                        "main",
                         Arrays.asList(),
-                        Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
-                                new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO)))
-                        ))
-                ), BigInteger.ZERO),
-                Arguments.of("Fields & No Return", new Ast.Source(
                         Arrays.asList(
-                                new Ast.Field("x", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
-                                new Ast.Field("y", false, Optional.of(new Ast.Expression.Literal(BigInteger.TEN)))
-                        ),
-                        Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
-                                new Ast.Statement.Expression(new Ast.Expression.Binary("+",
-                                        new Ast.Expression.Access(Optional.empty(), "x"),
-                                        new Ast.Expression.Access(Optional.empty(), "y")))
-                        )))
-                ), Environment.NIL.getValue()),
-                Arguments.of("Foo", FooTestData.tree_main, Environment.NIL.getValue())
+                            new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO))
+                        ))
+                    )
+                ),
+                BigInteger.ZERO
+            ),
+
+            // LET x = 1;
+            // LET y = 10;
+            // DEF main() DO
+            //   x + y;
+            // END
+            // Note: x + y is evaluated but not returned (no RETURN statement)
+            Arguments.of("Fields & No Return",
+                new Ast.Source(
+                    Arrays.asList(
+                        new Ast.Field("x", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                        new Ast.Field("y", false, Optional.of(new Ast.Expression.Literal(BigInteger.TEN)))
+                    ),
+                    Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Binary("+",
+                            new Ast.Expression.Access(Optional.empty(), "x"),
+                            new Ast.Expression.Access(Optional.empty(), "y"))
+                        )
+                    )))
+                ), Environment.NIL.getValue()
+            ),
+
+            Arguments.of("Foo", FooTestData.tree_main, Environment.NIL.getValue())
         );
+    }
+
+    @Test
+    void testMethodCallsStatement() {
+        // DEF f(x) DO
+        //   log(x);
+        // END
+        // DEF g(y) DO
+        //   log(y);
+        //   f(y + 1);
+        // END
+        // DEF h(z) DO
+        //   log(z);
+        //   g(z + 1);
+        // END
+        // DEF main() DO
+        //   f(0);
+        //   g(1);
+        //   h(2);
+        // END
+        Scope scope = new Scope(null);
+        StringWriter writer = new StringWriter();
+        scope.defineFunction(
+            "log",
+            1,
+            args -> {
+                writer.write(String.valueOf(args.get(0).getValue()));
+                return args.get(0);
+            }
+        );
+
+        Ast ast = new Ast.Source(
+            Arrays.asList(),
+            Arrays.asList(
+
+                // DEF f(x) DO
+                //   log(x);
+                // END
+                new Ast.Method(
+                    "f",
+                    Arrays.asList("x"),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "log",
+                            Arrays.asList(new Ast.Expression.Access(Optional.empty(), "x"))
+                        ))
+                    )
+                ),
+
+                // DEF g(y) DO
+                //   log(y);
+                //   f(y + 1);
+                // END
+                new Ast.Method(
+                    "g",
+                    Arrays.asList("y"),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "log",
+                            Arrays.asList(new Ast.Expression.Access(Optional.empty(), "y"))
+                        )),
+
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "f",
+                            Arrays.asList(new Ast.Expression.Binary( "+",
+                                new Ast.Expression.Access(Optional.empty(), "y"),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                            ))
+                        ))
+                    )
+                ),
+
+                // DEF h(z) DO
+                //   log(z);
+                //   g(z + 1);
+                // END
+                new Ast.Method(
+                    "h",
+                    Arrays.asList("z"),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "log",
+                            Arrays.asList(new Ast.Expression.Access(Optional.empty(), "z"))
+                        )),
+
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "g",
+                            Arrays.asList(new Ast.Expression.Binary( "+",
+                                new Ast.Expression.Access(Optional.empty(), "z"),
+                                new Ast.Expression.Literal(BigInteger.ONE)
+                            ))
+                        ))
+                    )
+                ),
+
+                // DEF main() DO
+                //   f(0);
+                //   g(1);
+                //   h(2);
+                // END
+                new Ast.Method(
+                    "main",
+                    Arrays.asList(),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "f",
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.ZERO))
+                        )),
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "g",
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.ONE))
+                        )),
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "h",
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(2)))
+                        ))
+                    )
+                )
+            )
+        );
+
+        test(
+            ast,
+            Environment.NIL.getValue(),
+            scope);
+        String log = writer.toString();
+        Assertions.assertEquals("012234", log);
     }
 
     @ParameterizedTest
     @MethodSource
     void testField(String test, Ast.Field ast, Object expected) {
-        // Scope{ parent=null,
-        //        variables={},
-        //        functions={}
-        // }
-        //
-        // LET name;
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "name": {nil Scope{}} },
-        //           functions={}
-        //    }
-        //
-        // LET name = 1;
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "name": {1 Scope{}} },
-        //           functions={}
-        //    }
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
     }
 
     private static Stream<Arguments> testField() {
         return Stream.of(
-                // TODO: add test with CONST
-                Arguments.of("Declaration", new Ast.Field("name", false, Optional.empty()), Environment.NIL.getValue()),
-                Arguments.of("Initialization", new Ast.Field("x", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))), BigInteger.ONE)
+            // TODO: add test with CONST
+            // LET name;
+            Arguments.of("Declaration",
+                new Ast.Field("name", false, Optional.empty()),
+                Environment.NIL.getValue()
+            ),
+
+            // LET name = 1;
+            Arguments.of("Initialization",
+                new Ast.Field("x", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                BigInteger.ONE
+            )
         );
     }
 
     @ParameterizedTest
     @MethodSource
     void testMethod(String test, Ast.Method ast, List<Environment.PlcObject> args, Object expected) {
-        // Scope{ parent=null,
-        //        variables={},
-        //        functions={}
-        // }
-        //
-        // DEF main() DO RETURN 0; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={},
-        //           functions={ "main/0" }
-        //    }
-        // Note: calling main() -> 0
-        //
-        // DEF square(x) DO RETURN x * x; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={},
-        //           functions={ "square/1" }
-        //    }
-        // Note: calling square(10) -> 100
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupFunction(ast.getName(), args.size()).invoke(args).getValue());
     }
 
     private static Stream<Arguments> testMethod() {
         return Stream.of(
-                Arguments.of("Main",
-                        new Ast.Method("main", Arrays.asList(), Arrays.asList(
-                                new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO)))
-                        ),
-                        Arrays.asList(),
-                        BigInteger.ZERO
-                ),
-                Arguments.of("Arguments",
-                        new Ast.Method("main", Arrays.asList("x"), Arrays.asList(
-                                new Ast.Statement.Return(new Ast.Expression.Binary("*",
-                                        new Ast.Expression.Access(Optional.empty(), "x"),
-                                        new Ast.Expression.Access(Optional.empty(), "x")
-                                ))
-                        )),
-                        Arrays.asList(Environment.create(BigInteger.TEN)),
-                        BigInteger.valueOf(100)
-                )
+            // DEF main() DO
+            //   RETURN 0;
+            // END
+            Arguments.of("Main",
+                new Ast.Method("main", Arrays.asList(), Arrays.asList(
+                    new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO))
+                )),
+                Arrays.asList(),
+                BigInteger.ZERO
+            ),
+
+            // DEF square(x) DO
+            //   RETURN x * x;
+            // END
+            // TODO look at how this tests creates params, cleaner way then what is in GeneratorTests.java
+            Arguments.of("Arguments",
+                new Ast.Method("square", Arrays.asList("x"), Arrays.asList(
+                    new Ast.Statement.Return(new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "x"),
+                        new Ast.Expression.Access(Optional.empty(), "x")
+                    ))
+                )),
+                Arrays.asList(Environment.create(BigInteger.TEN)),
+                BigInteger.valueOf(100)
+            )
         );
     }
 
     @Test
-    void testExpressionStatement() {
+    void testExpressionPrintStatement() {
         // print("Hello, World!");
         // -> NIL,
         //    %System.out.println("Hello, World!");%
-        //
-        // log(1);
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={},
-        //           functions={ "log/1" }
-        //    }
         PrintStream sysout = System.out;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         System.setOut(new PrintStream(out));
         try {
-            test(new Ast.Statement.Expression(
-                    new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(new Ast.Expression.Literal("Hello, World!")))
-            ), Environment.NIL.getValue(), new Scope(null));
+            test(
+                new Ast.Statement.Expression(
+                    new Ast.Expression.Function(
+                        Optional.empty(),
+                        "print",
+                        Arrays.asList(new Ast.Expression.Literal("Hello, World!")))
+                ),
+                Environment.NIL.getValue(),
+                new Scope(null)
+            );
             Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString());
         } finally {
             System.setOut(sysout);
@@ -176,118 +294,85 @@ final class InterpreterTests {
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Object expected) {
-        // Scope{ parent=null,
-        //        variables={},
-        //        functions={}
-        // }
-        //
-        // LET name;
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "name": {nil Scope{}} },
-        //           functions={}
-        //    }
-        //
-        // LET name = 1;
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "name": {1 Scope{}} },
-        //           functions={}
-        //    }
         Scope scope = test(ast, Environment.NIL.getValue(), new Scope(null));
         Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
     }
 
     private static Stream<Arguments> testDeclarationStatement() {
         return Stream.of(
-                Arguments.of("Declaration",
-                        new Ast.Statement.Declaration("name", Optional.empty()),
-                        Environment.NIL.getValue()
-                ),
-                Arguments.of("Initialization",
-                        new Ast.Statement.Declaration("name", Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
-                        BigInteger.ONE
-                )
+            // LET name;
+            Arguments.of("Declaration",
+                new Ast.Statement.Declaration("name", Optional.empty()),
+                Environment.NIL.getValue()
+            ),
+
+            // LET name = 1;
+            Arguments.of("Initialization",
+                new Ast.Statement.Declaration("name", Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                BigInteger.ONE
+            )
         );
     }
 
-    @Test
-    void testVariableAssignmentStatement() {
-        // Scope{ parent=null,
-        //        variables={ "variable": {"variable" Scope{}} },
-        //        functions={}
-        // }
-        //
-        // variable = 1;
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "variable": {1 Scope{}} },
-        //           functions={}
-        //    }
+    @ParameterizedTest
+    @MethodSource
+    void testVariableAssignmentStatement(String test, Ast.Statement.Assignment ast, String name, Scope scope, Object expected) {
+        test(ast, Environment.NIL.getValue(), scope);
+        Assertions.assertEquals(expected, scope.lookupVariable(name).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testVariableAssignmentStatement() {
         Scope scope = new Scope(null);
         scope.defineVariable("variable", false, Environment.create("variable"));
 
-        test(new Ast.Statement.Assignment(
-                new Ast.Expression.Access(Optional.empty(),"variable"),
-                new Ast.Expression.Literal(BigInteger.ONE)
-        ), Environment.NIL.getValue(), scope);
-        Assertions.assertEquals(BigInteger.ONE, scope.lookupVariable("variable").getValue().getValue());
+        return Stream.of(
+            // variable = 1;
+            Arguments.of("Assignment",
+                new Ast.Statement.Assignment(
+                    new Ast.Expression.Access(Optional.empty(),"variable"),
+                    new Ast.Expression.Literal(BigInteger.ONE)
+                ),
+                "variable",
+                scope,
+                BigInteger.ONE
+            )
+        );
     }
 
-    @Test
-    void testFieldAssignmentStatement() {
-        // Scope{ parent=null,
-        //        variables={ "object": Scope{ parent=null,
-        //                                     variables={ "field": {"object.field" Scope{}} },
-        //                                     functions={}
-        //                              }
-        //        },
-        //        functions={}
-        // }
-        //
-        // object.field = 1;
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "object": Scope{ parent=null,
-        //                                        variables={ "field": {1 Scope{}} },
-        //                                        functions={}
-        //                                 }
-        //           },
-        //           functions={}
-        //    }
-        Scope scope = new Scope(null);
+    @ParameterizedTest
+    @MethodSource
+    void testFieldAssignmentStatement(String test, Ast.Statement.Assignment ast, String name, Scope object, Scope root, Object expected) {
+        test(ast, Environment.NIL.getValue(), root);
+        Assertions.assertEquals(expected, object.lookupVariable(name).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testFieldAssignmentStatement() {
+        Scope root = new Scope(null);
         Scope object = new Scope(null);
         object.defineVariable("field", false, Environment.create("object.field"));
-        scope.defineVariable("object", false, new Environment.PlcObject(object, "object"));
+        root.defineVariable("object", false, new Environment.PlcObject(object, "object"));
 
-        test(new Ast.Statement.Assignment(
-                new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")),"field"),
-                new Ast.Expression.Literal(BigInteger.ONE)
-        ), Environment.NIL.getValue(), scope);
-        Assertions.assertEquals(BigInteger.ONE, object.lookupVariable("field").getValue().getValue());
+        return Stream.of(
+            // object.field = 10;
+            Arguments.of("Field Assignment",
+                new Ast.Statement.Assignment(
+                    new Ast.Expression.Access(Optional.of(
+                        new Ast.Expression.Access(Optional.empty(), "object")),
+                        "field"
+                    ),
+                    new Ast.Expression.Literal(BigInteger.TEN)
+                ),
+                "field",
+                object,
+                root,
+                BigInteger.TEN
+            )
+        );
     }
 
     @ParameterizedTest
     @MethodSource
     void testIfStatement(String test, Ast.Statement.If ast, Object expected) {
-        // Scope{ parent=null,
-        //        variables={ "num": {nil Scope{}} },
-        //        functions={}
-        // }
-        //
-        // IF TRUE DO num = 1; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "num": {1 Scope{}} },
-        //           functions={}
-        //    }
-        //
-        // IF FALSE DO ELSE num = 10; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "num": {10 Scope{}} },
-        //           functions={}
-        //    }
         Scope scope = new Scope(null);
         scope.defineVariable("num", false, Environment.NIL);
 
@@ -297,59 +382,74 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testIfStatement() {
         return Stream.of(
-                Arguments.of("True Condition",
-                        new Ast.Statement.If(
-                                new Ast.Expression.Literal(true),
-                                Arrays.asList(new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(),"num"), new Ast.Expression.Literal(BigInteger.ONE))),
-                                Arrays.asList()
-                        ),
-                        BigInteger.ONE
+            // IF TRUE DO
+            //   num = 1;
+            // END
+            Arguments.of("True Condition",
+                new Ast.Statement.If(
+                    new Ast.Expression.Literal(true),
+                    Arrays.asList(
+                        new Ast.Statement.Assignment(
+                            new Ast.Expression.Access(Optional.empty(),"num"),
+                            new Ast.Expression.Literal(BigInteger.ONE)
+                        )
+                    ),
+
+                    Arrays.asList()
                 ),
-                Arguments.of("False Condition",
-                        new Ast.Statement.If(
-                                new Ast.Expression.Literal(false),
-                                Arrays.asList(),
-                                Arrays.asList(new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(),"num"), new Ast.Expression.Literal(BigInteger.TEN)))
-                        ),
-                        BigInteger.TEN
-                )
+                BigInteger.ONE
+            ),
+            // IF FALSE DO
+            //   ELSE
+            //     num = 10;
+            // END
+            Arguments.of("False Condition",
+                new Ast.Statement.If(
+                    new Ast.Expression.Literal(false),
+                    Arrays.asList(),
+
+                    Arrays.asList(
+                        new Ast.Statement.Assignment(
+                            new Ast.Expression.Access(Optional.empty(),"num"),
+                            new Ast.Expression.Literal(BigInteger.TEN)
+                        )
+                    )
+                ),
+                BigInteger.TEN
+            )
         );
     }
 
 
     @Test
     void testForStatement() {
-        // Scope{ parent=null,
-        //        variables={ "sum": {0 Scope{}}, "num": {nil Scope{}} },
-        //        functions={}
-        // }
-        //
-        // FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "sum": {10 Scope{}}, "num": {5 Scope{}} },
-        //           functions={}
-        //    }
+        // FOR (num = 0; num < 5; num = num + 1)
+        //   sum = sum + num;
+        // END
         Scope scope = new Scope(null);
         scope.defineVariable("sum", false, Environment.create(BigInteger.ZERO));
         scope.defineVariable("num", false, Environment.NIL);
 
         test(new Ast.Statement.For(
-                new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(), "num"), new Ast.Expression.Literal(BigInteger.ZERO)),
-                new Ast.Expression.Binary("<",
-                        new Ast.Expression.Access(Optional.empty(), "num"),
-                        new Ast.Expression.Literal(BigInteger.valueOf(5))),
-                new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(), "num"),
-                        new Ast.Expression.Binary("+",
-                                new Ast.Expression.Access(Optional.empty(), "num"),
-                                new Ast.Expression.Literal(BigInteger.ONE))),
-                Arrays.asList(new Ast.Statement.Assignment(
-                        new Ast.Expression.Access(Optional.empty(),"sum"),
-                        new Ast.Expression.Binary("+",
-                                new Ast.Expression.Access(Optional.empty(),"sum"),
-                                new Ast.Expression.Access(Optional.empty(),"num")
-                        )
-                ))
+            new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(), "num"), new Ast.Expression.Literal(BigInteger.ZERO)),
+
+            new Ast.Expression.Binary("<",
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Literal(BigInteger.valueOf(5))),
+
+            new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "num"),
+                    new Ast.Expression.Literal(BigInteger.ONE))),
+
+            Arrays.asList(new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(),"sum"),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(),"sum"),
+                    new Ast.Expression.Access(Optional.empty(),"num")
+                )
+            ))
         ), Environment.NIL.getValue(), scope);
 
         // you can evaluate the state of each variable in scope one at a time, here is an example:
@@ -372,32 +472,25 @@ final class InterpreterTests {
 
     @Test
     void testWhileStatement() {
-        // -> Scope{ parent=null,
-        //           variables={ "num": {0 Scope{}} },
-        //           functions={}
-        //    }
-        //
-        // WHILE num < 10 DO num = num + 1; END
-        // -> NIL,
-        //    Scope{ parent=null,
-        //           variables={ "num": {10 Scope{}} },
-        //           functions={}
-        //    }
+        // WHILE num < 10 DO
+        //   num = num + 1;
+        // END
         Scope scope = new Scope(null);
         scope.defineVariable("num", false, Environment.create(BigInteger.ZERO));
 
         test(new Ast.Statement.While(
-                new Ast.Expression.Binary("<",
-                        new Ast.Expression.Access(Optional.empty(),"num"),
-                        new Ast.Expression.Literal(BigInteger.TEN)
-                ),
-                Arrays.asList(new Ast.Statement.Assignment(
-                        new Ast.Expression.Access(Optional.empty(),"num"),
-                        new Ast.Expression.Binary("+",
-                                new Ast.Expression.Access(Optional.empty(),"num"),
-                                new Ast.Expression.Literal(BigInteger.ONE)
-                        )
-                ))
+            new Ast.Expression.Binary("<",
+                new Ast.Expression.Access(Optional.empty(),"num"),
+                new Ast.Expression.Literal(BigInteger.TEN)
+            ),
+
+            Arrays.asList(new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(),"num"),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(),"num"),
+                    new Ast.Expression.Literal(BigInteger.ONE)
+                )
+            ))
         ),Environment.NIL.getValue(), scope);
         Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue());
     }
@@ -410,12 +503,12 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
-                Arguments.of("Nil", new Ast.Expression.Literal(null), Environment.NIL.getValue()), //remember, special case
-                Arguments.of("Boolean", new Ast.Expression.Literal(true), true),
-                Arguments.of("Integer", new Ast.Expression.Literal(BigInteger.ONE), BigInteger.ONE),
-                Arguments.of("Decimal", new Ast.Expression.Literal(BigDecimal.ONE), BigDecimal.ONE),
-                Arguments.of("Character", new Ast.Expression.Literal('c'), 'c'),
-                Arguments.of("String", new Ast.Expression.Literal("string"), "string")
+            Arguments.of("Nil", new Ast.Expression.Literal(null), Environment.NIL.getValue()), //remember, special case
+            Arguments.of("Boolean", new Ast.Expression.Literal(true), true),
+            Arguments.of("Integer", new Ast.Expression.Literal(BigInteger.ONE), BigInteger.ONE),
+            Arguments.of("Decimal", new Ast.Expression.Literal(BigDecimal.ONE), BigDecimal.ONE),
+            Arguments.of("Character", new Ast.Expression.Literal('c'), 'c'),
+            Arguments.of("String", new Ast.Expression.Literal("string"), "string")
         );
     }
 
@@ -427,14 +520,14 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testGroupExpression() {
         return Stream.of(
-                Arguments.of("Literal", new Ast.Expression.Group(new Ast.Expression.Literal(BigInteger.ONE)), BigInteger.ONE),
-                Arguments.of("Binary",
-                        new Ast.Expression.Group(new Ast.Expression.Binary("+",
-                                new Ast.Expression.Literal(BigInteger.ONE),
-                                new Ast.Expression.Literal(BigInteger.TEN)
-                        )),
-                        BigInteger.valueOf(11)
-                )
+            Arguments.of("Literal", new Ast.Expression.Group(new Ast.Expression.Literal(BigInteger.ONE)), BigInteger.ONE),
+            Arguments.of("Binary",
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal(BigInteger.TEN)
+                )),
+                BigInteger.valueOf(11)
+            )
         );
     }
 
@@ -446,62 +539,62 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
-                Arguments.of("And",
-                        new Ast.Expression.Binary("AND",
-                                new Ast.Expression.Literal(true),
-                                new Ast.Expression.Literal(false)
-                        ),
-                        false
+            Arguments.of("And",
+                new Ast.Expression.Binary("AND",
+                    new Ast.Expression.Literal(true),
+                    new Ast.Expression.Literal(false)
                 ),
-                Arguments.of("Or (Short Circuit)",
-                        new Ast.Expression.Binary("OR",
-                                new Ast.Expression.Literal(true),
-                                new Ast.Expression.Access(Optional.empty(), "undefined")
-                        ),
-                        true
+                false
+            ),
+            Arguments.of("Or (Short Circuit)",
+                new Ast.Expression.Binary("OR",
+                    new Ast.Expression.Literal(true),
+                    new Ast.Expression.Access(Optional.empty(), "undefined")
                 ),
-                Arguments.of("Less Than",
-                        new Ast.Expression.Binary("<",
-                                new Ast.Expression.Literal(BigInteger.ONE),
-                                new Ast.Expression.Literal(BigInteger.TEN)
-                        ),
-                        true
+                true
+            ),
+            Arguments.of("Less Than",
+                new Ast.Expression.Binary("<",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal(BigInteger.TEN)
                 ),
-                Arguments.of("Greater Than or Equal",
-                        new Ast.Expression.Binary(">=",
-                                new Ast.Expression.Literal(BigInteger.ONE),
-                                new Ast.Expression.Literal(BigInteger.TEN)
-                        ),
-                        false
+                true
+            ),
+            Arguments.of("Greater Than or Equal",
+                new Ast.Expression.Binary(">=",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal(BigInteger.TEN)
                 ),
-                Arguments.of("Equal",
-                        new Ast.Expression.Binary("==",
-                                new Ast.Expression.Literal(BigInteger.ONE),
-                                new Ast.Expression.Literal(BigInteger.TEN)
-                        ),
-                        false
+                false
+            ),
+            Arguments.of("Equal",
+                new Ast.Expression.Binary("==",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal(BigInteger.TEN)
                 ),
-                Arguments.of("Concatenation",
-                        new Ast.Expression.Binary("+",
-                                new Ast.Expression.Literal("a"),
-                                new Ast.Expression.Literal("b")
-                        ),
-                        "ab"
+                false
+            ),
+            Arguments.of("Concatenation",
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Literal("a"),
+                    new Ast.Expression.Literal("b")
                 ),
-                Arguments.of("Addition",
-                        new Ast.Expression.Binary("+",
-                                new Ast.Expression.Literal(BigInteger.ONE),
-                                new Ast.Expression.Literal(BigInteger.TEN)
-                        ),
-                        BigInteger.valueOf(11)
+                "ab"
+            ),
+            Arguments.of("Addition",
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal(BigInteger.TEN)
                 ),
-                Arguments.of("Division",
-                        new Ast.Expression.Binary("/",
-                                new Ast.Expression.Literal(new BigDecimal("1.2")),
-                                new Ast.Expression.Literal(new BigDecimal("3.4"))
-                        ),
-                        new BigDecimal("0.4")
-                )
+                BigInteger.valueOf(11)
+            ),
+            Arguments.of("Division",
+                new Ast.Expression.Binary("/",
+                    new Ast.Expression.Literal(new BigDecimal("1.2")),
+                    new Ast.Expression.Literal(new BigDecimal("3.4"))
+                ),
+                new BigDecimal("0.4")
+            )
         );
     }
 
@@ -536,14 +629,14 @@ final class InterpreterTests {
 
     private static Stream<Arguments> testAccessExpression() {
         return Stream.of(
-                Arguments.of("Variable",
-                        new Ast.Expression.Access(Optional.empty(), "variable"),
-                        "variable"
-                ),
-                Arguments.of("Field",
-                        new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "field"),
-                        "object.field"
-                )
+            Arguments.of("Variable",
+                new Ast.Expression.Access(Optional.empty(), "variable"),
+                "variable"
+            ),
+            Arguments.of("Field",
+                new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "field"),
+                "object.field"
+            )
         );
     }
 

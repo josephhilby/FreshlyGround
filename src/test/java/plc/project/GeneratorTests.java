@@ -34,11 +34,11 @@ public class GeneratorTests {
         Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.INTEGER, false, Environment.NIL);
 
         return Stream.of(
+            // DEF main(): Integer DO
+            //     print("Hello, World!");
+            //     RETURN 0;
+            // END
             Arguments.of("Hello, World!",
-                // DEF main(): Integer DO
-                //     print("Hello, World!");
-                //     RETURN 0;
-                // END
                 new Ast.Source(
                     Arrays.asList(),
 
@@ -79,12 +79,12 @@ public class GeneratorTests {
                     "}"
                 )
             ),
+            // LET x: Integer;
+            // LET y: Integer = 10;
+            // DEF main(): Integer DO
+            //     RETURN x + y;
+            // END
             Arguments.of("Field and Method",
-                // LET x: Integer;
-                // LET y: Integer = 10;
-                // DEF main(): Integer DO
-                //     RETURN x + y;
-                // END
                 new Ast.Source(
                     Arrays.asList(
                         init(new Ast.Field("x", "Integer", false, Optional.empty()), ast -> ast.setVariable(_x)),
@@ -144,15 +144,15 @@ public class GeneratorTests {
         Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.BOOLEAN, false, Environment.NIL);
 
         return Stream.of(
+            // LET x: String;
             Arguments.of("Field Non-Const",
-                // LET x: String;
                 init(new Ast.Field("x", "String", false, Optional.empty()),
                     ast -> ast.setVariable(_x)
                 ),
                 "String x;"
             ),
+            // LET CONST y: Boolean = TRUE AND FALSE;
             Arguments.of("Field Const",
-                // LET CONST y: Boolean = TRUE AND FALSE;
                 init(new Ast.Field("y", "Boolean", true, Optional.of(
                     init(new Ast.Expression.Binary("AND",
                         init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)),
@@ -176,10 +176,10 @@ public class GeneratorTests {
         Environment.Variable _radius = new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, false, Environment.NIL);
 
         return Stream.of(
+            // DEF area(radius: Decimal): Decimal DO
+            //     RETURN 3.14 * radius * radius
+            // END
             Arguments.of("Method",
-                // DEF area(radius: Decimal): Decimal DO
-                //     RETURN 3.14 * radius * radius
-                // END
                 init(new Ast.Method(
                     "area",
                     Arrays.asList("radius"),
@@ -217,8 +217,8 @@ public class GeneratorTests {
         Environment.Function _log = new Environment.Function("log", "log", Arrays.asList(Environment.Type.STRING), Environment.Type.NIL, args -> Environment.NIL);
 
         return Stream.of(
+            // log("Hello World");
             Arguments.of("Expression",
-                // log("Hello World");
                 new Ast.Statement.Expression(
                     init(new Ast.Expression.Function(Optional.empty(),"log", Arrays.asList(
                         init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING))
@@ -226,8 +226,8 @@ public class GeneratorTests {
                 ),
                 "log(\"Hello World\");"
             ),
+            // 1;
             Arguments.of("Initialization",
-                // 1;
                 new Ast.Statement.Expression(init(new Ast.Expression.Literal(new BigDecimal("1")),ast -> ast.setType(Environment.Type.INTEGER))),
                 "1;"
             )
@@ -245,14 +245,14 @@ public class GeneratorTests {
         Environment.Variable _name2 = new Environment.Variable("name", "name", Environment.Type.DECIMAL, true, Environment.NIL);
 
         return Stream.of(
+            // LET name: Integer;
             Arguments.of("Declaration",
-                // LET name: Integer;
                 init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()
                 ), ast -> ast.setVariable(_name)),
                 "int name;"
             ),
+            // LET name = 1.0;
             Arguments.of("Initialization",
-                // LET name = 1.0;
                 init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
                     init(new Ast.Expression.Literal(new BigDecimal("1.0")),ast -> ast.setType(Environment.Type.DECIMAL))
                 )), ast -> ast.setVariable(_name2)),
@@ -271,8 +271,8 @@ public class GeneratorTests {
         Environment.Variable _variable = new Environment.Variable("variable", "variable", Environment.Type.STRING, false, Environment.NIL);
 
         return Stream.of(
+            // variable = "Hello World";
             Arguments.of("Assignment",
-                // variable = "Hello World";
                 new Ast.Statement.Assignment(
                     init(new Ast.Expression.Access(Optional.empty(), "variable"),ast -> ast.setVariable(_variable)),
                     init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING))
@@ -294,31 +294,31 @@ public class GeneratorTests {
         Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true, Environment.NIL);
 
         return Stream.of(
+            // IF expr DO
+            //     stmt;
+            // END
             Arguments.of("If",
-                    // IF expr DO
-                    //     stmt;
-                    // END
-                    new Ast.Statement.If(
-                        init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
-                        Arrays.asList(
-                            new Ast.Statement.Expression(
-                                init(new Ast.Expression.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(_stmt))
-                            )
-                        ),
-                        Arrays.asList()
+                new Ast.Statement.If(
+                    init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(
+                            init(new Ast.Expression.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(_stmt))
+                        )
                     ),
-                    String.join(System.lineSeparator(),
-                        "if (expr) {",
-                        "    stmt;",
-                        "}"
-                    )
+                    Arrays.asList()
+                ),
+                String.join(System.lineSeparator(),
+                    "if (expr) {",
+                    "    stmt;",
+                    "}"
+                )
             ),
+            // IF expr DO
+            //     stmt;
+            // ELSE
+            //     stmt2;
+            // END
             Arguments.of("Else",
-                // IF expr DO
-                //     stmt;
-                // ELSE
-                //     stmt2;
-                // END
                 new Ast.Statement.If(
                     init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
                     Arrays.asList(
@@ -350,10 +350,10 @@ public class GeneratorTests {
         Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
 
         return Stream.of(
+            // FOR (num = 0; num < 5; num = num + 1)
+            //     print(num);
+            // END
             Arguments.of("For",
-                // FOR (num = 0; num < 5; num = num + 1)
-                //     print(num);
-                // END
                 new Ast.Statement.For(
                     new Ast.Statement.Assignment(
                         init(new Ast.Expression.Access(Optional.empty(), "num"),ast -> ast.setVariable(_num)),
@@ -386,10 +386,10 @@ public class GeneratorTests {
                     "}"
                 )
             ),
+            // FOR (; num < 5;)
+            //     print(num);
+            // END
             Arguments.of("Missing Signature",
-                // FOR (; num < 5;)
-                //     print(num);
-                // END
                 new Ast.Statement.For(
                     null,
 
@@ -437,10 +437,10 @@ public class GeneratorTests {
         Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true, Environment.NIL);
 
         return Stream.of(
+            // FOR (num = 0; num < 5; num = num + 1)
+            //     print(num);
+            // END
             Arguments.of("While",
-                // FOR (num = 0; num < 5; num = num + 1)
-                //     print(num);
-                // END
                 new Ast.Statement.While(
                     init(new Ast.Expression.Access(Optional.empty(), "condition"), ast -> ast.setVariable(_condition)),
 
@@ -547,16 +547,16 @@ public class GeneratorTests {
 
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
+            // TRUE AND FALSE
             Arguments.of("And",
-                // TRUE AND FALSE
                 init(new Ast.Expression.Binary("AND",
                     init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)),
                     init(new Ast.Expression.Literal(false), ast -> ast.setType(Environment.Type.BOOLEAN))
                 ), ast -> ast.setType(Environment.Type.BOOLEAN)),
                 "true && false"
             ),
+            // "Ben" + 10
             Arguments.of("Concatenation",
-                // "Ben" + 10
                 init(new Ast.Expression.Binary("+",
                     init(new Ast.Expression.Literal("Ben"), ast -> ast.setType(Environment.Type.STRING)),
                     init(new Ast.Expression.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
@@ -578,13 +578,13 @@ public class GeneratorTests {
         Environment.Variable _field = new Environment.Variable("field", "field", Environment.Type.INTEGER, false, Environment.NIL);
 
         return Stream.of(
+            // variable
             Arguments.of("Variable",
-                // variable
                 init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(_variable)),
                 "variable"
             ),
+            // object.field
             Arguments.of("Field",
-                // object.field
                 init(
                     new Ast.Expression.Access(Optional.of(
                         init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(_object))
@@ -605,8 +605,8 @@ public class GeneratorTests {
         Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
 
         return Stream.of(
+            // print("Hello, World!")
             Arguments.of("Print",
-                // print("Hello, World!")
                 init(new Ast.Expression.Function(Optional.empty(),"print", Arrays.asList(
                     init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING)))
                 ),ast -> ast.setFunction(_print)),

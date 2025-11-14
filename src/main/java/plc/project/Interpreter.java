@@ -97,6 +97,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         for (Ast.Method method : ast.getMethods()) {
             visit(method);
         }
+        // debug
+//        System.out.println("Global interpreter scope before main: " + scope);
+//        scope.lookupFunction("h", 1);
+
         List<Environment.PlcObject> args = new ArrayList<>();
         return scope.lookupFunction("main", 0).invoke(args);
     }
@@ -149,10 +153,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        Scope parent = scope;
+        Scope defining = scope;
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+
+            Scope calling = defining;
             try {
-                scope = new Scope(parent);
+                scope = new Scope(defining);
                 List<String> parameters = ast.getParameters();
                 for (int i = 0; i < parameters.size(); i++) {
                     scope.defineVariable(parameters.get(i), false, args.get(i));
@@ -163,7 +169,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             } catch (Return ret) {
                 return ret.value;
             } finally {
-                scope = scope.getParent();
+                scope = calling;
             }
            return Environment.NIL;
         });

@@ -23,6 +23,7 @@ public class LexerTests {
                 // Allows alphanumeric characters, underscores, and hyphens ([A-Za-z0-9_-])
                 Arguments.of("Alphabetic", "getName", true),
                 Arguments.of("Alphanumeric", "thelegend27", true),
+                Arguments.of("Caps", "ABC", true),
                 Arguments.of("Underscore", "_abC01", true),
                 Arguments.of("Underscores", "____", true),
                 Arguments.of("Hyphenated", "a-b-c", true),
@@ -224,57 +225,70 @@ public class LexerTests {
 
     private static Stream<Arguments> testExamples() {
         return Stream.of(
-                Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.INTEGER, "5", 8),
-                        new Token(Token.Type.OPERATOR, ";", 9)
-                )),
-                Arguments.of("Example 2", "print(\"Hello, World!\");", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "print", 0),
-                        new Token(Token.Type.OPERATOR, "(", 5),
-                        new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
-                        new Token(Token.Type.OPERATOR, ")", 21),
-                        new Token(Token.Type.OPERATOR, ";", 22)
-                )),
-                Arguments.of("Example 3", FooTestData.source, FooTestData.tokens),
-                Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.INTEGER, "5", 8),
-                        new Token(Token.Type.OPERATOR, "-", 9),
-                        new Token(Token.Type.INTEGER, "2", 10),
-                        new Token(Token.Type.OPERATOR, ";", 11)
-                )),
-                Arguments.of("Example 5", "LET x = 5.1-2.2;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.DECIMAL, "5.1", 8),
-                        new Token(Token.Type.OPERATOR, "-", 11),
-                        new Token(Token.Type.DECIMAL, "2.2", 12),
-                        new Token(Token.Type.OPERATOR, ";", 15)
-                )),
-                Arguments.of("Example 6", "LET x = 5 -2;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.INTEGER, "5", 8),
-                        new Token(Token.Type.OPERATOR, "-", 10),
-                        new Token(Token.Type.INTEGER, "2", 11),
-                        new Token(Token.Type.OPERATOR, ";", 12)
-                )),
-                Arguments.of("Example 7", "LET x = 5 -0;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.INTEGER, "5", 8),
-                        new Token(Token.Type.OPERATOR, "-", 10),
-                        new Token(Token.Type.INTEGER, "0", 11),
-                        new Token(Token.Type.OPERATOR, ";", 12)
-                ))
+            Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                new Token(Token.Type.IDENTIFIER, "x", 4),
+                new Token(Token.Type.OPERATOR, "=", 6),
+                new Token(Token.Type.INTEGER, "5", 8),
+                new Token(Token.Type.OPERATOR, ";", 9)
+            )),
+            Arguments.of("Example 2", "print(\"Hello, World!\");", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "print", 0),
+                new Token(Token.Type.OPERATOR, "(", 5),
+                new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
+                new Token(Token.Type.OPERATOR, ")", 21),
+                new Token(Token.Type.OPERATOR, ";", 22)
+            )),
+            Arguments.of("Example 3", FooTestData.source, FooTestData.tokens),
+            Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                new Token(Token.Type.IDENTIFIER, "x", 4),
+                new Token(Token.Type.OPERATOR, "=", 6),
+                new Token(Token.Type.INTEGER, "5", 8),
+                new Token(Token.Type.OPERATOR, "-", 9),
+                new Token(Token.Type.INTEGER, "2", 10),
+                new Token(Token.Type.OPERATOR, ";", 11)
+            )),
+            Arguments.of("Example 5", "LET x = 5.1-2.2;", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                new Token(Token.Type.IDENTIFIER, "x", 4),
+                new Token(Token.Type.OPERATOR, "=", 6),
+                new Token(Token.Type.DECIMAL, "5.1", 8),
+                new Token(Token.Type.OPERATOR, "-", 11),
+                new Token(Token.Type.DECIMAL, "2.2", 12),
+                new Token(Token.Type.OPERATOR, ";", 15)
+            )),
+            Arguments.of("Example 6", "LET x = 5 -2;", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                new Token(Token.Type.IDENTIFIER, "x", 4),
+                new Token(Token.Type.OPERATOR, "=", 6),
+                new Token(Token.Type.INTEGER, "5", 8),
+                new Token(Token.Type.OPERATOR, "-", 10),
+                new Token(Token.Type.INTEGER, "2", 11),
+                new Token(Token.Type.OPERATOR, ";", 12)
+            )),
+            Arguments.of("Example 7", "LET x = 5 -0;", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                new Token(Token.Type.IDENTIFIER, "x", 4),
+                new Token(Token.Type.OPERATOR, "=", 6),
+                new Token(Token.Type.INTEGER, "5", 8),
+                new Token(Token.Type.OPERATOR, "-", 10),
+                new Token(Token.Type.INTEGER, "0", 11),
+                new Token(Token.Type.OPERATOR, ";", 12)
+            )),
+            Arguments.of("Example 8", "abc 123 456.789 'c' \"string\" %", Arrays.asList(
+                new Token(Token.Type.IDENTIFIER, "abc", 0),
+                new Token(Token.Type.INTEGER, "123", 4),
+                new Token(Token.Type.DECIMAL, "456.789", 8),
+                new Token(Token.Type.CHARACTER, "'c'", 16),
+                new Token(Token.Type.STRING, "\"string\"", 20),
+                new Token(Token.Type.OPERATOR, "%", 29)
+            )),
+            Arguments.of("Example 9", "15 - 10", Arrays.asList(
+                new Token(Token.Type.INTEGER, "15", 0),
+                new Token(Token.Type.OPERATOR, "-", 3),
+                new Token(Token.Type.INTEGER, "10", 5)
+            ))
         );
     }
 
