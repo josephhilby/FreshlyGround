@@ -39,7 +39,9 @@ public final class AnalyzerTests {
     private static Stream<Arguments> testSource() {
         return Stream.of(
             Arguments.of("Valid Main",
-                // DEF main(): Integer DO RETURN 0; END
+                // DEF main(): Integer DO
+                //   RETURN 0;
+                // END
                 new Ast.Source(
                     Arrays.asList(),
                     Arrays.asList(
@@ -58,8 +60,9 @@ public final class AnalyzerTests {
                 )
             ),
             // LET value: Boolean = TRUE;
-            // DEF main(): Integer
-            //   DO RETURN value; END
+            // DEF main(): Integer DO
+            //   RETURN value;
+            // END
             Arguments.of("Invalid Return",
                 new Ast.Source(
                     Arrays.asList(
@@ -73,8 +76,9 @@ public final class AnalyzerTests {
                 ),
                 null
             ),
-            // DEF main()
-            //   DO RETURN 0; END
+            // DEF main() DO
+            //   RETURN 0;
+            // END
             Arguments.of("Missing Return Type for Main",
                 new Ast.Source(
                     Arrays.asList(),
@@ -86,8 +90,9 @@ public final class AnalyzerTests {
                 ),
                 null
             ),
-            // DEF main(): String
-            //   DO RETURN 0; END
+            // DEF main(): String DO
+            //   RETURN 0;
+            // END
             Arguments.of("Invalid Return Type for Main",
                 new Ast.Source(
                     Arrays.asList(),
@@ -99,8 +104,9 @@ public final class AnalyzerTests {
                 ),
                 null
             ),
-            // DEF main(): Str
-            //   DO RETURN 0; END
+            // DEF main(): Str DO
+            //   RETURN 0;
+            // END
             Arguments.of("Invalid Return Type",
                 new Ast.Source(
                     Arrays.asList(),
@@ -113,8 +119,9 @@ public final class AnalyzerTests {
                 null
             ),
             // LET num: Integer = 1;
-            // DEF main(): Integer
-            //   DO print(num + 1.0); END
+            // DEF main(): Integer DO
+            //   print(num + 1.0);
+            // END
             Arguments.of("Invalid Global Use",
                 new Ast.Source(
                     Arrays.asList(
@@ -133,8 +140,9 @@ public final class AnalyzerTests {
                 ),
                 null
             ),
-            // DEF main()
-            //   DO print("Hello, World!"); END
+            // DEF main() DO
+            //   print("Hello, World!");
+            // END
             Arguments.of("Invalid Return Type",
                 new Ast.Source(
                     Arrays.asList(),
@@ -147,6 +155,31 @@ public final class AnalyzerTests {
                     )
                 ),
                 null
+            ),
+            // LET num: Integer = 1;
+            // DEF main(): Integer DO
+            //   print(num);
+            // END
+            Arguments.of("Invalid Global Use",
+                new Ast.Source(
+                    Arrays.asList(
+                        new Ast.Field("num","Integer", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE)))
+                    ),
+                    Arrays.asList(
+                        new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                            new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
+                                new Ast.Expression.Access(Optional.empty(), "num")
+                            )))
+                        ))
+                    )
+                ),
+                new Ast.Source(
+                    Arrays.asList(
+                        init(new Ast.Field("num","Integer", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                            ast -> ast.setVariable(new Environment.Variable("num", "num", Environment.Type.INTEGER, false, Environment.NIL)))
+                    ),
+                    Arrays.asList()
+                )
             )
         );
     }
@@ -197,7 +230,9 @@ public final class AnalyzerTests {
     private static Stream<Arguments> testMethod() {
         return Stream.of(
             Arguments.of("Main",
-                // DEF main(): Integer DO RETURN 0; END
+                // DEF main(): Integer DO
+                //   RETURN 0;
+                // END
                 new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                     new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO)))
                 ),
@@ -206,7 +241,9 @@ public final class AnalyzerTests {
                 )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
             ),
             Arguments.of("Hello World",
-                // DEF main(): Integer DO print("Hello, World!"); END
+                // DEF main(): Integer DO
+                //   print("Hello, World!");
+                // END
                 new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                     new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
                         new Ast.Expression.Literal("Hello, World!")
@@ -229,7 +266,8 @@ public final class AnalyzerTests {
                 null
             ),
             Arguments.of("No Explicit Return Type",
-                // DEF empty() DO END
+                // DEF empty() DO
+                // END
                 new Ast.Method("empty", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()),
                 init(new Ast.Method("empty", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()), ast ->
                     ast.setFunction(new Environment.Function("empty", "empty", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL)))

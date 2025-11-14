@@ -59,7 +59,7 @@ final class InterpreterTests {
                         Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
                                 new Ast.Statement.Expression(new Ast.Expression.Binary("+",
                                         new Ast.Expression.Access(Optional.empty(), "x"),
-                                        new Ast.Expression.Access(Optional.empty(), "y")                                ))
+                                        new Ast.Expression.Access(Optional.empty(), "y")))
                         )))
                 ), Environment.NIL.getValue()),
                 Arguments.of("Foo", FooTestData.tree_main, Environment.NIL.getValue())
