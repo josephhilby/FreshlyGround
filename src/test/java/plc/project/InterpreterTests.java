@@ -872,12 +872,26 @@ final class InterpreterTests {
             Arrays.asList(
 
                 // DEF f(z) DO
+                //   log(x + y + z);
                 //   RETURN x + y + z;
                 // END
                 new Ast.Method(
                     "f",
                     Arrays.asList("z"),
                     Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "log",
+                            Arrays.asList(
+                                new Ast.Expression.Binary("+",
+                                    new Ast.Expression.Access(Optional.empty(), "x"),
+                                    new Ast.Expression.Binary("+",
+                                        new Ast.Expression.Access(Optional.empty(), "y"),
+                                        new Ast.Expression.Access(Optional.empty(), "z")
+                                    )
+                                )
+                            )
+                        )),
                         new Ast.Statement.Return(
                             new Ast.Expression.Binary("+",
                                 new Ast.Expression.Access(Optional.empty(), "x"),
@@ -889,29 +903,23 @@ final class InterpreterTests {
                         )
                     )
                 ),
-                // TODO finish test
+
                 // DEF main() DO
-                //   LET y = 4;
-                //   RETURN f(5);
+                //   LET y = 40;
+                //   RETURN f(10);
                 // END
                 new Ast.Method(
                     "main",
                     Arrays.asList(),
                     Arrays.asList(
+                        new Ast.Statement.Declaration(
+                            "y",
+                            Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(40)))
+                        ),
                         new Ast.Statement.Expression(new Ast.Expression.Function(
                             Optional.empty(),
                             "f",
-                            Arrays.asList(new Ast.Expression.Literal(BigInteger.ZERO))
-                        )),
-                        new Ast.Statement.Expression(new Ast.Expression.Function(
-                            Optional.empty(),
-                            "g",
-                            Arrays.asList(new Ast.Expression.Literal(BigInteger.ONE))
-                        )),
-                        new Ast.Statement.Expression(new Ast.Expression.Function(
-                            Optional.empty(),
-                            "h",
-                            Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(2)))
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(10)))
                         ))
                     )
                 )
@@ -923,7 +931,7 @@ final class InterpreterTests {
             Environment.NIL.getValue(),
             scope);
         String log = writer.toString();
-        Assertions.assertEquals("012234", log);
+        Assertions.assertEquals("13", log);
     }
 
     @Test
