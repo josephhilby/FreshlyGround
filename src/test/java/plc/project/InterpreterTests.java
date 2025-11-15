@@ -223,7 +223,7 @@ final class InterpreterTests {
 
             // LET name = 1;
             Arguments.of("Initialization",
-                new Ast.Field("x", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                new Ast.Field("name", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                 BigInteger.ONE
             )
         );
@@ -252,7 +252,6 @@ final class InterpreterTests {
             // DEF square(x) DO
             //   RETURN x * x;
             // END
-            // TODO look at how this tests creates params, cleaner way then what is in GeneratorTests.java
             Arguments.of("Arguments",
                 new Ast.Method("square", Arrays.asList("x"), Arrays.asList(
                     new Ast.Statement.Return(new Ast.Expression.Binary("*",
@@ -431,7 +430,9 @@ final class InterpreterTests {
         scope.defineVariable("num", false, Environment.NIL);
 
         test(new Ast.Statement.For(
-            new Ast.Statement.Assignment(new Ast.Expression.Access(Optional.empty(), "num"), new Ast.Expression.Literal(BigInteger.ZERO)),
+            new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Literal(BigInteger.ZERO)),
 
             new Ast.Expression.Binary("<",
                 new Ast.Expression.Access(Optional.empty(), "num"),
@@ -468,6 +469,91 @@ final class InterpreterTests {
         actual.add(scope.lookupVariable("num").getValue().getValue());
 
         Assertions.assertEquals(expected, actual);
+    }
+
+    @Test
+    void testForStatement2() {
+        // FOR (num = 0; num < 5; )
+        //   sum = sum + num;
+        //   num = num + 1;
+        // END
+
+        // scope = {num = NIL, sum = 0}
+        Scope scope = new Scope(null);
+        scope.defineVariable("sum", false, Environment.create(BigInteger.ZERO));
+        scope.defineVariable("num", false, Environment.NIL);
+
+        // FOR (num = 0; num < 5; )
+        test(new Ast.Statement.For(
+            new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Literal(BigInteger.ZERO)),
+
+            new Ast.Expression.Binary("<",
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Literal(BigInteger.valueOf(5))),
+
+            null,
+
+            Arrays.asList(
+                //   sum = sum + num;
+                new Ast.Statement.Assignment(
+                    new Ast.Expression.Access(Optional.empty(),"sum"),
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Access(Optional.empty(),"sum"),
+                        new Ast.Expression.Access(Optional.empty(),"num"))),
+
+                //   num = num + 1;
+                new Ast.Statement.Assignment(
+                    new Ast.Expression.Access(Optional.empty(),"num"),
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Access(Optional.empty(),"num"),
+                        new Ast.Expression.Literal(BigInteger.ONE)))
+            )
+        ), Environment.NIL.getValue(), scope);
+
+        Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("sum").getValue().getValue());
+        Assertions.assertEquals(BigInteger.valueOf(5), scope.lookupVariable("num").getValue().getValue());
+    }
+
+    @Test
+    void testForStatement3() {
+        // FOR (; num < 5; num = num + 1)
+        //   sum = sum + num;
+        // END
+
+        // scope = {num = 0, sum = 0}
+        Scope scope = new Scope(null);
+        scope.defineVariable("num", false, Environment.create(BigInteger.ZERO));
+        scope.defineVariable("sum", false, Environment.create(BigInteger.ZERO));
+
+        // FOR (; num < 5; num = num + 1)
+        test(new Ast.Statement.For(
+            null,
+
+            new Ast.Expression.Binary("<",
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Literal(BigInteger.valueOf(5))),
+
+            new Ast.Statement.Assignment(
+                new Ast.Expression.Access(Optional.empty(), "num"),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(),"num"),
+                    new Ast.Expression.Literal(BigInteger.ONE))),
+
+
+            Arrays.asList(
+                //   sum = sum + num;
+                new Ast.Statement.Assignment(
+                    new Ast.Expression.Access(Optional.empty(),"sum"),
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Access(Optional.empty(),"sum"),
+                        new Ast.Expression.Access(Optional.empty(),"num")))
+            )
+        ), Environment.NIL.getValue(), scope);
+
+        Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("sum").getValue().getValue());
+        Assertions.assertEquals(BigInteger.valueOf(5), scope.lookupVariable("num").getValue().getValue());
     }
 
     @Test
@@ -553,6 +639,13 @@ final class InterpreterTests {
                 ),
                 true
             ),
+            Arguments.of("And (Short Circuit)",
+                new Ast.Expression.Binary("AND",
+                    new Ast.Expression.Literal(false),
+                    new Ast.Expression.Access(Optional.empty(), "undefined")
+                ),
+                false
+            ),
             Arguments.of("Less Than",
                 new Ast.Expression.Binary("<",
                     new Ast.Expression.Literal(BigInteger.ONE),
@@ -581,6 +674,27 @@ final class InterpreterTests {
                 ),
                 "ab"
             ),
+            Arguments.of("RHS String",
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal("10")
+                ),
+                "110"
+            ),
+            Arguments.of("String Compare True",
+                new Ast.Expression.Binary("<",
+                    new Ast.Expression.Literal("abc"),
+                    new Ast.Expression.Literal("abd")
+                ),
+                true
+            ),
+            Arguments.of("String Compare False",
+                new Ast.Expression.Binary(">",
+                    new Ast.Expression.Literal("abc"),
+                    new Ast.Expression.Literal("abd")
+                ),
+                false
+            ),
             Arguments.of("Addition",
                 new Ast.Expression.Binary("+",
                     new Ast.Expression.Literal(BigInteger.ONE),
@@ -594,6 +708,27 @@ final class InterpreterTests {
                     new Ast.Expression.Literal(new BigDecimal("3.4"))
                 ),
                 new BigDecimal("0.4")
+            ),
+            Arguments.of("Division by Zero",
+                new Ast.Expression.Binary("/",
+                    new Ast.Expression.Literal(new BigInteger("1")),
+                    new Ast.Expression.Literal(new BigInteger("0"))
+                ),
+                null
+            ),
+            Arguments.of("Nil Equals",
+                new Ast.Expression.Binary("==",
+                    new Ast.Expression.Literal(null),
+                    new Ast.Expression.Literal(null)
+                ),
+                true
+            ),
+            Arguments.of("Distinct Types",
+                new Ast.Expression.Binary("!=",
+                    new Ast.Expression.Literal(BigInteger.ONE),
+                    new Ast.Expression.Literal("1")
+                ),
+                true
             )
         );
     }
@@ -699,6 +834,96 @@ final class InterpreterTests {
                 Environment.NIL.getValue()
             )
         );
+    }
+
+    @Test
+    void testFunctionScope() {
+        // LET x = 1;
+        // LET y = 2;
+        // LET z = 3;
+        // DEF f(z) DO
+        //   RETURN x + y + z;
+        // END
+        // DEF main() DO
+        //   LET y = 4;
+        //   RETURN f(5);
+        // END
+
+        Scope scope = new Scope(null);
+        StringWriter writer = new StringWriter();
+        scope.defineFunction(
+            "log",
+            1,
+            args -> {
+                writer.write(String.valueOf(args.get(0).getValue()));
+                return args.get(0);
+            }
+        );
+
+        Ast ast = new Ast.Source(
+            // LET x = 1;
+            // LET y = 2;
+            // LET z = 3;
+            Arrays.asList(
+                new Ast.Field("x", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
+                new Ast.Field("y", false, Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(2)))),
+                new Ast.Field("z", false, Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(3))))
+            ),
+            Arrays.asList(
+
+                // DEF f(z) DO
+                //   RETURN x + y + z;
+                // END
+                new Ast.Method(
+                    "f",
+                    Arrays.asList("z"),
+                    Arrays.asList(
+                        new Ast.Statement.Return(
+                            new Ast.Expression.Binary("+",
+                                new Ast.Expression.Access(Optional.empty(), "x"),
+                                new Ast.Expression.Binary("+",
+                                    new Ast.Expression.Access(Optional.empty(), "y"),
+                                    new Ast.Expression.Access(Optional.empty(), "z")
+                                )
+                            )
+                        )
+                    )
+                ),
+                // TODO finish test
+                // DEF main() DO
+                //   LET y = 4;
+                //   RETURN f(5);
+                // END
+                new Ast.Method(
+                    "main",
+                    Arrays.asList(),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "f",
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.ZERO))
+                        )),
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "g",
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.ONE))
+                        )),
+                        new Ast.Statement.Expression(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "h",
+                            Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(2)))
+                        ))
+                    )
+                )
+            )
+        );
+
+        test(
+            ast,
+            Environment.NIL.getValue(),
+            scope);
+        String log = writer.toString();
+        Assertions.assertEquals("012234", log);
     }
 
     @Test
