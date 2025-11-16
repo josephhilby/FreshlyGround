@@ -221,19 +221,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
             throw new RuntimeException("FOR block must contain at least one statement");
         }
 
-        visitStatements(ast.getStatements());
-
         if (ast.getInitialization() != null) {
             visit(ast.getInitialization());
             initialization = (Ast.Statement.Assignment) ast.getInitialization();
 
             // throws a RuntimeException if: initialization exists AND not Comparable
             requireAssignable(Environment.Type.COMPARABLE, initialization.getReceiver().getType());
+        }
 
-            if (ast.getIncrement() != null) {
-                visit(ast.getIncrement());
-                increment = (Ast.Statement.Assignment) ast.getIncrement();
+        if (ast.getIncrement() != null) {
+            visit(ast.getIncrement());
+            increment = (Ast.Statement.Assignment) ast.getIncrement();
 
+            if (ast.getInitialization() != null) {
+                initialization = (Ast.Statement.Assignment) ast.getInitialization();
                 // throws a RuntimeException if: initialization AND increment exists AND NOT same type
                 requireAssignable(initialization.getReceiver().getType(), increment.getReceiver().getType());
             }
@@ -243,6 +244,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // throws a RuntimeException if: condition not Bool
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        visitStatements(ast.getStatements());
 
         return null;
     }
@@ -302,7 +305,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         } else if (literal instanceof Boolean) {
             ast.setType(Environment.Type.BOOLEAN);
 
-        } else if (literal == Environment.NIL) {
+        } else if (literal == null) {
             ast.setType(Environment.Type.NIL);
 
         } else if (literal instanceof BigInteger bigInteger) {
@@ -359,6 +362,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         } else if (check(operator, "==", "!=", "<=", ">=", "<", ">")) {
             requireAssignables(Environment.Type.COMPARABLE, leftType, rightType);
+            compareTypes(leftType, rightType);
             ast.setType(Environment.Type.BOOLEAN);
 
         } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
@@ -428,20 +432,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // [ receiver.] function([ arguments ])
     @Override
     public Void visit(Ast.Expression.Function ast) {
+        int parameterOffset = 0;
         Environment.Function function;
-        List<Ast.Expression> arguments = ast.getArguments();
         List<Environment.Type> parameterTypes;
-        int i = 0;
+        List<Ast.Expression> arguments = ast.getArguments();
 
         // if receiver, visit AND increment argument starting index (account for invoking object)
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
-            function = receiver.getType().getFunction(ast.getName(), ast.getArguments().size());
-            i++;
 
+            function = receiver.getType().getFunction(ast.getName(), arguments.size());
+            parameterOffset = 1;
         } else {
-            function = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+            function = scope.lookupFunction(ast.getName(), arguments.size());
         }
 
         // set function
@@ -449,13 +453,21 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // checks provided arguments are assignable to parameter types
         parameterTypes = function.getParameterTypes();
-        while (i < arguments.size()) {
-            visit(arguments.get(i));
-            requireAssignable(parameterTypes.get(i), arguments.get(i).getType());
-            i++;
+        for (Ast.Expression argument : arguments) {
+            visit(argument);
+            requireAssignable(parameterTypes.get(parameterOffset), argument.getType());
+            parameterOffset++;
         }
 
         return null;
+    }
+
+    // helper
+    private void compareTypes(Environment.Type type1, Environment.Type type2) {
+        if (type1.equals(type2)) {
+            return;
+        }
+        throw new RuntimeException("Types mismatch");
     }
 
     // helper
