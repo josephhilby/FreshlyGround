@@ -36,11 +36,11 @@ public final class Parser {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
 
-        while (match("LET")) {
+        while (peek("LET")) {
             fields.add(parseField());
         }
 
-        while (match("DEF")) {
+        while (peek("DEF")) {
             methods.add(parseMethod());
         }
 
@@ -58,6 +58,7 @@ public final class Parser {
     // field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
     //            LET CONST name : type = expression;
     public Ast.Field parseField() throws ParseException {
+        keywordCheck("LET");
         boolean constant = match("CONST");
         String name = currentToken().getLiteral();
         typeCheck(Token.Type.IDENTIFIER);
@@ -70,6 +71,11 @@ public final class Parser {
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
+
+        if (constant && expression.isEmpty()) {
+            parseError("CONST must have an initial value");
+        }
+
         keywordCheck(";");
         return new Ast.Field(name, type, constant, expression);
     }
@@ -82,6 +88,7 @@ public final class Parser {
     //             DEF name(parameter : parameterType) : returnType DO statement(s) END
     public Ast.Method parseMethod() throws ParseException {
         // TODO: Clean up
+        keywordCheck("DEF");
         String name = currentToken().getLiteral();
         typeCheck(Token.Type.IDENTIFIER);
 
