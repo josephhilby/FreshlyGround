@@ -1400,6 +1400,7 @@ final class ParserModifiedTests {
                 //END
                 new Token(Token.Type.IDENTIFIER, "END", 129)
         );
+
         Ast.Source expected = new Ast.Source(
             Arrays.asList(new Ast.Field("first", "Integer", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE)))),
             Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
@@ -1432,7 +1433,9 @@ final class ParserModifiedTests {
      * Standard test function. If expected is null, a ParseException is expected
      * to be thrown (not used in the provided tests).
      */
-    private static <T extends Ast> void test(List<Token> tokens, T expected, Function<Parser, T> function) {
+    private static <T extends Ast> void test(List<Token> tokens,
+                                             T expected,
+                                             Function<Parser, T> function) {
         Parser parser = new Parser(tokens);
         if (expected != null) {
             Assertions.assertEquals(expected, function.apply(parser));

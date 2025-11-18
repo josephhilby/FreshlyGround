@@ -1,6 +1,8 @@
 package plc.project;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class Generator implements Ast.Visitor<Void> {
 
@@ -52,15 +54,15 @@ public final class Generator implements Ast.Visitor<Void> {
 
         newline(indent);
         if (!ast.getMethods().isEmpty()) {
-            indent++;
+//            indent++;
             for (Ast.Method method : ast.getMethods()) {
-                newline(indent);
+                newline(++indent);
                 print(method);
+                newline(--indent);
             }
             newline(--indent);
         }
 
-        newline(indent);
         print("}");
         return null;
     }
@@ -86,6 +88,8 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Method ast) {
         if (ast.getReturnTypeName().isPresent()) {
             print(getJavaType(ast.getReturnTypeName().get()), " ");
+        } else {
+            print("void ");
         }
 
         if (ast.getParameters().isEmpty()) {
@@ -283,8 +287,12 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         if (!ast.getArguments().isEmpty()) {
-            for (Ast.Expression argument : ast.getArguments()) {
-                print(argument);
+            List<Ast.Expression> arguments = ast.getArguments();
+            for (int i = 0; i < arguments.size(); i++) {
+                print(arguments.get(i));
+                if (i < arguments.size() - 1) {
+                    print(", ");
+                }
             }
         }
 
