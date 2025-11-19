@@ -132,22 +132,22 @@ public class EndToEndInterpreterTests {
         // scope = {log/1 = ...}
 
         Scope scope = new Scope(null);
-        StringBuilder builder = new StringBuilder();
+        StringWriter writer = new StringWriter();
         scope.defineFunction("log", 1, args -> {
-                    builder.append(args.get(0).getValue());
-                    return args.get(0);
-                });
+            writer.write(String.valueOf(args.get(0).getValue()));
+            return args.get(0);
+        });
         test(
             "log(1);",
             Environment.NIL.getValue(),
             Parser::parseStatement,
             scope
         );
-        Assertions.assertEquals("1", builder.toString());
+        Assertions.assertEquals("1", writer.toString());
     }
 
-    // Scope
-    // If Scope:
+    @Test
+    void testLogSource() {
         // DEF main(): Integer DO
         //     LET x = 1;
         //     LET y = 2;
@@ -163,7 +163,38 @@ public class EndToEndInterpreterTests {
         //     log(y);
         // END
 
-    // Function Scope:
+        Scope scope = new Scope(null);
+        StringWriter writer = new StringWriter();
+        scope.defineFunction("log", 1, args -> {
+            writer.write(String.valueOf(args.get(0).getValue()));
+            return args.get(0);
+        });
+        test(
+            String.join(System.lineSeparator(),
+                "DEF main(): Integer DO",
+                "    LET x = 1;",
+                "    LET y = 2;",
+                "    log(x);",
+                "    log(y);",
+                "    IF TRUE DO",
+                "        LET x = 3;",
+                "        y = 4;",
+                "        log(x);",
+                "        log(y);",
+                "    END",
+                "    log(x);",
+                "    log(y);",
+                "END"
+            ),
+            Environment.NIL.getValue(),
+            Parser::parseSource,
+            scope
+        );
+        Assertions.assertEquals("123414", writer.toString());
+    }
+
+    @Test
+    void testOutputSource() {
         // LET x: Integer = 1;
         // LET y: Integer = 2;
         // LET z: Integer = 3;
@@ -175,28 +206,124 @@ public class EndToEndInterpreterTests {
         //     RETURN f(5);
         // END
 
+        Scope scope = new Scope(null);
+        test(
+            String.join(System.lineSeparator(),
+                "LET x: Integer = 1;",
+                "LET y: Integer = 2;",
+                "LET z: Integer = 3;",
+                "DEF f(z: Integer): Integer DO",
+                "    RETURN x + y + z;",
+                "END",
+                "DEF main(): Integer DO",
+                "    LET y = 4;",
+                "    RETURN f(100);",
+                "END"
+            ),
+            BigInteger.valueOf(103),
+            Parser::parseSource,
+            scope
+        );
+    }
+
     // Statement
-        // Declaration (2):
-            // Declaration: LET name;
-                // scope = {name = NIL}
-            // Initialization: LET name = 1;
-                // scope = {name = 1}
-        // Assignment (2):
-            // Variable: variable = 1;, scope = {variable = NIL}
-                // scope = {variable = 1}
-            // List: object.field = 1;, scope = {object = PlcObject{field = NIL}}
-                // scope = {object = PlcObject{field = 1}}
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testDeclaration(String test, String source, Object expected) {
+        ScopeAst ret = test(source, Environment.NIL.getValue(), Parser::parseStatement, new Scope(null));
+
+        Scope scope = ret.getScope();
+        Ast.Statement.Declaration ast = (Ast.Statement.Declaration) ret.getAst();
+        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testDeclaration() {
+        return Stream.of(
+            // LET name;
+            // scope = {name = NIL}
+            Arguments.of("Declaration",
+                String.join(System.lineSeparator(),
+                    "LET name;"
+                ),
+                Environment.NIL.getValue()
+            ),
+            // LET name = 1;
+            // scope = {name = 1}
+            Arguments.of("Initialization",
+                String.join(System.lineSeparator(),
+                    "LET name = 1;"
+                ),
+                BigInteger.valueOf(1)
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAssignmentVariable(String test, String source, Object expected, String name) {
+        Scope root = new Scope(null);
+        root.defineVariable("variable", false, Environment.create("variable"));
+
+        test(source, Environment.NIL.getValue(), Parser::parseStatement, root);
+        Assertions.assertEquals(expected, root.lookupVariable(name).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testAssignmentVariable() {
+        return Stream.of(
+            // variable = 1;, scope = {variable = NIL}
+            // scope = {variable = 11}
+            Arguments.of("Variable",
+                String.join(System.lineSeparator(),
+                    "variable = 11;"
+                ),
+                BigInteger.valueOf(11),
+                "variable"
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAssignmentField(String test, String source, Object expected, String name) {
+        Scope root = new Scope(null);
+        Scope object = new Scope(null);
+        object.defineVariable("field", false, Environment.create("object.field"));
+        root.defineVariable("object", false, new Environment.PlcObject(object, "object"));
+
+        test(source, Environment.NIL.getValue(), Parser::parseStatement, root);
+        Assertions.assertEquals(expected, object.lookupVariable(name).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testAssignmentField() {
+        return Stream.of(
+            // object.field = 13;, scope = {object = PlcObject{field = NIL}}
+            // scope = {object = PlcObject{field = 13}}
+            Arguments.of("List",
+                String.join(System.lineSeparator(),
+                    "object.field = 13;"
+                ),
+                BigInteger.valueOf(13),
+                "field"
+            )
+        );
+    }
+
+    // Assignment (2):
         // If (2):
             // True Condition: IF TRUE DO num = 1; END, scope = {num = NIL}
                 // scope = {num = 1}
             // False Condition: IF FALSE DO ELSE num = 10; END, scope = {num = NIL}
                 // scope = {num = 10}
+
         // For (1):
             // For: FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END, scope = {sum = 0, num = NIL}
                 // scope = {sum = 10, num = 5}
+
         // While (1):
             // While: WHILE num < 10 DO num = num + 1; END, scope = {num = 0}
                 // scope = {num = 10}
+
 
     // Expression
         // Literal (3):
@@ -204,9 +331,11 @@ public class EndToEndInterpreterTests {
             // Integer: 1
             // String: "string"
             // Boolean: TRUE
+
         // Group (2):
             // Literal: (1)
             // Binary: (1 + 10)
+
         // Binary (7):
             // And: TRUE AND FALSE
             // Or (Short Circuit): TRUE OR undefined
@@ -215,13 +344,14 @@ public class EndToEndInterpreterTests {
             // Concatenation: "a" + "b"
             // Addition: 1 + 10
             // Division: 1.2 / 3.4
+
         // Access (2):
             // Variable: variable, scope = {variable = 1}
             // Field: object.field, scope = {object = PlcObject{field = 1}}
+
         // Function (2):
             // Function: function(), scope = {function/0 = ... (returns 1)
             // Log: log(1), scope = {log/1 = ...} (returns the argument, 1)
-
 
     // Error
         // Integer Decimal Subtraction: 1 - 1.0
