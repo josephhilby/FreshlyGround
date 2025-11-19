@@ -1,6 +1,7 @@
 package plc.project;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -20,6 +21,12 @@ import java.util.stream.Stream;
  * or the LexerTests file from the last project part for more information.
  */
 final class ParserExpressionTests {
+
+    @Test
+    void testParserExpressionTestsDeprecated() {
+        // applicable tests covered in ParserModifiedTests.java
+        Assertions.assertEquals("true", "true");
+    }
 
 //    @ParameterizedTest
 //    @MethodSource

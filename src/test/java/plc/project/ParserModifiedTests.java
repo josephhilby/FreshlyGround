@@ -778,6 +778,10 @@ final class ParserModifiedTests {
                 Arrays.asList(new Token(Token.Type.CHARACTER, "'\\b'", 0)),
                 new Ast.Expression.Literal('\b')
             ),
+            Arguments.of("Escaped Character Escape",
+                Arrays.asList(new Token(Token.Type.STRING, "\"\\\\b\"", 0)),
+                new Ast.Expression.Literal("\\b")
+            ),
             Arguments.of("String Literal",
                 Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
                 new Ast.Expression.Literal("string")

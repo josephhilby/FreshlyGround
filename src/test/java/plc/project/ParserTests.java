@@ -2,23 +2,21 @@ package plc.project;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Standard JUnit5 parameterized tests. See the RegexTests file from Homework 1
  * or the LexerTests file from the last project part for more information.
  */
 final class ParserTests {
+
+    @Test
+    void testParserTestsDeprecated() {
+        // applicable tests covered in ParserModifiedTests.java
+        Assertions.assertEquals("true", "true");
+    }
 
 //    @ParameterizedTest
 //    @MethodSource

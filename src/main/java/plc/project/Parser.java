@@ -215,7 +215,7 @@ public final class Parser {
     public Ast.Statement.For parseForStatement() throws ParseException {
         keywordCheck("(");
         Ast.Statement initialization = null;
-        if (typeCheck(Token.Type.IDENTIFIER, false)) {
+        if (tokens.get(0).getType() == Token.Type.IDENTIFIER) {
             initialization = parseLoopStatement();
         }
         keywordCheck(";");
@@ -224,7 +224,7 @@ public final class Parser {
         keywordCheck(";");
 
         Ast.Statement increment = null;
-        if (typeCheck(Token.Type.IDENTIFIER, false)) {
+        if (tokens.get(0).getType() == Token.Type.IDENTIFIER) {
             increment = parseLoopStatement();
         }
         keywordCheck(")");
@@ -471,36 +471,52 @@ public final class Parser {
         return indexes;
     }
 
-    // remove found escape characters from locations
+    // remove found escape characters from locations but keep escaped escape chars
     private String clean(String string, ArrayList<Integer> indexes) {
-        StringBuilder builder = new StringBuilder(string);
-        for (int i = indexes.size() - 1; i >= 0; i--) {
-            int index = indexes.get(i);
-            char c = string.charAt(index + 1);
-            builder.deleteCharAt(index + 1);
-            builder.deleteCharAt(index);
+        StringBuilder builder = new StringBuilder();
+        int i = 0;
 
-            switch (c) {
-                case 'b':
-                    builder.insert(index, '\b');
-                    break;
-                case 'n':
-                    builder.insert(index, '\n');
-                    break;
-                case 'r':
-                    builder.insert(index, '\r');
-                    break;
-                case 't':
-                    builder.insert(index, '\t');
-                    break;
-                case '\'':
-                    builder.insert(index, '\'');
-                    break;
-                case '\\':
-                    builder.insert(index, '\\');
-                    break;
+        while (i < string.length()) {
+            char c = string.charAt(i);
+
+            if (c == '\\' && i + 1 < string.length()) {
+                char next = string.charAt(i + 1);
+                switch (next) {
+                    case 'b':
+                        builder.append('\b');
+                        i += 2;
+                        break;
+                    case 'n':
+                        builder.append('\n');
+                        i += 2;
+                        break;
+                    case 'r':
+                        builder.append('\r');
+                        i += 2;
+                        break;
+                    case 't':
+                        builder.append('\t');
+                        i += 2;
+                        break;
+                    case '\'':
+                        builder.append('\'');
+                        i += 2;
+                        break;
+                    case '\\':
+                        builder.append('\\');
+                        i += 2;
+                        break;
+                    default:
+                        builder.append(c);
+                        i++;
+                        break;
+                }
+            } else {
+                builder.append(c);
+                i++;
             }
         }
+
         return builder.toString();
     }
 

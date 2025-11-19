@@ -1,32 +1,181 @@
 package plc.project;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 public class EndToEndInterpreterTests {
 
-    // log
-    // StringBuilder builder = new StringBuilder();
-    //        scope.defineFunction("log", 1, args -> {
-    //            builder.append(args.get(0).getValue());
-    //            return args.get(0);
-    //        });
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testSource(String test, String source, Object expected) {
+        Scope scope = new Scope(null);
+        test(source, expected, Parser::parseSource, scope);
+    }
 
-    // Source
-        // Field Addition: LET x: Integer = 1; LET y: Integer = 10; DEF main(): Integer DO RETURN x + y; END
-        // Source Invoke Main (predefined): <empty>, scope = {main/0 = ...} (returns 0)
+    private static Stream<Arguments> testSource() {
+        return Stream.of(
+            // LET x: Integer = 1;
+            // LET y: Integer = 10;
+            // DEF main(): Integer DO RETURN x + y; END
+            Arguments.of("Field Addition",
+                String.join(System.lineSeparator(),
+                    "LET x: Integer = 1;",
+                    "LET y: Integer = 10;",
+                    "DEF main(): Integer DO RETURN x + y; END"
+                ),
+                BigInteger.valueOf(11)
+            )
+            // Source Invoke Main (predefined): <empty>, scope = {main/0 = ...} (returns 0)
+        );
+    }
 
-    // Field
-        // Declaration: LET name: Integer;
-            // scope = {name = NIL}
-        // Initialization: VAL name: Integer = 1;
-            // scope = {name = 1}
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testField(String test, String source, Object expected) {
+        ScopeAst ret = test(source, Environment.NIL.getValue(), Parser::parseField, new Scope(null));
 
-    // Method
-        // Main: DEF main(): Integer DO RETURN 0; END
-        // One Parameter: DEF square(x: Integer): Integer DO RETURN x * x; END
+        Scope scope = ret.getScope();
+        Ast.Field ast = (Ast.Field) ret.getAst();
+        Assertions.assertEquals(expected, scope.lookupVariable(ast.getName()).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testField() {
+        return Stream.of(
+            // LET name: Integer;
+            Arguments.of("Declaration",
+                String.join(System.lineSeparator(),
+                    "LET name: Integer;"
+                ),
+                // scope = {name = NIL}
+                Environment.NIL.getValue()
+            ),
+            // LET name: Integer = 1;
+            Arguments.of("Initialization",
+                String.join(System.lineSeparator(),
+                    "LET name: Integer = 1;"
+                ),
+                // scope = {name = 1}
+                BigInteger.valueOf(1)
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testMethod(String test, String source, Object expected, List<Environment.PlcObject> args) {
+        ScopeAst ret = test(source, Environment.NIL.getValue(), Parser::parseMethod, new Scope(null));
+
+        Scope scope = ret.getScope();
+        Ast.Method ast = (Ast.Method) ret.getAst();
+        Assertions.assertEquals(expected, scope.lookupFunction(ast.getName(), args.size()).invoke(args).getValue());
+    }
+
+    private static Stream<Arguments> testMethod() {
+        return Stream.of(
+            // DEF main(): Integer DO RETURN 0; END
+            Arguments.of("Main",
+                String.join(System.lineSeparator(),
+                    "DEF main(): Integer DO RETURN 0; END"
+                ),
+                BigInteger.valueOf(0),
+                Arrays.asList()
+            ),
+            // DEF square(x: Integer): Integer DO RETURN x * x; END
+            Arguments.of("One Parameter",
+                String.join(System.lineSeparator(),
+                    "DEF square(x: Integer): Integer DO RETURN x * x; END"
+                ),
+                BigInteger.valueOf(81),
+                Arrays.asList(Environment.create(BigInteger.valueOf(9)))
+            )
+        );
+    }
+
+    @Test
+    void testPrintStatement() {
+        // print("Hello, World!");
+        // scope = {}
+        // %System.out.println("Hello, World!");%
+        PrintStream sysout = System.out;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(out));
+        try {
+            test(
+                "print(\"Hello, World!\");",
+                Environment.NIL.getValue(),
+                Parser::parseStatement,
+                new Scope(null)
+            );
+            Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString());
+        } finally {
+            System.setOut(sysout);
+        }
+    }
+
+    @Test
+    void testLogStatement() {
+        // Log: log(1);
+        // scope = {log/1 = ...}
+
+        Scope scope = new Scope(null);
+        StringBuilder builder = new StringBuilder();
+        scope.defineFunction("log", 1, args -> {
+                    builder.append(args.get(0).getValue());
+                    return args.get(0);
+                });
+        test(
+            "log(1);",
+            Environment.NIL.getValue(),
+            Parser::parseStatement,
+            scope
+        );
+        Assertions.assertEquals("1", builder.toString());
+    }
+
+    // Scope
+    // If Scope:
+        // DEF main(): Integer DO
+        //     LET x = 1;
+        //     LET y = 2;
+        //     log(x);
+        //     log(y);
+        //     IF TRUE DO
+        //         LET x = 3;
+        //         y = 4;
+        //         log(x);
+        //         log(y);
+        //     END
+        //     log(x);
+        //     log(y);
+        // END
+
+    // Function Scope:
+        // LET x: Integer = 1;
+        // LET y: Integer = 2;
+        // LET z: Integer = 3;
+        // DEF f(z: Integer): Integer DO
+        //     RETURN x + y + z;
+        // END
+        // DEF main(): Integer DO
+        //     LET y = 4;
+        //     RETURN f(5);
+        // END
 
     // Statement
-        // Expression (1):
-            // Log: log(1);
-                // scope = {log/1 = ...}
         // Declaration (2):
             // Declaration: LET name;
                 // scope = {name = NIL}
@@ -73,36 +222,42 @@ public class EndToEndInterpreterTests {
             // Function: function(), scope = {function/0 = ... (returns 1)
             // Log: log(1), scope = {log/1 = ...} (returns the argument, 1)
 
-    // Scope
-        // If Scope:
-            // DEF main(): Integer DO
-            //     LET x = 1;
-            //     LET y = 2;
-            //     log(x);
-            //     log(y);
-            //     IF TRUE DO
-            //         LET x = 3;
-            //         y = 4;
-            //         log(x);
-            //         log(y);
-            //     END
-            //     log(x);
-            //     log(y);
-            // END
-        // Function Scope:
-            // LET x: Integer = 1;
-            // LET y: Integer = 2;
-            // LET z: Integer = 3;
-            // DEF f(z: Integer): Integer DO
-            //     RETURN x + y + z;
-            // END
-            // DEF main(): Integer DO
-            //     LET y = 4;
-            //     RETURN f(5);
-            // END
 
     // Error
         // Integer Decimal Subtraction: 1 - 1.0
         // While w/ String: WHILE "false" DO END
         // Redefined Field: LET name: Integer; LET name: Integer = 1;
+
+    static class ScopeAst {
+        private Scope scope;
+        private Ast ast;
+
+        public ScopeAst(Scope scope, Ast ast) {
+            this.scope = scope;
+            this.ast = ast;
+        }
+
+        public Scope getScope() { return scope; }
+        public Ast getAst() { return ast; }
+    }
+
+    // LEXER - PARSER - INTERPRETER
+    private static <T extends Ast> ScopeAst test(String input,
+                                             Object expected,
+                                             Function<Parser, T> function,
+                                             Scope scope) {
+        // code -> LEXER -> tokens
+        List<Token> tokens = new Lexer(input).lex();
+
+        // tokens -> PARSER -> ast
+        Parser parser = new Parser(tokens);
+        Ast ast = function.apply(parser);
+
+        // ast -> INTERPRETER -> java
+        Interpreter interpreter = new Interpreter(scope);
+
+        Assertions.assertEquals(expected, interpreter.visit(ast).getValue());
+
+        return new ScopeAst(interpreter.getScope(), ast);
+    }
 }
