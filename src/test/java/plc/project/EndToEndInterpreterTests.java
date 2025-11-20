@@ -8,12 +8,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -309,49 +308,301 @@ public class EndToEndInterpreterTests {
         );
     }
 
-    // Assignment (2):
-        // If (2):
-            // True Condition: IF TRUE DO num = 1; END, scope = {num = NIL}
-                // scope = {num = 1}
-            // False Condition: IF FALSE DO ELSE num = 10; END, scope = {num = NIL}
-                // scope = {num = 10}
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testIf(String test, String source, Object expected) {
+        Scope initialScope = new Scope(null);
+        initialScope.defineVariable("num", false, Environment.create("num"));
+        ScopeAst ret = test(source, Environment.NIL.getValue(), Parser::parseStatement, initialScope);
 
-        // For (1):
-            // For: FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END, scope = {sum = 0, num = NIL}
-                // scope = {sum = 10, num = 5}
+        Scope scope = ret.getScope();
+        Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue());
+    }
 
-        // While (1):
-            // While: WHILE num < 10 DO num = num + 1; END, scope = {num = 0}
-                // scope = {num = 10}
+    private static Stream<Arguments> testIf() {
+        return Stream.of(
+            // IF TRUE DO num = 1; END, scope = {num = NIL}
+            // scope = {num = 1}
+            Arguments.of("True Condition",
+                String.join(System.lineSeparator(),
+                    "IF TRUE DO num = 1; ELSE num = 10; END"
+                ),
+                BigInteger.valueOf(1)
+            ),
+            // IF FALSE DO ELSE num = 10; END, scope = {num = NIL}
+            // scope = {num = 10}
+            Arguments.of("False Condition",
+                String.join(System.lineSeparator(),
+                    "IF FALSE DO num = 1; ELSE num = 10; END"
+                ),
+                BigInteger.valueOf(10)
+            )
+        );
+    }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testFor(String test, String source, Object expected) {
+        Scope initialScope = new Scope(null);
+        initialScope.defineVariable("num", false, Environment.create("num"));
+        initialScope.defineVariable("sum", false, Environment.create(BigInteger.ZERO));
+        ScopeAst ret = test(source, Environment.NIL.getValue(), Parser::parseStatement, initialScope);
 
-    // Expression
-        // Literal (3):
-            // Nil: NIL
-            // Integer: 1
-            // String: "string"
+        Scope scope = ret.getScope();
+        Assertions.assertEquals(expected, scope.lookupVariable("sum").getValue().getValue());
+    }
+
+    private static Stream<Arguments> testFor() {
+        return Stream.of(
+            // FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END, scope = {sum = 0, num = NIL}
+            // scope = {sum = 10, num = 5}
+            Arguments.of("For",
+                String.join(System.lineSeparator(),
+                    "FOR (num = 0; num < 5; num = num + 1) sum = sum + num; END"
+                ),
+                BigInteger.valueOf(10)
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testWhile(String test, String source, Object expected) {
+        Scope initialScope = new Scope(null);
+        initialScope.defineVariable("num", false, Environment.create(BigInteger.ZERO));
+        ScopeAst ret = test(source, Environment.NIL.getValue(), Parser::parseStatement, initialScope);
+
+        Scope scope = ret.getScope();
+        Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue());
+    }
+
+    private static Stream<Arguments> testWhile() {
+        return Stream.of(
+            // WHILE num < 10 DO num = num + 1; END, scope = {num = 0}
+            // scope = {num = 10}
+            Arguments.of("While",
+                String.join(System.lineSeparator(),
+                    "WHILE num < 20 DO num = num + 1; END"
+                ),
+                BigInteger.valueOf(20)
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testLiteral(String test, String source, Object expected) {
+        Scope initialScope = new Scope(null);
+        test(source, expected, Parser::parseExpression, initialScope);
+    }
+
+    private static Stream<Arguments> testLiteral() {
+        return Stream.of(
+            // NIL
+            Arguments.of("Nil",
+                String.join(System.lineSeparator(),
+                    "NIL"
+                ),
+                Environment.NIL.getValue()
+            ),
+            // 1
+            Arguments.of("Integer",
+                String.join(System.lineSeparator(),
+                    "1"
+                ),
+                BigInteger.valueOf(1)
+            ),
+            // "string"
+            Arguments.of("String",
+                String.join(System.lineSeparator(),
+                    "\"string\""
+                ),
+                "string"
+            ),
             // Boolean: TRUE
+            Arguments.of("Boolean",
+                String.join(System.lineSeparator(),
+                    "TRUE"
+                ),
+                true
+            )
+        );
+    }
 
-        // Group (2):
-            // Literal: (1)
-            // Binary: (1 + 10)
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testGroup(String test, String source, Object expected) {
+        Scope initialScope = new Scope(null);
+        test(source, expected, Parser::parseExpression, initialScope);
+    }
 
-        // Binary (7):
-            // And: TRUE AND FALSE
-            // Or (Short Circuit): TRUE OR undefined
-            // Less Than: 1 < 10
-            // Equal: 1 == 10
-            // Concatenation: "a" + "b"
-            // Addition: 1 + 10
-            // Division: 1.2 / 3.4
+    private static Stream<Arguments> testGroup() {
+        return Stream.of(
+            // (1)
+            Arguments.of("Literal",
+                String.join(System.lineSeparator(),
+                    "(15)"
+                ),
+                BigInteger.valueOf(15)
+            ),
+            // (1 + 10)
+            Arguments.of("Binary",
+                String.join(System.lineSeparator(),
+                    "(1 + 100)"
+                ),
+                BigInteger.valueOf(101)
+            )
+        );
+    }
 
-        // Access (2):
-            // Variable: variable, scope = {variable = 1}
-            // Field: object.field, scope = {object = PlcObject{field = 1}}
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testBinary(String test, String source, Object expected) {
+        Scope initialScope = new Scope(null);
+        test(source, expected, Parser::parseExpression, initialScope);
+    }
 
-        // Function (2):
-            // Function: function(), scope = {function/0 = ... (returns 1)
-            // Log: log(1), scope = {log/1 = ...} (returns the argument, 1)
+    private static Stream<Arguments> testBinary() {
+        return Stream.of(
+            // TRUE AND FALSE
+            Arguments.of("And",
+                String.join(System.lineSeparator(),
+                    "TRUE AND FALSE"
+                ),
+                false
+            ),
+            // TRUE OR undefined
+            Arguments.of("Or (Short Circuit)",
+                String.join(System.lineSeparator(),
+                    "TRUE OR undefined"
+                ),
+                true
+            ),
+            // 1 < 10
+            Arguments.of("Less Than",
+                String.join(System.lineSeparator(),
+                    "1 < 10"
+                ),
+                true
+            ),
+            // 1 == 10
+            Arguments.of("Equal",
+                String.join(System.lineSeparator(),
+                    "1 == 10"
+                ),
+                false
+            ),
+            // "a" + "b"
+            Arguments.of("Concatenation",
+                String.join(System.lineSeparator(),
+                    "\"a\" + \"b\""
+                ),
+                "ab"
+            ),
+            // 1 + 10
+            Arguments.of("Addition",
+                String.join(System.lineSeparator(),
+                    "1 + 10"
+                ),
+                BigInteger.valueOf(11)
+            ),
+            // 1.2 / 3.4
+            Arguments.of("Division",
+                String.join(System.lineSeparator(),
+                    "1.2 / 3.4"
+                ),
+                BigDecimal.valueOf(0.4)
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAccessVariable(String test, String source, Object expected, String name) {
+        Scope root = new Scope(null);
+        root.defineVariable("variable", false, Environment.create(BigInteger.valueOf(28)));
+
+        test(source, Environment.NIL.getValue(), Parser::parseStatement, root);
+        Assertions.assertEquals(expected, root.lookupVariable(name).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testAccessVariable() {
+        return Stream.of(
+            // variable, scope = {variable = 28}
+            Arguments.of("Variable",
+                String.join(System.lineSeparator(),
+                    "variable;"
+                ),
+                BigInteger.valueOf(28),
+                "variable"
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAccessField(String test, String source, Object expected, String name) {
+        Scope root = new Scope(null);
+        Scope object = new Scope(null);
+        object.defineVariable("field", false, Environment.create(BigInteger.valueOf(13)));
+        root.defineVariable("object", false, new Environment.PlcObject(object, "object"));
+
+        test(source, Environment.NIL.getValue(), Parser::parseStatement, root);
+        Assertions.assertEquals(expected, object.lookupVariable(name).getValue().getValue());
+    }
+
+    private static Stream<Arguments> testAccessField() {
+        return Stream.of(
+            // object.field, scope = {object = PlcObject{field = 13}}
+            Arguments.of("List",
+                String.join(System.lineSeparator(),
+                    "object.field;"
+                ),
+                BigInteger.valueOf(13),
+                "field"
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testFunction(String test, String source, Object expected, String name, int arity, List<Environment.PlcObject> params) {
+        Scope scope = new Scope(null);
+        StringWriter writer = new StringWriter();
+        scope.defineFunction("log", 1, args -> {
+            writer.write(String.valueOf(args.get(0).getValue()));
+            return args.get(0);
+        });
+        scope.defineFunction("function", 0, args -> {return Environment.create(BigInteger.ZERO);});
+
+        test(source, expected, Parser::parseExpression, scope);
+        Assertions.assertEquals(expected, scope.lookupFunction(name, arity).invoke(params).getValue());
+    }
+
+    private static Stream<Arguments> testFunction() {
+        return Stream.of(
+            // function(), scope = {function/0 = ... (returns 1)
+            Arguments.of("Function",
+                String.join(System.lineSeparator(),
+                    "function()"
+                ),
+                BigInteger.valueOf(0),
+                "function",
+                0,
+                Arrays.asList()
+            ),
+            // log(1), scope = {log/1 = ...} (returns the argument, 1)
+            Arguments.of("Log",
+                String.join(System.lineSeparator(),
+                    "log(5)"
+                ),
+                BigInteger.valueOf(5),
+                "log",
+                1,
+                Arrays.asList(Environment.create(BigInteger.valueOf(5)))
+            )
+        );
+    }
 
     // Error
         // Integer Decimal Subtraction: 1 - 1.0
