@@ -42,10 +42,10 @@ public class ScopeTestData {
         "END";
 
     // expect 8
-    public static final String input2 = "LET x = 1;\n" +
-        "LET y = 2;\n" +
-        "LET z = 3;\n" +
-        "DEF f(z) DO\n" +
+    public static final String input2 = "LET x: Integer = 1;\n" +
+        "LET y: Integer = 2;\n" +
+        "LET z: Integer = 3;\n" +
+        "DEF f(z: Integer) DO\n" +
         "    RETURN x + y + z;\n" +
         "END\n" +
         "DEF main() DO\n" +

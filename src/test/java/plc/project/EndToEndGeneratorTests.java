@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+// TODO check against slide deck
+// https://mediasite.video.ufl.edu/Mediasite/Play/c6c51d03742b43578043069ce6cb934b1d
+
 public class EndToEndGeneratorTests {
     private static final Environment.Type OBJECT_TYPE =
         new Environment.Type(

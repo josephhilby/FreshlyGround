@@ -54,7 +54,6 @@ public final class Generator implements Ast.Visitor<Void> {
 
         newline(indent);
         if (!ast.getMethods().isEmpty()) {
-//            indent++;
             for (Ast.Method method : ast.getMethods()) {
                 newline(++indent);
                 print(method);
@@ -83,19 +82,14 @@ public final class Generator implements Ast.Visitor<Void> {
         return null;
     }
 
-
     @Override
     public Void visit(Ast.Method ast) {
-        if (ast.getReturnTypeName().isPresent()) {
-            print(getJavaType(ast.getReturnTypeName().get()), " ");
-        } else {
-            print("void ");
-        }
+        print(ast.getFunction().getReturnType().getJvmName(), " ", ast.getFunction().getName());
 
         if (ast.getParameters().isEmpty()) {
-            print(ast.getName(), "() {");
+            print("() {");
         } else {
-            print(ast.getName(), "(");
+            print("(");
             for (int i = 0; i < ast.getParameters().size(); i++) {
                 print(getJavaType(ast.getParameterTypeNames().get(i)), " ", ast.getParameters().get(i));
                 if (i < ast.getParameters().size() - 1) {
@@ -147,11 +141,9 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Statement.If ast) {
         print("if (", ast.getCondition(), ") {");
 
-        newline(++indent);
+        indent++;
         for (int i = 0; i < ast.getThenStatements().size(); i++) {
-            if (i != 0) {
-                newline(++indent);
-            }
+            newline(indent);
             print(ast.getThenStatements().get(i));
         }
         newline(--indent);
@@ -226,16 +218,18 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        if (ast.getType() == Environment.Type.INTEGER) {
+        if (ast.getType().equals(Environment.Type.INTEGER)) {
             print(ast.getLiteral());
-        } else if (ast.getType() == Environment.Type.DECIMAL) {
+        } else if (ast.getType().equals(Environment.Type.DECIMAL)) {
             print(ast.getLiteral());
-        } else if (ast.getType() == Environment.Type.STRING) {
+        } else if (ast.getType().equals(Environment.Type.STRING)) {
             print("\"", ast.getLiteral(), "\"");
-        } else if (ast.getType() == Environment.Type.CHARACTER) {
+        } else if (ast.getType().equals(Environment.Type.CHARACTER)) {
             print("'", ast.getLiteral(), "'");
-        } else if (ast.getType() == Environment.Type.BOOLEAN) {
+        } else if (ast.getType().equals(Environment.Type.BOOLEAN)) {
             print(ast.getLiteral());
+        } else if (ast.getType().equals(Environment.Type.NIL)) {
+            print("null");
         } else {
             throw new RuntimeException("Unknown Type: " + ast.getType());
         }
@@ -251,7 +245,6 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Binary ast) {
         String operator = ast.getOperator();
-        // TODO this is a bad way to handle this, also test for recursive/nested bin
         switch (ast.getOperator()) {
             case "AND":
                 operator = "&&";
@@ -270,9 +263,9 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", ast.getName());
+            print(receiver, ".", ast.getVariable().getJvmName());
         } else {
-            print(ast.getName());
+            print(ast.getVariable().getJvmName());
         }
         return null;
     }

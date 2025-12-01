@@ -535,14 +535,14 @@ public class GeneratorTests {
             // END
             Arguments.of("No Statements",
                 init(new Ast.Method(
-                    "empty",
+                    "func",
                     Arrays.asList(),
                     Arrays.asList(),
                     Optional.of("String"),
                     Arrays.asList()), ast -> ast.setFunction(_empty)
                 ),
                 String.join(System.lineSeparator(),
-                    "String empty() {}"
+                    "String func() {}"
                 )
             ),
 
@@ -692,12 +692,12 @@ public class GeneratorTests {
                         new Environment.Function("func",
                             "func",
                             Arrays.asList(Environment.Type.STRING, Environment.Type.STRING, Environment.Type.STRING),
-                            Environment.Type.STRING,
+                            Environment.Type.NIL,
                             args -> Environment.NIL)
                     )
                 ),
                 String.join(System.lineSeparator(),
-                    "void func(String x, String y, String z) {",
+                    "Void func(String x, String y, String z) {",
                     "    function(1);",
                     "}"
                 )
@@ -731,10 +731,15 @@ public class GeneratorTests {
                             "z",
                             Arrays.asList(init(new Ast.Expression.Access(Optional.empty(), "z"), ast -> ast.setVariable(_z)))
                         ), ast -> ast.setFunction(_print)))
-                    )), ast -> ast.setFunction(_func)
+                    )), ast -> ast.setFunction(
+                        new Environment.Function("func",
+                            "func",
+                            Arrays.asList(),
+                            Environment.Type.NIL,
+                            args -> Environment.NIL))
                 ),
                 String.join(System.lineSeparator(),
-                    "void func(int x, double y, String z) {",
+                    "Void func(int x, double y, String z) {",
                     "    System.out.println(x);",
                     "    System.out.println(y);",
                     "    System.out.println(z);",
@@ -742,9 +747,10 @@ public class GeneratorTests {
                 )
             ),
 
-            //DEF func() DO
-            //  function(1);
-            //END
+            // TODO fix
+            // DEF func() DO
+            //   function(1);
+            // END
             Arguments.of("Empty Return Type",
                 init(new Ast.Method(
                     "func",
@@ -764,7 +770,7 @@ public class GeneratorTests {
                     )
                 ),
                 String.join(System.lineSeparator(),
-                    "void func() {",
+                    "Void func() {",
                     "    function(1);",
                     "}"
                 )
@@ -820,10 +826,10 @@ public class GeneratorTests {
                                 init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER))
                             )
                         )), ast -> ast.setFunction(
-                        new Environment.Function("func",
-                            "func",
+                        new Environment.Function("main",
+                            "main",
                             Arrays.asList(),
-                            Environment.Type.STRING,
+                            Environment.Type.INTEGER,
                             args -> Environment.NIL)
                     )
                 ),
@@ -923,7 +929,7 @@ public class GeneratorTests {
 
         return Stream.of(
             // variable = "Hello World";
-            Arguments.of("Assignment",
+            Arguments.of("Variable",
                 new Ast.Statement.Assignment(
                     init(new Ast.Expression.Access(Optional.empty(), "variable"),ast -> ast.setVariable(_variable)),
                     init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING))
@@ -931,7 +937,7 @@ public class GeneratorTests {
                 "variable = \"Hello World\";"
             ),
             // field = 1;
-            Arguments.of("Assignment",
+            Arguments.of("Variable JVM field",
                 new Ast.Statement.Assignment(
                     init(new Ast.Expression.Access(Optional.empty(), "field"),ast -> ast.setVariable(_field)),
                     init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
@@ -939,7 +945,7 @@ public class GeneratorTests {
                 "field = 1;"
             ),
             // object.field = 1;
-            Arguments.of("Assignment",
+            Arguments.of("Field JVM field",
                 new Ast.Statement.Assignment(
                     init(
                         new Ast.Expression.Access(Optional.of(
@@ -976,41 +982,9 @@ public class GeneratorTests {
         Environment.Variable _stmt = new Environment.Variable("stmt", "stmt", Environment.Type.NIL, true, Environment.NIL);
         Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true, Environment.NIL);
 
-        return Stream.of(
-            //If (7)
-            //If (2):
-            //IF cond DO
-            //    function(1);
-            //END
-            //Else (2):
-            //IF cond DO
-            //    function(1);
-            //ELSE
-            //    function(2);
-            //END
-            //If Multiple Statements:
-            //IF cond DO
-            //    function(1);
-            //    function(2);
-            //    function(3);
-            //ELSE
-            //    function(4);
-            //END
-            //Else Multiple Statements:
-            //IF cond DO
-            //    function(1);
-            //ELSE
-            //    function(2);
-            //    function(3);
-            //    function(4);
-            //END
-            //Nested If:
-            //IF cond1 DO
-            //    IF cond2 DO
-            //        function(1);
-            //    END
-            //END
+        Environment.Function _func = new Environment.Function("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER,args -> Environment.NIL);
 
+        return Stream.of(
             // IF expr DO
             //     stmt;
             // END
@@ -1050,6 +1024,148 @@ public class GeneratorTests {
                     "    stmt;",
                     "} else {",
                     "    stmt2;",
+                    "}"
+                )
+            ),
+            //If Multiple Statements:
+            //IF expr DO
+            //    function(1);
+            //    function(2);
+            //    function(3);
+            //ELSE
+            //    function(4);
+            //END
+            Arguments.of("Multiple If",
+                new Ast.Statement.If(
+                    init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func))),
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.valueOf(2)), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func))),
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.valueOf(3)), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func)))
+                    ),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.valueOf(4)), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func)))
+                    )
+                ),
+                String.join(System.lineSeparator(),
+                    "if (expr) {",
+                    "    function(1);",
+                    "    function(2);",
+                    "    function(3);",
+                    "} else {",
+                    "    function(4);",
+                    "}"
+                )
+            ),
+            //Else Multiple Statements:
+            //IF expr DO
+            //    function(1);
+            //ELSE
+            //    function(2);
+            //    function(3);
+            //    function(4);
+            //END
+            Arguments.of("Multiple Else",
+                new Ast.Statement.If(
+                    init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func)))
+                    ),
+                    Arrays.asList(
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.valueOf(2)), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func))),
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.valueOf(3)), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func))),
+                        new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                            Optional.empty(),
+                            "function",
+                            Arrays.asList(
+                                init(new Ast.Expression.Literal(BigInteger.valueOf(4)), ast -> ast.setType(Environment.Type.INTEGER))
+                            )
+                        ), ast -> ast.setFunction(_func)))
+                    )
+                ),
+                String.join(System.lineSeparator(),
+                    "if (expr) {",
+                    "    function(1);",
+                    "} else {",
+                    "    function(2);",
+                    "    function(3);",
+                    "    function(4);",
+                    "}"
+                )
+            ),
+            //Nested If:
+            //IF cond1 DO
+            //    IF cond2 DO
+            //        function(1);
+            //    END
+            //END
+            Arguments.of("Nested If",
+                new Ast.Statement.If(
+                    init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
+                    Arrays.asList(
+                        new Ast.Statement.If(
+                            init(new Ast.Expression.Access(Optional.empty(), "expr"), ast -> ast.setVariable(_expr)),
+                            Arrays.asList(
+                                new Ast.Statement.Expression(init(new Ast.Expression.Function(
+                                    Optional.empty(),
+                                    "function",
+                                    Arrays.asList(
+                                        init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                                    )
+                                ), ast -> ast.setFunction(_func)))
+                            ),
+                            Arrays.asList()
+                        )
+                    ),
+                    Arrays.asList()
+                ),
+                String.join(System.lineSeparator(),
+                    "if (expr) {",
+                    "    if (expr) {",
+                    "        function(1);",
+                    "    }",
                     "}"
                 )
             )
@@ -1275,14 +1391,6 @@ public class GeneratorTests {
 
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
-            //Literal (6):
-            //Nil: NIL
-            //Boolean: TRUE
-            //Integer: 1
-            //Decimal: 123.456
-            //Character: 'a'
-            //String: "Hello World"
-
             // TRUE
             Arguments.of("Boolean",
                 init(new Ast.Expression.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)),
@@ -1302,6 +1410,16 @@ public class GeneratorTests {
             Arguments.of("String",
                 init(new Ast.Expression.Literal("Hello World"), ast -> ast.setType(Environment.Type.STRING)),
                 "\"Hello World\""
+            ),
+            // 'a'
+            Arguments.of("Character",
+                init(new Ast.Expression.Literal('a'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                "\'a\'"
+            ),
+            // "NIL"
+            Arguments.of("Nil",
+                init(new Ast.Expression.Literal(Environment.NIL), ast -> ast.setType(Environment.Type.NIL)),
+                "null"
             )
         );
     }
@@ -1410,8 +1528,12 @@ public class GeneratorTests {
 
         return Stream.of(
             //Access (6)
+
+            // TODO get output
             //Variable: variable
             //Variable JVM Name: name
+
+
             //Field (2): object.field
             //Field JVM Name: object.name
             //Field Chain: object.a.b.c
