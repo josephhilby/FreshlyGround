@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The interpreter takes a structured representation of the program, the Abstract
@@ -97,6 +98,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         for (Ast.Method method : ast.getMethods()) {
             visit(method);
         }
+        // debug
+//        System.out.println("Global interpreter scope before main: " + scope);
+//        scope.lookupFunction("h", 1);
+
         List<Environment.PlcObject> args = new ArrayList<>();
         return scope.lookupFunction("main", 0).invoke(args);
     }
@@ -149,10 +154,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        Scope parent = scope;
+        Scope defining = scope;
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+
+            Scope calling = defining;
             try {
-                scope = new Scope(parent);
+                scope = new Scope(defining);
                 List<String> parameters = ast.getParameters();
                 for (int i = 0; i < parameters.size(); i++) {
                     scope.defineVariable(parameters.get(i), false, args.get(i));
@@ -163,7 +170,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             } catch (Return ret) {
                 return ret.value;
             } finally {
-                scope = scope.getParent();
+                scope = calling;
             }
            return Environment.NIL;
         });
@@ -321,7 +328,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     @Override
     public Environment.PlcObject visit(Ast.Statement.For ast) {
-        visit(ast.getInitialization());
+        if (ast.getInitialization() != null) {
+            visit(ast.getInitialization());
+        }
 
         while (requireType(Boolean.class, visit(ast.getCondition()))) {
             try {
@@ -333,7 +342,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 scope = scope.getParent();
             }
 
-            visit(ast.getIncrement());
+            if (ast.getIncrement() != null) {
+                visit(ast.getIncrement());
+            }
         }
         return Environment.NIL;
     }
@@ -481,11 +492,30 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         String operator = ast.getOperator();
         Object left = visit(ast.getLeft()).getValue();
 
+        // OR short circuit
         if (operator.equals("OR") && Boolean.parseBoolean(left.toString())) {
             return Environment.create(true);
         }
 
+        // AND short circuit
+        if (operator.equals("AND") && !Boolean.parseBoolean(left.toString())) {
+            return Environment.create(false);
+        }
+
         Object right = visit(ast.getRight()).getValue();
+
+        // ==/!= override
+        if (operator.equals("==")) {
+            return Environment.create(Objects.equals(left, right));
+        }
+
+        if (operator.equals("!=")) {
+            return Environment.create(!Objects.equals(left, right));
+        }
+
+        if (operator.equals("+") && (left.getClass() == String.class || right.getClass() == String.class)) {
+            return Environment.create(String.valueOf(left) + String.valueOf(right));
+        }
 
         if (left.getClass() != right.getClass()) {
             throw new RuntimeException();
@@ -601,8 +631,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     private Environment.PlcObject handleStr(String left, String right, String op) {
         switch (op) {
-            case "+":
-                return Environment.create(left + right);
+            case ">":
+                return Environment.create(left.compareTo(right) > 0);
+            case "<":
+                return Environment.create(left.compareTo(right) < 0);
+            case ">=":
+                return Environment.create(left.compareTo(right) >= 0);
+            case "<=":
+                return Environment.create(left.compareTo(right) <= 0);
             default:
                 throw new RuntimeException();
         }
@@ -620,14 +656,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "*":
                 return Environment.create(left.multiply(right));
             case "/":
-                if (left.compareTo(BigInteger.ZERO) == 0) {
+                if (right.compareTo(BigInteger.ZERO) == 0) {
                     throw new RuntimeException("Cannot divide by zero");
                 }
                 return Environment.create(left.divide(right));
-            case "==":
-                return Environment.create(left.compareTo(right) == 0);
-            case "!=":
-                return Environment.create(left.compareTo(right) != 0);
             case ">=":
                 return Environment.create(left.compareTo(right) >= 0);
             case "<=":
@@ -653,14 +685,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "*":
                 return Environment.create(left.multiply(right));
             case "/":
-                if (left.compareTo(BigDecimal.ZERO) == 0) {
+                if (right.compareTo(BigDecimal.ZERO) == 0) {
                     throw new RuntimeException("Cannot divide by zero");
                 }
                 return Environment.create(left.divide(right, RoundingMode.HALF_EVEN));
-            case "==":
-                return Environment.create(left.compareTo(right) == 0);
-            case "!=":
-                return Environment.create(left.compareTo(right) != 0);
             case ">=":
                 return Environment.create(left.compareTo(right) >= 0);
             case "<=":

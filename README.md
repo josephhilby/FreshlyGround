@@ -391,3 +391,43 @@ Scope{ parent    = Scope{...},
 ```
 
 Finally, the main function will be called as an entry point, this will run the print statement and return zero.
+
+
+ideas
+Java attempts to define more at language design time to allow the JVM to be portable.
+Earlier the binding the greater the efficency but less flexable. Compiled vs. Interpreted
+
+
+definitions
+name, value, binding, scope
+
+name := representation of a value
+value := object or data
+binding := association between name and value
+elaboration := process of creating bindings when entering a scope
+scope := part of the program where the binding is active
+scope rules := def ref env
+ref env := set of active bindings at some point in execution
+lifetime := period of time from binding creation to destruction
+binding time := the point at which the binding is created
+garbage := object or value that outlives its binding
+dangling ref := binding that outlives its object or value
+
+Binding time in order: design (primitive types, CFG), implementation (bigint, char), writing (definitions),
+compile (tokens to AST), linking (program in memory), load (process in memory), run (values, variables),
+
+run: startup, module entry, elaboration, procedure entry, block entry, statement exe
+
+Static: bound before runtime
+Dynamic: bound at runtime
+
+storage alloc
+static := object given address that is maintained throughout program execution
+    global, immutable values
+stack := LIFO object, used in sub-routine calls and returns to store register values
+    locals, parameters
+heap := object given address that is maintained for some user defined time
+
+Resource Allocation Is Initialization (RAII) or Scope-Bound Resource Management (SBRM)
+Binds life cycle of a resource allocation to the lifetime of an object to avoid leaks. Allocation happens in 
+constructor, deallocation happens in destructor

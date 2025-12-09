@@ -36,11 +36,11 @@ public final class Parser {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
 
-        while (match("LET")) {
+        while (peek("LET")) {
             fields.add(parseField());
         }
 
-        while (match("DEF")) {
+        while (peek("DEF")) {
             methods.add(parseMethod());
         }
 
@@ -58,6 +58,7 @@ public final class Parser {
     // field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
     //            LET CONST name : type = expression;
     public Ast.Field parseField() throws ParseException {
+        keywordCheck("LET");
         boolean constant = match("CONST");
         String name = currentToken().getLiteral();
         typeCheck(Token.Type.IDENTIFIER);
@@ -70,6 +71,11 @@ public final class Parser {
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
+
+        if (constant && expression.isEmpty()) {
+            parseError("CONST must have an initial value");
+        }
+
         keywordCheck(";");
         return new Ast.Field(name, type, constant, expression);
     }
@@ -82,6 +88,7 @@ public final class Parser {
     //             DEF name(parameter : parameterType) : returnType DO statement(s) END
     public Ast.Method parseMethod() throws ParseException {
         // TODO: Clean up
+        keywordCheck("DEF");
         String name = currentToken().getLiteral();
         typeCheck(Token.Type.IDENTIFIER);
 
@@ -208,7 +215,7 @@ public final class Parser {
     public Ast.Statement.For parseForStatement() throws ParseException {
         keywordCheck("(");
         Ast.Statement initialization = null;
-        if (typeCheck(Token.Type.IDENTIFIER, false)) {
+        if (tokens.get(0).getType() == Token.Type.IDENTIFIER) {
             initialization = parseLoopStatement();
         }
         keywordCheck(";");
@@ -217,7 +224,7 @@ public final class Parser {
         keywordCheck(";");
 
         Ast.Statement increment = null;
-        if (typeCheck(Token.Type.IDENTIFIER, false)) {
+        if (tokens.get(0).getType() == Token.Type.IDENTIFIER) {
             increment = parseLoopStatement();
         }
         keywordCheck(")");
@@ -464,36 +471,52 @@ public final class Parser {
         return indexes;
     }
 
-    // remove found escape characters from locations
+    // remove found escape characters from locations but keep escaped escape chars
     private String clean(String string, ArrayList<Integer> indexes) {
-        StringBuilder builder = new StringBuilder(string);
-        for (int i = indexes.size() - 1; i >= 0; i--) {
-            int index = indexes.get(i);
-            char c = string.charAt(index + 1);
-            builder.deleteCharAt(index + 1);
-            builder.deleteCharAt(index);
+        StringBuilder builder = new StringBuilder();
+        int i = 0;
 
-            switch (c) {
-                case 'b':
-                    builder.insert(index, '\b');
-                    break;
-                case 'n':
-                    builder.insert(index, '\n');
-                    break;
-                case 'r':
-                    builder.insert(index, '\r');
-                    break;
-                case 't':
-                    builder.insert(index, '\t');
-                    break;
-                case '\'':
-                    builder.insert(index, '\'');
-                    break;
-                case '\\':
-                    builder.insert(index, '\\');
-                    break;
+        while (i < string.length()) {
+            char c = string.charAt(i);
+
+            if (c == '\\' && i + 1 < string.length()) {
+                char next = string.charAt(i + 1);
+                switch (next) {
+                    case 'b':
+                        builder.append('\b');
+                        i += 2;
+                        break;
+                    case 'n':
+                        builder.append('\n');
+                        i += 2;
+                        break;
+                    case 'r':
+                        builder.append('\r');
+                        i += 2;
+                        break;
+                    case 't':
+                        builder.append('\t');
+                        i += 2;
+                        break;
+                    case '\'':
+                        builder.append('\'');
+                        i += 2;
+                        break;
+                    case '\\':
+                        builder.append('\\');
+                        i += 2;
+                        break;
+                    default:
+                        builder.append(c);
+                        i++;
+                        break;
+                }
+            } else {
+                builder.append(c);
+                i++;
             }
         }
+
         return builder.toString();
     }
 
