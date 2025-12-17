@@ -1,10 +1,8 @@
 package plc.project;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public final class Scope {
 
@@ -40,11 +38,11 @@ public final class Scope {
         }
     }
 
-    public Environment.Function defineFunction(String name, String jvmName, List<Environment.Type> parameterTypes, Environment.Type returnType, java.util.function.Function<List<Environment.PlcObject>, Environment.PlcObject> function) {
+    public Environment.Function defineFunction(String name, String jvmName, List<Environment.Type> parameterTypes, Environment.Type returnType) {
         if (functions.containsKey(name + "/" + parameterTypes.size())) {
             throw new RuntimeException("The function " + name + "/" + parameterTypes.size() + " is already defined in this scope.");
         } else {
-            Environment.Function func = new Environment.Function(name, jvmName, parameterTypes, returnType, function);
+            Environment.Function func = new Environment.Function(name, jvmName, parameterTypes, returnType);
             functions.put(func.getName() + "/" + func.getParameterTypes().size(), func);
             return func;
         }

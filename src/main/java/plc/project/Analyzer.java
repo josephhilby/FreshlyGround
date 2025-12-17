@@ -14,7 +14,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
-        scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
+        scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
     }
 
     public Scope getScope() {
@@ -92,7 +92,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define and set function in current scope
-        Environment.Function function = scope.defineFunction(name, name, paramTypes, returnType, args -> Environment.NIL);
+        Environment.Function function = scope.defineFunction(name, name, paramTypes, returnType);
         ast.setFunction(function);
 
         // visit statements (including parameters) in new scope
@@ -510,5 +510,4 @@ public final class Analyzer implements Ast.Visitor<Void> {
         // else RuntimeException
         throw new RuntimeException("Type mismatch");
     }
-
 }

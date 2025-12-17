@@ -24,7 +24,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-Freshly Ground is a **novel programming language compiler** whose source code is compiled into bytecode
+FreshlyGround is a **novel programming language compiler** whose source code is compiled into bytecode
 for execution on the **Java Virtual Machine (JVM)**. This project was adapted from an academic compiler
 project created in **COP 4020** at the **University of Florida**, and follows the methodology  outlined in the 
 book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
@@ -35,7 +35,7 @@ syntactic analysis, semantic analysis, and bytecode generation.
 
 ### Compilation Pipeline (Passes)
 
-> - **Tokenization**  
+> - **Tokenization**
 >   *Source Code* → `Lexer.java` → *Token Stream*
 >
 > - **Syntactic Analysis**  
@@ -63,9 +63,9 @@ the decorated AST to ensure all identifiers, scopes, and types are resolved prio
 
 <!-- DESIGN AND THEORY -->
 ## Design and Theory
-### Lexical Token Types
-At the start is the lexer. This will take a source code file and lex it into an array of tokens (Token Stream)
-following the rules below. 
+### Token Definitions
+At the start is the lexer. This will take a source code file and lex it into an array of tokens (Token Stream) as
+defined in the following the rules: 
 
 ```regexp 
 identifier := [A-Za-z_] [A-Za-z0-9_-]*
@@ -84,10 +84,10 @@ of tokens into a structured representation of the program known as the Abstract 
 is governed by a context-free grammar (CFG) that defines the syntactic structure of the language. 
 
 This project defines its grammar using Extended Backus–Naur Form (EBNF). EBNF was selected because it naturally 
-supports a top-down (recursive-descent) parsing strategy with linear-time complexity under the given grammar constraints. 
+supports a top-down (recursive-descent) parsing strategy with linear-time complexity. 
 
 This parser begins at a predetermined start symbol (**S**) and incrementally constructs the AST by:
-- Consuming the terminal symbols (**Σ**) produced by the lexer, and placing them as leaf nodes.
+- Consuming a terminal symbols (**Σ**) produced by the lexer, and placing it as leaf nodes.
 - Creating non-terminal symbols (**N**) according to the CFG production rules (**P**), and placing them as internal nodes.
 
 The resulting AST captures the hierarchical structure of the program and serves as the input to subsequent 
@@ -100,11 +100,10 @@ semantic analysis and code generation stages.
 - **P** – production rules (right side of `::=`)
 - **S** – start symbol (`source`), which constitutes the instantiation of the AST
 
-**Note:** 
-In the syntax rules below, each line should be read as `non-terminal symbol ::= production rule`.
-
 #### Syntax Rules
 >```ebnf
+>non-terminal symbol       ::= production rule
+>---                           ---
 >source                    ::= { field } { method }
 >
 >field                     ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
@@ -152,6 +151,36 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >- `|` = alternative
 >- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
+### Semantic Model
+FreshlyGround follows a static, early-binding semantic model, similar to Java. The compiler resolves names, 
+types, and scopes at compile time in order to produce portable and efficient JVM bytecode. Runtime execution is 
+delegated entirely to the JVM.
+
+#### Definitions
+>- Name := a symbolic identifier in the source program (e.g., x)
+>- Value := the data or object a name refers to at runtime (e.g., 10)
+>- Binding := the association between a name and its meaning (i.e., Environment.Type/Variable/Function)
+>- Binding Time := the point at which the binding is created
+>- Lifetime := period of time from binding creation to destruction
+>- Scope := region of the program where a binding is visible
+
+#### Binding Times
+Bindings are established progressively throughout the compilation process:
+
+> 1. Design: language grammar, syntax rules, and primitive type definitions
+> 2. Implementation: Mapping language-level types to JVM representations (Environment.Type)
+> 3. Writing: Variable and function declarations in source code
+> 4. Compile: Name resolution, scope construction, and type checking (Environment.Variable/Function)
+
+Runtime value binding is left to the JVM.
+
+#### Scope Rules
+FreshlyGround enforces lexical (static) scoping with the following rules:
+
+> 1. Declarations bind names in the current scope
+> 2. References are resolved by walking outward through parent scopes
+> 3. Redeclaration outside same scope (Shadowing) is allowed.
+> 4. Redeclaration in same scope is not allowed.
 
 <!-- PRACTICAL IMPLEMENTATION -->
 ## Practical Implementation
@@ -164,7 +193,8 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >     └─> Ast.Field(name=identifier, typeName=identifier, constant=bool, value=expression)
 >  
 > method
-> └─ "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO" { statement } "END"
+> └─ "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] 
+>     │ "DO" { statement } "END"
 >     └─> Ast.Method(name=identifier, 
 >                    parameters=identifier(s), 
 >                    parameterTypeNames=identifier(s), 
@@ -189,7 +219,7 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 > │                        elseStatements=statement(s))
 > │
 > ├─ "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" 
-> │   │                     { statement } "END"
+> │   │   { statement } "END"
 > │   └─> Ast.Statement.For(initialization=(Ast.Statement.Assignment), 
 > │                         condition=expression, 
 > │                         increment=(Ast.Statement.Assignment), 
@@ -262,19 +292,27 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 LET x: Integer = 10;
 ```
 Before getting too far into the weeds, note that this snippet would fail to compile because 
-FreshlyGround requires a `main()` method as an entry point. This example is intentionally minimal in order to 
-illustrate the compilation pipeline on a small, readable input.
+FreshlyGround requires a `main()` method as an entry point. This example will ignore that and remain intentionally minimal 
+in order to illustrate the compilation pipeline on a small, readable input.
 
-### Lexing and Parsing
-Initially each section of the source code would lex into the following token stream: "LET", "x", ":", "Integer", "=", "10" and ";".
-Because the token stream is syntactically valid, the parser would then match it to the field production: 
-`field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"`. With the field identifier mapping to `x`, 
-the declared type mapping to `Integer`, and the initializer expression to the literal `10` through the following precedence chain:
+### Syntactic Analysis (Lexing and Parsing)
+The lexer tokenizes the source code into a typed token stream. For this input, the relevant tokens correspond to:
+
+`token stream = { "LET", "x", ":", "Integer", "=", "10", ";" }`
+
+Because the token stream is syntactically valid, the parser matches it to the field production: 
+
+```ebnf
+field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
+``` 
+
+With the field identifier mapping to `x`, the declared type mapping to `Integer`, and the initialized expression 
+to the literal `10`, through the following precedence chain:
 
 > `expression` → `logical_expression` → `comparison_expression` → `additive_expression` → `multiplicative_expression` 
 > → `secondary_expression` → `primary_expression` → `integer`
 
-A simplified view of this mapping would look like:
+A simplified tree view of this mapping would look like:
 
 ```text
 field
@@ -285,51 +323,45 @@ field
  ├─ "="
  ├─ expression
  │   └─ logical_expression
- │       └─ comparison_expression
- │           └─ additive_expression
- │               └─ multiplicative_expression
- │                   └─ secondary_expression
- │                       └─ primary_expression
- │                           └─ integer("10")
+ │       └─ ...
+ │           └─ integer("10")
  └─ ";"
 ```
 
-Note: At this time the field type (`Integer`) and expression literal type (`integer`) match; that is to say
-the statement is semantically correct. This is not always the case and is not checked by the lexer or parser.
+At this time the parser has enforced only syntax. While the field type (`Integer`) and expression literal type 
+(`integer`) do match -- that is to say the statement is semantically correct -- if they did not, the parser would 
+not care. That will be checked later.
 
-All programs in this language parse from the source entry point. Conceptually, this example becomes a source 
+All programs in FreshlyGround parse from the source entry point. Conceptually, this example becomes a `source` 
 node containing a single field and no methods:
 
 ```yaml
 Ast.Source
  └─ fields: [
-   Ast.Field
-    ├─ name: "x"
-    ├─ typeName: "Integer"
-    ├─ constant: false
-    └─ value: Optional.of(
-       Ast.Expression.Literal
-        ├─ literal: 10
-        └─ type: null
-         )
-    └─ variable: null
-    ]
+    Ast.Field
+     ├─ name: "x"
+     ├─ typeName: "Integer"
+     ├─ constant: false
+     └─ value:
+        Ast.Expression.Literal
+         ├─ literal: 10
+         └─ type: null
+     └─ variable: null
+     ]
  └─ methods: []
 ```
 
-### Analyzing
+### Semantic Analysis (Analyzing)
 The analyzer performs a pre-order traversal over the AST and applies the language’s scope and environment rules. 
-During this pass, it:
+Where the scope will define visibility and environment will define meaning. During this pass, it:
 - Declares `x` in the current scope as an `Environment.Variable`
 - Resolves the declared type to a concrete `Environment.Type`
 - Infers and assigns the literal type to a concrete `Environment.Type`.
 - Attaches the variable and type metadata onto the AST ("Decorates").
 
-For readability, `Scope{ parent = null, variables = {}, functions = {} }` has been shortened to `Scope{...}`.
-
 ```java
 // Current Scope
-Scope{ parent=Scope{...}, 
+Scope{ parent=null, 
        variables={ "x" -> Environment.Variable(
            name="x",
            jvmName="x",
@@ -338,7 +370,7 @@ Scope{ parent=Scope{...},
                name="Integer", 
                jvmName="int",
                // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
-               scope=Scope{ parent=Scope{ parent=Scope{...} } })
+               scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
        )},
        functions={}
 }
@@ -358,7 +390,7 @@ Ast.Source
             Environment.Type
              ├─ name: "Integer"
              ├─ jvmName: "int"
-             └─ scope: Scope{ parent=Scope{ parent=Scope{...} } }
+             └─ scope: Integer.scope ⊆ Comparable.scope ⊆ Any.scope
      └─ variable:
         Environment.Variable
          ├─ name: "x"
@@ -368,50 +400,7 @@ Ast.Source
             Environment.Type
              ├─ name: "Integer"
              ├─ jvmName: "int"
-             └─ scope: Scope{ parent=Scope{ parent=Scope{...} } }
+             └─ scope: Integer.scope ⊆ Comparable.scope ⊆ Any.scope
     ]
  └─ methods: []
 ```
-
-Finally, as mentioned before, the interpreter would give a `RuntimeException` due to there being no `main()` function.
-
----
-
-ideas
-Java attempts to define more at language design time to allow the JVM to be portable.
-Earlier the binding the greater the efficency but less flexable. Compiled vs. Interpreted
-
-
-definitions
-name, value, binding, scope
-
-name := representation of a value
-value := object or data
-binding := association between name and value
-elaboration := process of creating bindings when entering a scope
-scope := part of the program where the binding is active
-scope rules := def ref env
-ref env := set of active bindings at some point in execution
-lifetime := period of time from binding creation to destruction
-binding time := the point at which the binding is created
-garbage := object or value that outlives its binding
-dangling ref := binding that outlives its object or value
-
-Binding time in order: design (primitive types, CFG), implementation (bigint, char), writing (definitions),
-compile (tokens to AST), linking (program in memory), load (process in memory), run (values, variables),
-
-run: startup, module entry, elaboration, procedure entry, block entry, statement exe
-
-Static: bound before runtime
-Dynamic: bound at runtime
-
-storage alloc
-static := object given address that is maintained throughout program execution
-    global, immutable values
-stack := LIFO object, used in sub-routine calls and returns to store register values
-    locals, parameters
-heap := object given address that is maintained for some user defined time
-
-Resource Allocation Is Initialization (RAII) or Scope-Bound Resource Management (SBRM)
-Binds life cycle of a resource allocation to the lifetime of an object to avoid leaks. Allocation happens in 
-constructor, deallocation happens in destructor

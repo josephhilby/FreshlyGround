@@ -1,24 +1,11 @@
 package plc.project;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class Environment {
-
-    public static PlcObject create(Object value) {
-        return new PlcObject(new Scope(null), value);
-    }
-
-    public static final PlcObject NIL = new PlcObject(Type.NIL, new Scope(null), new Object() {
-
-        @Override
-        public String toString() {
-            return "nil";
-        }
-    });
 
     private static final Map<String, Type> TYPES = new HashMap<>();
 
@@ -117,52 +104,6 @@ public final class Environment {
         String getJvmName();
     }
 
-    public static final class PlcObject implements Typed<Type> {
-
-        private final Type type;
-        private final Scope scope;
-        private final Object value;
-
-        public PlcObject(Scope scope, Object value) {
-            this(new Type("Unknown", "Unknown", scope), scope, value);
-        }
-
-        public PlcObject(Type type, Scope scope, Object value) {
-            this.type = type;
-            this.scope = scope;
-            this.value = value;
-        }
-
-        public Variable getField(String name) {
-            return scope.lookupVariable(name);
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        public Object getValue() {
-            return value;
-        }
-
-        public PlcObject callMethod(String name, List<PlcObject> arguments) {
-            Function function = scope.lookupFunction(name, arguments.size() + 1);
-            arguments = new ArrayList<>(arguments);
-            arguments.add(0, this);
-            return function.invoke(arguments);
-        }
-
-        @Override
-        public String toString() {
-            return "Object{" +
-                    "type=" + type +
-                    ", scope=" + scope +
-                    ", value=" + value +
-                    '}';
-        }
-
-    }
-
     public static final class Variable implements Named, Typed<Type> {
 
         private final String name;
@@ -220,14 +161,12 @@ public final class Environment {
         private final String jvmName;
         private final List<Type> parameterTypes;
         private final Type returnType;
-        private final java.util.function.Function<List<PlcObject>, PlcObject> function;
 
-        public Function(String name, String jvmName, List<Type> parameterTypes, Type returnType, java.util.function.Function<List<PlcObject>, PlcObject> function) {
+        public Function(String name, String jvmName, List<Type> parameterTypes, Type returnType) {
             this.name = name;
             this.jvmName = jvmName;
             this.parameterTypes = parameterTypes;
             this.returnType = returnType;
-            this.function = function;
         }
 
         public String getName() {
@@ -250,9 +189,6 @@ public final class Environment {
             return returnType;
         }
 
-        public PlcObject invoke(List<PlcObject> arguments) {
-            return function.apply(arguments);
-        }
 
         @Override
         public boolean equals(Object obj) {
@@ -271,7 +207,6 @@ public final class Environment {
                 ", arity=" + parameterTypes.size() +
                 ", parameterTypes=" + parameterTypes +
                 ", returnType=" + returnType +
-                ", function=" + function +
                 '}';
         }
     }
@@ -285,13 +220,13 @@ public final class Environment {
         registerType(Type.DECIMAL);
         registerType(Type.CHARACTER);
         registerType(Type.STRING);
-        Type.ANY.scope.defineFunction("stringify", "toString", Arrays.asList(), Type.STRING, args -> Environment.NIL);
-        Type.COMPARABLE.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.COMPARABLE), Type.COMPARABLE, args -> Environment.NIL);
-        Type.INTEGER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER, args -> Environment.NIL);
-        Type.DECIMAL.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL, args -> Environment.NIL);
-        Type.CHARACTER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.CHARACTER), Type.CHARACTER, args -> Environment.NIL);
+        Type.ANY.scope.defineFunction("stringify", "toString", Arrays.asList(), Type.STRING);
+        Type.COMPARABLE.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.COMPARABLE), Type.COMPARABLE);
+        Type.INTEGER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER);
+        Type.DECIMAL.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL);
+        Type.CHARACTER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.CHARACTER), Type.CHARACTER);
         Type.STRING.scope.defineVariable("length", "length()", Type.INTEGER, false);
-        Type.STRING.scope.defineFunction("slice", "substring", Arrays.asList(Type.ANY, Type.INTEGER, Type.INTEGER), Type.STRING, args -> Environment.NIL);
-        Type.STRING.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.STRING), Type.STRING, args -> Environment.NIL);
+        Type.STRING.scope.defineFunction("slice", "substring", Arrays.asList(Type.ANY, Type.INTEGER, Type.INTEGER), Type.STRING);
+        Type.STRING.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.STRING), Type.STRING);
     }
 }

@@ -1,6 +1,5 @@
 package plc.project;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -109,7 +108,6 @@ public abstract class Ast {
                     ", variable=" + variable +
                     '}';
         }
-
     }
 
     public static final class Method extends Ast {

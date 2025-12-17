@@ -27,8 +27,7 @@ public class EndToEndTests {
                     "method",
                     "method",
                     Arrays.asList(Environment.Type.ANY),
-                    Environment.Type.INTEGER,
-                    args -> Environment.NIL);
+                    Environment.Type.INTEGER);
             })
         );
 
@@ -713,7 +712,7 @@ public class EndToEndTests {
     @MethodSource
     void testFunction(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineFunction("function", "func", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
+        scope.defineFunction("function", "func", Arrays.asList(), Environment.Type.INTEGER);
         test(source, expected, Parser::parseExpression, scope);
     }
 

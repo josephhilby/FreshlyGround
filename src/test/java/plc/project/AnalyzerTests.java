@@ -23,7 +23,7 @@ public final class AnalyzerTests {
 
     private static final Environment.Type OBJECT_TYPE = new Environment.Type("ObjectType", "ObjectType", init(new Scope(null), scope -> {
         scope.defineVariable("field", "field", Environment.Type.INTEGER, false);
-        scope.defineFunction("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL);
+        scope.defineFunction("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER);
     }));
 
     @ParameterizedTest(name = "{0}")
@@ -37,9 +37,9 @@ public final class AnalyzerTests {
     }
 
     private static Stream<Arguments> testSource() {
-        Environment.Function _main = new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
-        Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
-        Environment.Function _reverse = new Environment.Function("reverse", "reverse", Arrays.asList(Environment.Type.STRING), Environment.Type.STRING, args -> Environment.NIL);
+        Environment.Function _main = new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER);
+        Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
+        Environment.Function _reverse = new Environment.Function("reverse", "reverse", Arrays.asList(Environment.Type.STRING), Environment.Type.STRING);
         Environment.Function _slice = Environment.Type.STRING.getFunction("slice", 2);
 
 
@@ -412,7 +412,7 @@ public final class AnalyzerTests {
                 ),
                 init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                     new Ast.Statement.Return(init(new Ast.Expression.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
-                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER)))
             ),
             Arguments.of("Hello World",
                 // DEF main(): Integer DO
@@ -426,8 +426,8 @@ public final class AnalyzerTests {
                 init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
                     new Ast.Statement.Expression(init(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
                         init(new Ast.Expression.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                    )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
-                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                    )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL))))
+                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER)))
             ),
             Arguments.of("Return Type Mismatch",
                 // DEF increment(num: Integer): Decimal DO RETURN num + 1; END
@@ -444,7 +444,7 @@ public final class AnalyzerTests {
                 // END
                 new Ast.Method("empty", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()),
                 init(new Ast.Method("empty", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()), ast ->
-                    ast.setFunction(new Environment.Function("empty", "empty", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL)))
+                    ast.setFunction(new Environment.Function("empty", "empty", Arrays.asList(), Environment.Type.NIL)))
             )
         );
     }
@@ -465,7 +465,7 @@ public final class AnalyzerTests {
                 new Ast.Statement.Expression(
                     init(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
                         init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                    )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))
+                    )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL)))
                 )
 
             ),
@@ -584,7 +584,7 @@ public final class AnalyzerTests {
                     Arrays.asList(new Ast.Statement.Expression(
                         init(new Ast.Expression.Function(Optional.empty(), "print", Arrays.asList(
                             init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
+                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL))))
                     ),
                     Arrays.asList()
                 )
@@ -670,7 +670,7 @@ public final class AnalyzerTests {
     public void testFor1() {
         // FOR (num = 1; num < 5; num = num + 1) function(num); END
         Scope scope = new Scope(null);
-        scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL);
+        scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER);
         scope.defineVariable("num", "num", Environment.Type.INTEGER, false);
 
         Ast.Statement.Assignment init = new Ast.Statement.Assignment(
@@ -732,8 +732,7 @@ public final class AnalyzerTests {
                                 "function",
                                 "function",
                                 Arrays.asList(Environment.Type.INTEGER),
-                                Environment.Type.INTEGER,
-                                args -> Environment.NIL
+                                Environment.Type.INTEGER
                             )
                         )
                     )
@@ -1012,8 +1011,8 @@ public final class AnalyzerTests {
     @MethodSource
     public void testFunctionExpression(String test, Ast.Expression.Function ast, Ast.Expression.Function expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
-            scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL);
+            scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER);
+            scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER);
             scope.defineVariable("object", "object", OBJECT_TYPE, false);
         }));
     }
@@ -1023,7 +1022,7 @@ public final class AnalyzerTests {
                 // function()
                 new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList()),
                 init(new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList()), ast ->
-                    ast.setFunction(new Environment.Function("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                    ast.setFunction(new Environment.Function("function", "function", Arrays.asList(), Environment.Type.INTEGER)))
             ),
             Arguments.of("Function Valid Arg",
                 // function(1)
@@ -1031,7 +1030,7 @@ public final class AnalyzerTests {
                 init(new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList(
                     init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
                 )), ast ->
-                    ast.setFunction(new Environment.Function("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL)))
+                    ast.setFunction(new Environment.Function("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER)))
             ),
             Arguments.of("Function Invalid Arg",
                 // function(1.0)
@@ -1045,7 +1044,7 @@ public final class AnalyzerTests {
                 ), "method", Arrays.asList()),
                 init(new Ast.Expression.Function(Optional.of(
                     init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false)))
-                ), "method", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL)))
+                ), "method", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER)))
             )
         );
     }
