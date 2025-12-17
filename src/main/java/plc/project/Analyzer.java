@@ -66,7 +66,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define variable in current scope, then set
-        Environment.Variable variable = scope.defineVariable(name, name, Environment.getType(typeName), constant, Environment.NIL);
+        Environment.Variable variable = scope.defineVariable(name, name, Environment.getType(typeName), constant);
         ast.setVariable(variable);
         return null;
     }
@@ -106,7 +106,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             scope = new Scope(scope);
 
             for (int i = 0; i < parameters.size(); i++) {
-                scope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false, Environment.NIL);
+                scope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false);
             }
 
             for (Ast.Statement statement : statements) {
@@ -157,7 +157,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define and set variable in current scope
-        Environment.Variable variable = scope.defineVariable(name, name, type, false, Environment.NIL);
+        Environment.Variable variable = scope.defineVariable(name, name, type, false);
         ast.setVariable(variable);
         return null;
     }
@@ -477,10 +477,26 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
     }
 
-    // accept if:
-    // 1. two types are the same
-    // 2. target is ANY
-    // 3. target is COMPARABLE, if INT, DEC, CHAR, STRING
+    /**
+     * Validates that a value of the {@code actual} type may be assigned to a target of the
+     * {@code target} type.
+     *
+     * <p>Assignability follows the nominal type relationships established by
+     * {@link Environment.Type} and does not perform general subtype traversal.
+     * A value is assignable if:</p>
+     *
+     * <ol>
+     *   <li>The target and actual types are identical</li>
+     *   <li>The target type is {@code Any}</li>
+     *   <li>The target type is {@code Comparable} and the actual type is one of
+     *       {@code Integer}, {@code Decimal}, {@code Character}, or {@code String}</li>
+     * </ol>
+     *
+     * <p>This method enforces the same type lattice implied by the scoped type hierarchy,
+     * ensuring consistency between semantic type checking and type-level scope inheritance.</p>
+     *
+     * @throws RuntimeException if the assignment is not permitted by the language rules
+     */
     public static void requireAssignable(Environment.Type target, Environment.Type actual) {
         if (target == actual ||
             target == Environment.Type.ANY ||

@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * The lexer is responsible for converting a raw input stream of characters
- * into a sequence of tokens for later parsing. Its operation is centered around
+ * into a {@link List} of {@link Token} objects for later parsing. Its operation is centered around
  * two core components:
  *
  * <ul>
@@ -15,7 +15,7 @@ import java.util.List;
  *       position, character buffer, and literal construction.</li>
  * </ul>
  *
- * <p>To use the lexer call {@code List<Token> tokens = new Lexer(source_code).lex()}<p/>
+ * <p>To use the lexer call: {@code List<Token> tokens = new Lexer(source_code).lex()}<p/>
  *
  * <p>If the lexer encounters invalid syntax (e.g., an unterminated string or
  * malformed literal), it must throw a {@link ParseException} at the character
@@ -38,7 +38,7 @@ public final class Lexer {
      * character stream is reached.
      * </p>
      *
-     * @return a list of all {@link Token} instances produced from the input
+     * @return a list of all {@link Token} objects produced from the input.
      */
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
@@ -57,18 +57,32 @@ public final class Lexer {
      * lexing routine.
      *
      * <p>Since whitespace is already handled by {@link #lex()}, the current
-     * character is guaranteed to begin a valid token.</p>
+     * character is guaranteed to begin a valid token, as defined by the following
+     * rules: </p>
      *
-     * @return the next {@link Token} identified in the input stream
+     * <pre>
+     * identifier := [A-Za-z_] [A-Za-z0-9_-]*
+     * operator   := [<>!=] =? | 'any character'
+     *
+     * integer    := 0 | [+-]? [1-9] [0-9]*
+     * decimal    := [+-]? [0-9]+ \. [0-9]+
+     * character  := ^' ([^'\n\r\\] | 'escape') '$
+     * string     := ^" ([^"\n\r\\] | 'escape')* "$
+     * escape     := ^\\ [bnrt'"\\]$
+     * </pre>
+     *
+     * @return the next {@link Token} identified in the input stream.
      */
     public Token lexToken() {
-        if (match("[A-Za-z_]")) {
+        if (peek("[A-Za-z_]")) {
             return lexIdentifier();
         }
         if (peek("[0-9]")
-                || (peek("[+-]", "[0-9]")
-                && chars.previous != Token.Type.INTEGER
-                && chars.previous != Token.Type.DECIMAL)) {
+                || (
+                    peek("[+-]", "[0-9]")
+                    && chars.previous != Token.Type.INTEGER
+                    && chars.previous != Token.Type.DECIMAL
+                    )) {
             return lexNumber(match("[+-]"));
         }
         if (match("'")) {
@@ -87,10 +101,10 @@ public final class Lexer {
      * Grammar rule:
      * </p>
      * <pre>
-     * identifier ::= [A-Za-z_] [A-Za-z0-9_-]*
+     * identifier  := [A-Za-z_] [A-Za-z0-9_-]*
      * </pre>
      *
-     * @return a {@link Token} representing the lexed identifier
+     * @return a {@link Token} representing an identifier literal.
      */
     public Token lexIdentifier() {
         while (match("[A-Za-z0-9_-]"));
@@ -99,18 +113,18 @@ public final class Lexer {
 
     /**
      * Consumes all consecutive characters that match its
-     * grammar rule and emits: {@link Token.Type#INTEGER} or
+     * grammar rule(s) and emits: {@link Token.Type#INTEGER} or
      * {@link Token.Type#DECIMAL}.
      * <p>
-     * Grammar rule:
+     * Grammar rule(s):
      * </p>
      * <pre>
-     * number ::= [+-]? [0-9]+ ( '.' [0-9]+ )?
+     * integer    := 0 | [+-]? [1-9] [0-9]*
+     * decimal    := [+-]? [0-9]+ \. [0-9]+
      * </pre>
      * @param signed {@code true} if the number includes a leading sign,
      *               {@code false} otherwise
-     * @return a {@link Token} representing either an integer or decimal literal
-     * @throws ParseException if the  is malformed
+     * @return a {@link Token} representing either an integer or decimal literal.
      */
     public Token lexNumber(boolean signed) {
         checkLeadingZeros();
@@ -130,11 +144,10 @@ public final class Lexer {
      * Grammar rule:
      * </p>
      * <pre>
-     * character ::= "'" ( [^'\n\r] | escape ) "'"
+     * character  := ^' ([^'\n\r\\] | 'escape') '$
      * </pre>
      *
-     * @return a {@link Token} representing the parsed character literal
-     * @throws ParseException if the character literal is malformed or unterminated
+     * @return a {@link Token} representing a character literal.
      */
     public Token lexCharacter() {
         matchCharacter();
@@ -147,27 +160,16 @@ public final class Lexer {
     }
 
     /**
-     * Lexes a string literal from the input stream.
+     * Consumes all consecutive characters that match its
+     * grammar rule and emits a {@link Token.Type#STRING}.
      * <p>
      * Grammar rule:
      * </p>
      * <pre>
-     * string ::= '"' ( [^"\n\r] | escape )* '"'
+     * string     := ^" ([^"\n\r\\] | 'escape')* "$
      * </pre>
-     * <p>
-     * A string literal begins and ends with double quotes and may contain any
-     * sequence of characters except unescaped quotes or newlines. Valid escape
-     * sequences (e.g., {@code \"}, {@code \\n}, {@code \\t}) are processed within
-     * the literal. This method consumes all valid characters until the closing
-     * quote is reached and emits a {@link Token.Type#STRING} token.
-     * </p>
      *
-     * <p>If the string literal is missing a closing quote or is otherwise
-     * malformed, a {@link ParseException} is thrown via
-     * {@link #lexError(String)}.</p>
-     *
-     * @return a {@link Token} representing the parsed string literal
-     * @throws ParseException if the string literal is unterminated or invalid
+     * @return a {@link Token} representing a string literal.
      */
     public Token lexString() {
         do {
@@ -180,7 +182,16 @@ public final class Lexer {
         return null;
     }
 
-    // escape ::= '\' [bnrt'"\]
+    /**
+     * Consumes all consecutive characters that match its
+     * grammar rule and emits no token.
+     * <p>
+     * Grammar rule:
+     * </p>
+     * <pre>
+     * escape     := ^\\ [bnrt'"\\]$
+     * </pre>
+     */
     public void lexEscape() {
         if (match("[bnrt'\"\\\\]")) {
             return;
@@ -188,7 +199,18 @@ public final class Lexer {
         lexError("Invalid escape character");
     }
 
-    // operator ::= [<>!=] '='? | 'any character'
+    /**
+     * Consumes all consecutive characters that match its
+     * grammar rule and emits a {@link Token.Type#OPERATOR}.
+     * <p>
+     * Grammar rule:
+     * </p>
+     * <pre>
+     * operator   := [<>!=] =? | 'any character'
+     * </pre>
+     *
+     * @return a {@link Token} representing an operator literal.
+     */
     public Token lexOperator() {
         if (match("[<>!=]", "=")) {
         } else {
@@ -197,21 +219,32 @@ public final class Lexer {
         return chars.emit(Token.Type.OPERATOR);
     }
 
-    // helper
+    /**
+     * A helper function that detects and rejects integer literals with
+     * leading zeros (e.g., {@code 0123}), which are not permitted.
+     */
     private void checkLeadingZeros() {
         if (peek("0", "[0-9]")) {
             lexError("No leading zeros");
         }
     }
 
-    // helper
+    /**
+     * A helper function that detects and rejects signed zero integer
+     * literals (e.g., {@code +0} or {@code -0}), unless the literal
+     * represents a decimal value.
+     */
     private void checkSignedZero(boolean signed) {
         if (signed && match("0") && !peek("\\.", "[0-9]")) {
             lexError("No signed zero integers");
         }
     }
 
-    // helper
+    /**
+     * A helper function that processes a character literal, handling
+     * valid escape sequences and rejecting unescaped newline or
+     * carriage return characters.
+     */
     private void matchCharacter() {
         if (match("\\\\")) {
             lexEscape();
@@ -221,13 +254,11 @@ public final class Lexer {
         }
     }
 
-    // helper
+    /**
+     * A helper function throws a {@link ParseException} at the current
+     * {@link CharStream} index, with the provided error message.
+     */
     private void lexError(String message) {
-        lexError(message, chars.index);
-    }
-
-    // helper
-    private void lexError(String message, int index) {
         throw new ParseException(
             message,
             chars.index
@@ -235,9 +266,10 @@ public final class Lexer {
     }
 
     /**
-     * Returns true if the next sequence of characters match the given patterns,
-     * which should be a regex. For example, {@code peek("a", "b", "c")} would
-     * return true if the next characters are {@code 'a', 'b', 'c'}.
+     * A helper function that returns true if the next sequence of characters
+     * match the given patterns, which should be a regex. For example,
+     * {@code peek("a", "b", "c")} would return true if the next {@link CharStream}
+     * characters are {@code 'abc'}.
      */
     public boolean peek(String... patterns) {
         for (int i = 0; i < patterns.length; i++) {
@@ -249,9 +281,9 @@ public final class Lexer {
     }
 
     /**
-     * Returns true in the same way as {@link #peek(String...)}, but also
-     * advances the character stream past all matched characters if peek returns
-     * true. Hint - it's easiest to have this method simply call peek.
+     * A helper function that returns true in the same way as {@link #peek(String...)},
+     * but also advances the character stream past all matched characters if peek returns
+     * true.
      */
     public boolean match(String... patterns) {
         boolean peek = peek(patterns);

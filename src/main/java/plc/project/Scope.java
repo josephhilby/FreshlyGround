@@ -20,15 +20,11 @@ public final class Scope {
         return parent;
     }
 
-    public void defineVariable(String name, boolean constant, Environment.PlcObject value) {
-        defineVariable(name, name, Environment.Type.ANY, constant, value);
-    }
-
-    public Environment.Variable defineVariable(String name, String jvmName, Environment.Type type, boolean constant, Environment.PlcObject value) {
+    public Environment.Variable defineVariable(String name, String jvmName, Environment.Type type, boolean constant) {
         if (variables.containsKey(name)) {
             throw new RuntimeException("The variable " + name + " is already defined in this scope.");
         } else {
-            Environment.Variable variable = new Environment.Variable(name, jvmName, type, constant, value);
+            Environment.Variable variable = new Environment.Variable(name, jvmName, type, constant);
             variables.put(variable.getName(), variable);
             return variables.get(name);
         }
@@ -42,14 +38,6 @@ public final class Scope {
         } else {
             throw new RuntimeException("The variable " + name + " is not defined in this scope.");
         }
-    }
-
-    public void defineFunction(String name, int arity, Function<List<Environment.PlcObject>, Environment.PlcObject> function) {
-        List<Environment.Type> parameterTypes = new ArrayList<>();
-        for (int i = 0; i < arity; i++) {
-            parameterTypes.add(Environment.Type.ANY);
-        }
-        defineFunction(name, name, parameterTypes, Environment.Type.ANY, function);
     }
 
     public Environment.Function defineFunction(String name, String jvmName, List<Environment.Type> parameterTypes, Environment.Type returnType, java.util.function.Function<List<Environment.PlcObject>, Environment.PlcObject> function) {
@@ -75,10 +63,9 @@ public final class Scope {
     @Override
     public String toString() {
         return "Scope{" +
-                "parent=" + parent +
-                ", variables=" + variables.keySet() +
-                ", functions=" + functions.keySet() +
-                '}';
+            "parent=" + parent +
+            ", variables=" + variables.keySet() +
+            ", functions=" + functions.keySet() +
+            '}';
     }
-
 }

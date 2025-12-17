@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 public class GeneratorTests {
 
     private static final Environment.Type OBJECT_TYPE = new Environment.Type("ObjectType", "ObjectType", init(new Scope(null), scope -> {
-        scope.defineVariable("field", "field", Environment.Type.INTEGER, false, Environment.NIL);
+        scope.defineVariable("field", "field", Environment.Type.INTEGER, false);
         scope.defineFunction("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL);
     }));
 
@@ -30,10 +30,10 @@ public class GeneratorTests {
     private static Stream<Arguments> testSource() {
         Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
         Environment.Function _main = new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
-        Environment.Variable _x = new Environment.Variable("x", "x", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _num = new Environment.Variable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _sum = new Environment.Variable("sum", "sum", Environment.Type.INTEGER, false, Environment.NIL);
+        Environment.Variable _x = new Environment.Variable("x", "x", Environment.Type.INTEGER, false);
+        Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.INTEGER, false);
+        Environment.Variable _num = new Environment.Variable("num", "num", Environment.Type.INTEGER, false);
+        Environment.Variable _sum = new Environment.Variable("sum", "sum", Environment.Type.INTEGER, false);
 
         return Stream.of(
 
@@ -363,10 +363,10 @@ public class GeneratorTests {
                     Arrays.asList(
                         init(new Ast.Field("x", "Integer", false, Optional.empty()), ast -> ast.setVariable(_x)),
                         init(new Ast.Field("y", "Decimal", false, Optional.empty()), ast -> ast.setVariable(
-                                new Environment.Variable("y", "y", Environment.Type.DECIMAL, false, Environment.NIL)
+                                new Environment.Variable("y", "y", Environment.Type.DECIMAL, false)
                             )),
                         init(new Ast.Field("z", "String", false, Optional.empty()), ast -> ast.setVariable(
-                                new Environment.Variable("z", "z", Environment.Type.STRING, false, Environment.NIL)
+                                new Environment.Variable("z", "z", Environment.Type.STRING, false)
                             ))
                     ),
 
@@ -379,7 +379,7 @@ public class GeneratorTests {
                             Arrays.asList(
                                 new Ast.Statement.Return(
                                     init(new Ast.Expression.Access(Optional.empty(),"x"), ast -> ast.setVariable(
-                                        new Environment.Variable("x", "x", Environment.Type.INTEGER, false, Environment.NIL)
+                                        new Environment.Variable("x", "x", Environment.Type.INTEGER, false)
                                     ))
                                 )
                             )
@@ -393,7 +393,7 @@ public class GeneratorTests {
                             Arrays.asList(
                                 new Ast.Statement.Return(
                                     init(new Ast.Expression.Access(Optional.empty(),"y"), ast -> ast.setVariable(
-                                        new Environment.Variable("y", "y", Environment.Type.DECIMAL, false, Environment.NIL)
+                                        new Environment.Variable("y", "y", Environment.Type.DECIMAL, false)
                                     ))
                                 )
                             )
@@ -407,7 +407,7 @@ public class GeneratorTests {
                             Arrays.asList(
                                 new Ast.Statement.Return(
                                     init(new Ast.Expression.Access(Optional.empty(),"z"), ast -> ast.setVariable(
-                                        new Environment.Variable("z", "z", Environment.Type.STRING, false, Environment.NIL)
+                                        new Environment.Variable("z", "z", Environment.Type.STRING, false)
                                     ))
                                 )
                             )
@@ -460,10 +460,10 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testFieldExpression() {
-        Environment.Variable _x = new Environment.Variable("x", "x", Environment.Type.STRING, false, Environment.NIL);
-        Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.BOOLEAN, false, Environment.NIL);
-        Environment.Variable _name = new Environment.Variable("name", "name", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _dub = new Environment.Variable("dub", "dub", Environment.Type.DECIMAL, false, Environment.NIL);
+        Environment.Variable _x = new Environment.Variable("x", "x", Environment.Type.STRING, false);
+        Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.BOOLEAN, false);
+        Environment.Variable _name = new Environment.Variable("name", "name", Environment.Type.INTEGER, false);
+        Environment.Variable _dub = new Environment.Variable("dub", "dub", Environment.Type.DECIMAL, false);
 
         return Stream.of(
             // LET x: String;
@@ -525,10 +525,10 @@ public class GeneratorTests {
         Environment.Function _function = new Environment.Function("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL);
         Environment.Function _empty = new Environment.Function("func", "func", Arrays.asList(), Environment.Type.STRING, args -> Environment.NIL);
 
-        Environment.Variable _radius = new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, false, Environment.NIL);
-        Environment.Variable _x = new Environment.Variable("x", "x", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.DECIMAL, false, Environment.NIL);
-        Environment.Variable _z = new Environment.Variable("z", "z", Environment.Type.STRING, false, Environment.NIL);
+        Environment.Variable _radius = new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, false);
+        Environment.Variable _x = new Environment.Variable("x", "x", Environment.Type.INTEGER, false);
+        Environment.Variable _y = new Environment.Variable("y", "y", Environment.Type.DECIMAL, false);
+        Environment.Variable _z = new Environment.Variable("z", "z", Environment.Type.STRING, false);
 
         return Stream.of(
             // DEF func(): String DO
@@ -879,8 +879,8 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testDeclarationStatement() {
-        Environment.Variable _name = new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL);
-        Environment.Variable _name2 = new Environment.Variable("name", "name", Environment.Type.DECIMAL, true, Environment.NIL);
+        Environment.Variable _name = new Environment.Variable("name", "name", Environment.Type.INTEGER, true);
+        Environment.Variable _name2 = new Environment.Variable("name", "name", Environment.Type.DECIMAL, true);
 
         return Stream.of(
             // LET name: Integer;
@@ -901,7 +901,7 @@ public class GeneratorTests {
                 init(new Ast.Statement.Declaration("str", Optional.of("String"), Optional.of(
                     init(new Ast.Expression.Literal("string"),ast -> ast.setType(Environment.Type.STRING))
                 )), ast -> ast.setVariable(
-                    new Environment.Variable("str", "str", Environment.Type.STRING, true, Environment.NIL))),
+                    new Environment.Variable("str", "str", Environment.Type.STRING, true))),
                 "String str = \"string\";"
             ),
             // LET str: Comparable = string;
@@ -909,7 +909,7 @@ public class GeneratorTests {
                 init(new Ast.Statement.Declaration("str", Optional.of("Comparable"), Optional.of(
                     init(new Ast.Expression.Literal("string"),ast -> ast.setType(Environment.Type.STRING))
                 )), ast -> ast.setVariable(
-                    new Environment.Variable("str", "str", Environment.Type.COMPARABLE, true, Environment.NIL))),
+                    new Environment.Variable("str", "str", Environment.Type.COMPARABLE, true))),
                 "Comparable str = \"string\";"
             )
         );
@@ -922,9 +922,9 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testAssignmentStatement() {
-        Environment.Variable _variable = new Environment.Variable("variable", "variable", Environment.Type.STRING, false, Environment.NIL);
-        Environment.Variable _object = new Environment.Variable("object", "object", OBJECT_TYPE, false, Environment.NIL);
-        Environment.Variable _field = new Environment.Variable("field", "field", Environment.Type.INTEGER, false, Environment.NIL);
+        Environment.Variable _variable = new Environment.Variable("variable", "variable", Environment.Type.STRING, false);
+        Environment.Variable _object = new Environment.Variable("object", "object", OBJECT_TYPE, false);
+        Environment.Variable _field = new Environment.Variable("field", "field", Environment.Type.INTEGER, false);
 
 
         return Stream.of(
@@ -960,7 +960,7 @@ public class GeneratorTests {
             Arguments.of("Function",
                 new Ast.Statement.Assignment(
                     init(new Ast.Expression.Access(Optional.empty(), "variable"),ast -> ast.setVariable(
-                            new Environment.Variable("variable", "variable", Environment.Type.COMPARABLE, false, Environment.NIL)
+                            new Environment.Variable("variable", "variable", Environment.Type.COMPARABLE, false)
                     )),
                     init(new Ast.Expression.Function(Optional.empty(), "function", Arrays.asList()), ast -> ast.setFunction(
                         new Environment.Function("function", "function", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL)
@@ -978,9 +978,9 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testIfStatement() {
-        Environment.Variable _expr = new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, true, Environment.NIL);
-        Environment.Variable _stmt = new Environment.Variable("stmt", "stmt", Environment.Type.NIL, true, Environment.NIL);
-        Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true, Environment.NIL);
+        Environment.Variable _expr = new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, true);
+        Environment.Variable _stmt = new Environment.Variable("stmt", "stmt", Environment.Type.NIL, true);
+        Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true);
 
         Environment.Function _func = new Environment.Function("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER,args -> Environment.NIL);
 
@@ -1179,7 +1179,7 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testForStatement() {
-        Environment.Variable _num = new Environment.Variable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
+        Environment.Variable _num = new Environment.Variable("num", "num", Environment.Type.INTEGER, false);
         Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
 
         return Stream.of(
@@ -1295,9 +1295,9 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testWhileStatement() {
-        Environment.Variable _condition = new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, false, Environment.NIL);
-        Environment.Variable _stmt1 = new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, true, Environment.NIL);
-        Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true, Environment.NIL);
+        Environment.Variable _condition = new Environment.Variable("condition", "condition", Environment.Type.BOOLEAN, false);
+        Environment.Variable _stmt1 = new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, true);
+        Environment.Variable _stmt2 = new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, true);
 
         return Stream.of(
             //While (7)
@@ -1522,9 +1522,9 @@ public class GeneratorTests {
     }
 
     private static Stream<Arguments> testAccessExpression() {
-        Environment.Variable _variable = new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _object = new Environment.Variable("object", "object", OBJECT_TYPE, false, Environment.NIL);
-        Environment.Variable _field = new Environment.Variable("field", "field", Environment.Type.INTEGER, false, Environment.NIL);
+        Environment.Variable _variable = new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false);
+        Environment.Variable _object = new Environment.Variable("object", "object", OBJECT_TYPE, false);
+        Environment.Variable _field = new Environment.Variable("field", "field", Environment.Type.INTEGER, false);
 
         return Stream.of(
             //Access (6)

@@ -1,7 +1,6 @@
 package plc.project;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 public final class Generator implements Ast.Visitor<Void> {
@@ -174,7 +173,6 @@ public final class Generator implements Ast.Visitor<Void> {
         print(ast.getCondition(), "; ");
 
         if (ast.getIncrement() != null) {
-            // must cast as visit(Ast.Statement.Assignment) must return ";" at end.
             Ast.Statement.Assignment increment = (Ast.Statement.Assignment) ast.getIncrement();
             print(increment.getReceiver(), " = ", increment.getValue(), " ");
         }
@@ -220,16 +218,22 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Literal ast) {
         if (ast.getType().equals(Environment.Type.INTEGER)) {
             print(ast.getLiteral());
+
         } else if (ast.getType().equals(Environment.Type.DECIMAL)) {
             print(ast.getLiteral());
+
         } else if (ast.getType().equals(Environment.Type.STRING)) {
             print("\"", ast.getLiteral(), "\"");
+
         } else if (ast.getType().equals(Environment.Type.CHARACTER)) {
             print("'", ast.getLiteral(), "'");
+
         } else if (ast.getType().equals(Environment.Type.BOOLEAN)) {
             print(ast.getLiteral());
+
         } else if (ast.getType().equals(Environment.Type.NIL)) {
             print("null");
+
         } else {
             throw new RuntimeException("Unknown Type: " + ast.getType());
         }

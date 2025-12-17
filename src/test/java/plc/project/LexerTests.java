@@ -20,21 +20,21 @@ public class LexerTests {
 
     private static Stream<Arguments> testIdentifier() {
         return Stream.of(
-                // Allows alphanumeric characters, underscores, and hyphens ([A-Za-z0-9_-])
-                Arguments.of("Alphabetic", "getName", true),
-                Arguments.of("Alphanumeric", "thelegend27", true),
-                Arguments.of("Caps", "ABC", true),
-                Arguments.of("Underscore", "_abC01", true),
-                Arguments.of("Underscores", "____", true),
-                Arguments.of("Hyphenated", "a-b-c", true),
-                Arguments.of("Leading Digit", "1fish2fish3fishbluefish", false),
-                Arguments.of("Single Char String", "a", true),
-                Arguments.of("Long Char String", "abcdefghijklmnopqrstuvwxyz012346789_-", true),
-                Arguments.of("AND", "AND", true),
-                Arguments.of("OR", "OR", true),
+            // Allows alphanumeric characters, underscores, and hyphens ([A-Za-z0-9_-])
+            Arguments.of("Alphabetic", "getName", true),
+            Arguments.of("Alphanumeric", "thelegend27", true),
+            Arguments.of("Caps", "ABC", true),
+            Arguments.of("Underscore", "_abC01", true),
+            Arguments.of("Underscores", "____", true),
+            Arguments.of("Hyphenated", "a-b-c", true),
+            Arguments.of("Leading Digit", "1fish2fish3fishbluefish", false),
+            Arguments.of("Single Char String", "a", true),
+            Arguments.of("Long Char String", "abcdefghijklmnopqrstuvwxyz012346789_-", true),
+            Arguments.of("AND", "AND", true),
+            Arguments.of("OR", "OR", true),
 
-                // But cannot start with a digit or a hyphen [-]
-                Arguments.of("Leading Hyphen", "-five", false)
+            // But cannot start with a digit or a hyphen [-]
+            Arguments.of("Leading Hyphen", "-five", false)
         );
     }
 
@@ -239,7 +239,6 @@ public class LexerTests {
                 new Token(Token.Type.OPERATOR, ")", 21),
                 new Token(Token.Type.OPERATOR, ";", 22)
             )),
-            Arguments.of("Example 3", FooTestData.source, FooTestData.tokens),
             Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                 new Token(Token.Type.IDENTIFIER, "x", 4),

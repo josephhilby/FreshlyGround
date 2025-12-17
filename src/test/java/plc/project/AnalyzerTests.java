@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public final class AnalyzerTests {
 
     private static final Environment.Type OBJECT_TYPE = new Environment.Type("ObjectType", "ObjectType", init(new Scope(null), scope -> {
-        scope.defineVariable("field", "field", Environment.Type.INTEGER, false, Environment.NIL);
+        scope.defineVariable("field", "field", Environment.Type.INTEGER, false);
         scope.defineFunction("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL);
     }));
 
@@ -43,7 +43,7 @@ public final class AnalyzerTests {
         Environment.Function _slice = Environment.Type.STRING.getFunction("slice", 2);
 
 
-        Environment.Variable _s = new Environment.Variable("s", "s", Environment.Type.STRING, false, Environment.NIL);
+        Environment.Variable _s = new Environment.Variable("s", "s", Environment.Type.STRING, false);
         Environment.Variable _length = Environment.Type.STRING.getField("length");
 
         return Stream.of(
@@ -373,7 +373,7 @@ public final class AnalyzerTests {
                 // LET name: Decimal;
                 new Ast.Field("name","Decimal", false, Optional.empty()),
                 init(new Ast.Field("name","Decimal", false, Optional.empty()),ast ->
-                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, false, Environment.NIL)))
+                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, false)))
             ),
             Arguments.of("Initialization",
                 // LET name: Integer = 1;
@@ -381,7 +381,7 @@ public final class AnalyzerTests {
                 init(new Ast.Field("name","Integer", false, Optional.of(
                     init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
                     )),ast ->
-                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false, Environment.NIL))
+                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false))
                 )
             ),
             Arguments.of("Unknown Type",
@@ -493,7 +493,7 @@ public final class AnalyzerTests {
                 // LET name: Integer;
                 new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()),
                 init(new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()), ast -> {
-                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false, Environment.NIL));
+                    ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false));
                 })
             ),
             Arguments.of("Initialization",
@@ -501,7 +501,7 @@ public final class AnalyzerTests {
                 new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
                 init(new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(
                     init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false, Environment.NIL)))
+                )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, false)))
             ),
             Arguments.of("Missing Type",
                 // LET name;
@@ -520,8 +520,8 @@ public final class AnalyzerTests {
     @MethodSource
     public void testAssignmentStatement(String test, Ast.Statement.Assignment ast, Ast.Statement.Assignment expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL);
-            scope.defineVariable("object", "object", OBJECT_TYPE, false, Environment.NIL);
+            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false);
+            scope.defineVariable("object", "object", OBJECT_TYPE, false);
         }));
     }
     private static Stream<Arguments> testAssignmentStatement() {
@@ -533,7 +533,7 @@ public final class AnalyzerTests {
                     new Ast.Expression.Literal(BigInteger.ONE)
                 ),
                 new Ast.Statement.Assignment(
-                    init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL))),
+                    init(new Ast.Expression.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false))),
                     init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
                 )
             ),
@@ -553,8 +553,8 @@ public final class AnalyzerTests {
                 ),
                 new Ast.Statement.Assignment(
                     init(new Ast.Expression.Access(Optional.of(
-                        init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false, Environment.NIL)))
-                    ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, false, Environment.NIL))),
+                        init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false)))
+                    ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, false))),
                     init(new Ast.Expression.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
                 )
             )
@@ -671,7 +671,7 @@ public final class AnalyzerTests {
         // FOR (num = 1; num < 5; num = num + 1) function(num); END
         Scope scope = new Scope(null);
         scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL);
-        scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
+        scope.defineVariable("num", "num", Environment.Type.INTEGER, false);
 
         Ast.Statement.Assignment init = new Ast.Statement.Assignment(
             new Ast.Expression.Access(Optional.empty(), "num"),
@@ -721,8 +721,7 @@ public final class AnalyzerTests {
                                             "num",
                                             "num",
                                             Environment.Type.INTEGER,
-                                            false,
-                                            Environment.NIL
+                                            false
                                         )
                                     )
                                 )
@@ -752,10 +751,10 @@ public final class AnalyzerTests {
 
         // scope = {num: Integer, sum: Integer}
         Scope scope = new Scope(null);
-        scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
-        scope.defineVariable("sum", "sum", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _num = new Environment.Variable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
-        Environment.Variable _sum = new Environment.Variable("sum", "sum", Environment.Type.INTEGER, false, Environment.NIL);
+        scope.defineVariable("num", "num", Environment.Type.INTEGER, false);
+        scope.defineVariable("sum", "sum", Environment.Type.INTEGER, false);
+        Environment.Variable _num = new Environment.Variable("num", "num", Environment.Type.INTEGER, false);
+        Environment.Variable _sum = new Environment.Variable("sum", "sum", Environment.Type.INTEGER, false);
 
         Ast.Statement.Assignment init = null;
         Ast.Expression.Binary cond = new Ast.Expression.Binary("<",
@@ -985,8 +984,8 @@ public final class AnalyzerTests {
     @MethodSource
     public void testAccessExpression(String test, Ast.Expression.Access ast, Ast.Expression.Access expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL);
-            scope.defineVariable("object", "object", OBJECT_TYPE, false, Environment.NIL);
+            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false);
+            scope.defineVariable("object", "object", OBJECT_TYPE, false);
         }));
     }
     private static Stream<Arguments> testAccessExpression() {
@@ -995,7 +994,7 @@ public final class AnalyzerTests {
                 // variable
                 new Ast.Expression.Access(Optional.empty(), "variable"),
                 init(new Ast.Expression.Access(Optional.empty(), "variable"), ast ->
-                    ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL)))
+                    ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false)))
             ),
             Arguments.of("Field",
                 // object.field
@@ -1003,8 +1002,8 @@ public final class AnalyzerTests {
                     new Ast.Expression.Access(Optional.empty(), "object")
                 ), "field"),
                 init(new Ast.Expression.Access(Optional.of(
-                    init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false, Environment.NIL)))
-                ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, false, Environment.NIL)))
+                    init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false)))
+                ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, false)))
             )
         );
     }
@@ -1015,7 +1014,7 @@ public final class AnalyzerTests {
         test(ast, expected, init(new Scope(null), scope -> {
             scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
             scope.defineFunction("function", "function", Arrays.asList(Environment.Type.INTEGER), Environment.Type.INTEGER, args -> Environment.NIL);
-            scope.defineVariable("object", "object", OBJECT_TYPE, false, Environment.NIL);
+            scope.defineVariable("object", "object", OBJECT_TYPE, false);
         }));
     }
     private static Stream<Arguments> testFunctionExpression() {
@@ -1045,7 +1044,7 @@ public final class AnalyzerTests {
                     new Ast.Expression.Access(Optional.empty(), "object")
                 ), "method", Arrays.asList()),
                 init(new Ast.Expression.Function(Optional.of(
-                    init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false, Environment.NIL)))
+                    init(new Ast.Expression.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, false)))
                 ), "method", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL)))
             )
         );

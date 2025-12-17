@@ -1,6 +1,21 @@
 package plc.project;
 
-public final class Token {
+/**
+ * A {@code Token} represents a single lexical unit produced by the {@link Lexer}.
+ * Each token captures:
+ *
+ * <ul>
+ *   <li>{@link Type} — categorizes the token (e.g., identifier, integer, decimal,
+ *       character, string, and operator).</li>
+ *   <li>{@code literal} — the exact character sequence consumed from the source.</li>
+ *   <li>{@code index} — the zero-based position in the input stream where the token begins.</li>
+ * </ul>
+ *
+ * <p>Tokens are immutable value objects and are compared using structural equality;
+ * two tokens are considered equal iff their type, literal, and index
+ * are equal.</p>
+ */
+public record Token(Type type, String literal, int index) {
 
     public enum Type {
         IDENTIFIER,
@@ -11,37 +26,8 @@ public final class Token {
         OPERATOR
     }
 
-    private final Type type;
-    private final String literal;
-    private final int index;
-
-    public Token(Type type, String literal, int index) {
-        this.type = type;
-        this.literal = literal;
-        this.index = index;
-    }
-
-    public Type getType() {
-        return type;
-    }
-    public String getLiteral() {
-        return literal;
-    }
-    public int getIndex() {
-        return index;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof Token
-                && type == ((Token) obj).type
-                && literal.equals(((Token) obj).literal)
-                && index == ((Token) obj).index;
-    }
-
     @Override
     public String toString() {
         return type + "=" + literal + "@" + index;
     }
-
 }

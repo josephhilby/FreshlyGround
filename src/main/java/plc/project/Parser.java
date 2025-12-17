@@ -7,19 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-/**
- * The parser takes the sequence of tokens emitted by the lexer and turns that
- * into a structured representation of the program, called the Abstract Syntax
- * Tree (AST).
- *
- * The parser has a similar architecture to the lexer, just with {@link Token}s
- * instead of characters. As before, {@link #peek(Object...)} and {@link
- * #match(Object...)} are helpers to make the implementation easier.
- *
- * This type of parser is called <em>recursive descent</em>. Each rule in our
- * grammar will have it's own function, and reference to other rules correspond
- * to calling those functions.
- */
+
 public final class Parser {
 
     private final TokenStream tokens;
@@ -60,11 +48,11 @@ public final class Parser {
     public Ast.Field parseField() throws ParseException {
         keywordCheck("LET");
         boolean constant = match("CONST");
-        String name = currentToken().getLiteral();
+        String name = currentToken().literal();
         typeCheck(Token.Type.IDENTIFIER);
 
         keywordCheck(":");
-        String type = currentToken().getLiteral();
+        String type = currentToken().literal();
         typeCheck(Token.Type.IDENTIFIER);
         Optional<Ast.Expression> expression = Optional.empty();
 
@@ -89,7 +77,7 @@ public final class Parser {
     public Ast.Method parseMethod() throws ParseException {
         // TODO: Clean up
         keywordCheck("DEF");
-        String name = currentToken().getLiteral();
+        String name = currentToken().literal();
         typeCheck(Token.Type.IDENTIFIER);
 
         List<String> parameters = new ArrayList<>();
@@ -100,10 +88,10 @@ public final class Parser {
         keywordCheck("(");
         if (!peek(")")) {
             do {
-                String parameter = currentToken().getLiteral();
+                String parameter = currentToken().literal();
                 typeCheck(Token.Type.IDENTIFIER);
                 keywordCheck(":");
-                String parameterType = currentToken().getLiteral();
+                String parameterType = currentToken().literal();
                 typeCheck(Token.Type.IDENTIFIER);
                 parameters.add(parameter);
                 parameterTypes.add(parameterType);
@@ -111,7 +99,7 @@ public final class Parser {
         }
         keywordCheck(")");
         if (match(":")) {
-            returnType = Optional.of(currentToken().getLiteral());
+            returnType = Optional.of(currentToken().literal());
             typeCheck(Token.Type.IDENTIFIER);
         }
         keywordCheck("DO");
@@ -161,14 +149,14 @@ public final class Parser {
     // "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
     //  LET name : type = expression;
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
-        String name = currentToken().getLiteral();
+        String name = currentToken().literal();
         typeCheck(Token.Type.IDENTIFIER);
 
         Optional<String> type = Optional.empty();
         Optional<Ast.Expression> expression = Optional.empty();
 
         if (match(":")) {
-            type = Optional.of(currentToken().getLiteral());
+            type = Optional.of(currentToken().literal());
             typeCheck(Token.Type.IDENTIFIER);
         }
 
@@ -215,7 +203,7 @@ public final class Parser {
     public Ast.Statement.For parseForStatement() throws ParseException {
         keywordCheck("(");
         Ast.Statement initialization = null;
-        if (tokens.get(0).getType() == Token.Type.IDENTIFIER) {
+        if (tokens.get(0).type() == Token.Type.IDENTIFIER) {
             initialization = parseLoopStatement();
         }
         keywordCheck(";");
@@ -224,7 +212,7 @@ public final class Parser {
         keywordCheck(";");
 
         Ast.Statement increment = null;
-        if (tokens.get(0).getType() == Token.Type.IDENTIFIER) {
+        if (tokens.get(0).type() == Token.Type.IDENTIFIER) {
             increment = parseLoopStatement();
         }
         keywordCheck(")");
@@ -371,8 +359,8 @@ public final class Parser {
     }
 
     public Ast.Expression parsePrimaryExpression(Optional<Ast.Expression> receiver) throws ParseException {
-        Token.Type type = currentToken().getType();
-        String literal = currentToken().getLiteral();
+        Token.Type type = currentToken().type();
+        String literal = currentToken().literal();
 
         // "NIL"
         if (match("NIL")) {
@@ -442,7 +430,7 @@ public final class Parser {
         Ast.Expression left = expression.get();
 
         while (check(operators)) {
-            String operator = tokens.get(-1).getLiteral();
+            String operator = tokens.get(-1).literal();
             Ast.Expression right = expression.get();
             left = new Ast.Expression.Binary(operator, left, right);
         }
@@ -534,8 +522,8 @@ public final class Parser {
     // helper
     private int tokenLocation(int offset) {
         int prev =  offset - 1;
-        return tokens.has(offset) ? tokens.get(offset).getIndex()
-                : tokens.get(prev).getIndex() + tokens.get(prev).getLiteral().length();
+        return tokens.has(offset) ? tokens.get(offset).index()
+                : tokens.get(prev).index() + tokens.get(prev).literal().length();
     }
 
     // helper
@@ -554,7 +542,7 @@ public final class Parser {
 
     private boolean typeCheck(Token.Type expectation, boolean consume) {
         if (!peek(expectation)) {
-            Token.Type actual = currentToken().getType();
+            Token.Type actual = currentToken().type();
             String msg = "Type Error. Expected: " + expectation + ", Got: " + actual;
             parseError(msg);
         }
@@ -593,11 +581,11 @@ public final class Parser {
             if (!tokens.has(i)) {
                 return false;
             } else if (patterns[i] instanceof Token.Type) {
-                if (patterns[i] != tokens.get(i).getType()) {
+                if (patterns[i] != tokens.get(i).type()) {
                     return false;
                 }
             } else if (patterns[i] instanceof String) {
-                if (!patterns[i].equals(tokens.get(i).getLiteral())) {
+                if (!patterns[i].equals(tokens.get(i).literal())) {
                     return false;
                 }
             } else {

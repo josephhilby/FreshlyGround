@@ -16,13 +16,13 @@ import java.util.stream.Stream;
 // TODO check against slide deck
 // https://mediasite.video.ufl.edu/Mediasite/Play/c6c51d03742b43578043069ce6cb934b1d
 
-public class EndToEndGeneratorTests {
+public class EndToEndTests {
     private static final Environment.Type OBJECT_TYPE =
         new Environment.Type(
             "ObjectType",
             "ObjectType",
             init(new Scope(null), scope -> {
-                scope.defineVariable("field", "field", Environment.Type.INTEGER, false, Environment.NIL);
+                scope.defineVariable("field", "field", Environment.Type.INTEGER, false);
                 scope.defineFunction(
                     "method",
                     "method",
@@ -36,7 +36,7 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testSource(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("object", "object", OBJECT_TYPE, false, Environment.NIL);
+        scope.defineVariable("object", "object", OBJECT_TYPE, false);
         test(source, expected, Parser::parseSource, scope);
     }
 
@@ -224,7 +224,7 @@ public class EndToEndGeneratorTests {
                     "END"
                 ),
                 String.join(System.lineSeparator(),
-                    "void func(int x, double y, String z) {",
+                    "Void func(int x, double y, String z) {",
                     "    System.out.println(x);",
                     "    System.out.println(y);",
                     "    System.out.println(z);",
@@ -307,7 +307,7 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testExpression(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
+        scope.defineVariable("num", "num", Environment.Type.INTEGER, false);
         test(source, expected, Parser::parseStatement, scope);
     }
 
@@ -395,8 +395,8 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testAssignment(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL);
-        scope.defineVariable("object", "object", OBJECT_TYPE, false, Environment.NIL);
+        scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false);
+        scope.defineVariable("object", "object", OBJECT_TYPE, false);
         test(source, expected, Parser::parseStatement, scope);
     }
 
@@ -427,7 +427,7 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testIf(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("cond", "cond", Environment.Type.BOOLEAN, false, Environment.NIL);
+        scope.defineVariable("cond", "cond", Environment.Type.BOOLEAN, false);
         test(source, expected, Parser::parseStatement, scope);
     }
 
@@ -476,8 +476,8 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testFor(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
-        scope.defineVariable("sum", "sum", Environment.Type.INTEGER, false, Environment.NIL);
+        scope.defineVariable("num", "num", Environment.Type.INTEGER, false);
+        scope.defineVariable("sum", "sum", Environment.Type.INTEGER, false);
         test(source, expected, Parser::parseStatement, scope);
     }
 
@@ -523,8 +523,8 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testWhile(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("num", "num", Environment.Type.INTEGER, false, Environment.NIL);
-        scope.defineVariable("cond", "cond", Environment.Type.BOOLEAN, false, Environment.NIL);
+        scope.defineVariable("num", "num", Environment.Type.INTEGER, false);
+        scope.defineVariable("cond", "cond", Environment.Type.BOOLEAN, false);
         test(source, expected, Parser::parseStatement, scope);
     }
 
@@ -681,8 +681,8 @@ public class EndToEndGeneratorTests {
     @MethodSource
     void testAccess(String test, String source, String expected) {
         Scope scope = new Scope(null);
-        scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false, Environment.NIL);
-        scope.defineVariable("object", "object", OBJECT_TYPE, false, Environment.NIL);
+        scope.defineVariable("variable", "variable", Environment.Type.INTEGER, false);
+        scope.defineVariable("object", "object", OBJECT_TYPE, false);
         test(source, expected, Parser::parseExpression, scope);
     }
 

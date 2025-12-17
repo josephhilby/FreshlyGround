@@ -54,10 +54,6 @@ public abstract class Ast {
         private final Optional<Ast.Expression> value;
         private Environment.Variable variable = null;
 
-        public Field(String name, boolean constant, Optional<Expression> value) {
-            this(name, "Any", constant, value);
-		}
-
         public Field(String name, String typeName, boolean constant, Optional<Ast.Expression> value) {
             this.name = name;
             this.typeName = typeName;
@@ -124,13 +120,6 @@ public abstract class Ast {
         private final Optional<String> returnTypeName;
         private final List<Statement> statements;
         private Environment.Function function = null;
-        
-        public Method(String name, List<String> parameters, List<Statement> statements) {
-            this(name, parameters, new ArrayList<>(), Optional.of("Any"), statements);
-            for (int i = 0; i < parameters.size(); i++) {
-                parameterTypeNames.add("Any");
-            }
-        }
 
         public Method(String name, List<String> parameters, List<String> parameterTypeNames, Optional<String> returnTypeName, List<Statement> statements) {
 
@@ -234,10 +223,6 @@ public abstract class Ast {
             private final Optional<String> typeName;
             private Optional<Ast.Expression> value;
             private Environment.Variable variable = null;
-
-            public Declaration(String name, Optional<Ast.Expression> value) {
-                this(name, Optional.empty(), value);
-            }
 
             public Declaration(String name, Optional<String> typeName, Optional<Ast.Expression> value) {
                 this.name = name;
@@ -438,7 +423,6 @@ public abstract class Ast {
                         ", statements=" + statements +
                         '}';
             }
-
         }
 
         public static final class While extends Statement {
@@ -502,7 +486,6 @@ public abstract class Ast {
             }
 
         }
-
     }
 
     public static abstract class Expression extends Ast {
@@ -769,7 +752,6 @@ public abstract class Ast {
             }
 
         }
-
     }
 
     public interface Visitor<T> {
@@ -777,34 +759,49 @@ public abstract class Ast {
         default T visit(Ast ast) {
             if (ast instanceof Ast.Source) {
                 return visit((Ast.Source) ast);
+
             } else if (ast instanceof Ast.Field) {
                 return visit((Ast.Field) ast);
+
             } else if (ast instanceof Ast.Method) {
                 return visit((Ast.Method) ast);
+
             } else if (ast instanceof Ast.Statement.Expression) {
                 return visit((Ast.Statement.Expression) ast);
+
             } else if (ast instanceof Ast.Statement.Declaration) {
                 return visit((Ast.Statement.Declaration) ast);
+
             } else if (ast instanceof Ast.Statement.Assignment) {
                 return visit((Ast.Statement.Assignment) ast);
+
             } else if (ast instanceof Ast.Statement.If) {
                 return visit((Ast.Statement.If) ast);
+
             } else if (ast instanceof Ast.Statement.For) {
                 return visit((Ast.Statement.For) ast);
+
             } else if (ast instanceof Ast.Statement.While) {
                 return visit((Ast.Statement.While) ast);
+
             } else if (ast instanceof Ast.Statement.Return) {
                 return visit((Ast.Statement.Return) ast);
+
             } else if (ast instanceof Ast.Expression.Literal) {
                 return visit((Ast.Expression.Literal) ast);
+
             } else if (ast instanceof Ast.Expression.Group) {
                 return visit((Ast.Expression.Group) ast);
+
             } else if (ast instanceof Ast.Expression.Binary) {
                 return visit((Ast.Expression.Binary) ast);
+
             } else if (ast instanceof Ast.Expression.Access) {
                 return visit((Ast.Expression.Access) ast);
+
             } else if (ast instanceof Ast.Expression.Function) {
                 return visit((Ast.Expression.Function) ast);
+
             } else {
                 throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
             }
@@ -840,5 +837,4 @@ public abstract class Ast {
 
         T visit(Ast.Expression.Function ast);
     }
-
 }

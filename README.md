@@ -24,28 +24,48 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-FreshlyGround is a **novel programming language** whose source code can follow one of 
-two paths, interpretation or compilation. The first sees the sourcecode interpreted and executed
-directly. The second path, sees the source code compiled into bytecode for  execution on 
-the **Java Virtual Machine (JVM)**. This project was developed for **COP 4020** at the 
-**University of Florida** and follows the methodology outlined in the book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
+Freshly Ground is a **novel programming language compiler** whose source code is compiled into bytecode
+for execution on the **Java Virtual Machine (JVM)**. This project was adapted from an academic compiler
+project created in **COP 4020** at the **University of Florida**, and follows the methodology  outlined in the 
+book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
+
+The compiler is structured as a sequence of well-defined, ordered, single-responsibility passes. Each pass performs 
+a distinct transformation on the program representation, following a clear separation of concerns between tokenization, 
+syntactic analysis, semantic analysis, and bytecode generation.
+
+### Compilation Pipeline (Passes)
+
+> - **Tokenization**  
+>   *Source Code* → `Lexer.java` → *Token Stream*
+>
+> - **Syntactic Analysis**  
+>   *Token Stream* → `Parser.java` → *Abstract Syntax Tree (AST)*
+>
+> - **Semantic Analysis**  
+>   *AST* → `Analyzer.java` → *Decorated AST*
+>
+> - **Bytecode Generation**  
+>   *Decorated AST* → `Generator.java` → *Java Bytecode*
+
+Digging a bit deeper:
+
+The lexer (`Lexer.java`) performs lexical analysis (or tokenization), converting raw characters into a stream of typed tokens while preserving 
+positional information. The parser (`Parser.java`) iterates over the token stream, validating the program syntax against the 
+language grammar and constructs a hierarchical Abstract Syntax Tree (AST) that captures the program's syntactic structure, 
+without interpreting semantics or types. 
+
+The analyzer (`Analyzer.java`) then traverses the AST and applies the languages scoping and environment rules,
+performing semantic analysis such as name resolution, type checking, and local type inference for untyped declarations. 
+This pass 'decorates' the AST with resolved symbols and concrete types without altering the original syntax. 
+
+Finally, the generator (`Generator.java`) lowers the fully analyzed program into executable JVM bytecode, relying on 
+the decorated AST to ensure all identifiers, scopes, and types are resolved prior to code generation.
 
 <!-- DESIGN AND THEORY -->
 ## Design and Theory
-### The Two Paths
-#### Interpretation
-- Source Code → `Lexer.java` → Array of Tokens
-- Array of Tokens → `Parser.java` → Abstract Syntax Tree (AST)
-- AST → `Interpreter.java` → Result
-
-#### Compilation
-- Source Code → `Lexer.java` → Array of Tokens
-- Array of Tokens → `Parser.java` → Abstract Syntax Tree (AST)
-TODO
-
-### Lexical Tokens
-At the start of both paths is the lexer. This will take a source code file and lex it into an array of tokens following 
-the rules below. 
+### Lexical Token Types
+At the start is the lexer. This will take a source code file and lex it into an array of tokens (Token Stream)
+following the rules below. 
 
 ```regexp 
 identifier := [A-Za-z_] [A-Za-z0-9_-]*
@@ -59,16 +79,21 @@ escape     := ^\\ [bnrt'"\\]$
 ```
 
 ### Context Free Grammar Syntax Tree
-After being lexed the tokens, in both paths, move on to the Parser. This will take the tokens from a linear
-array structure and shape them into an m-ary tree, the construction of which will follow specific syntax rules of a 
-context free grammar (CFG). The CFG of this project is presented in Extended Backus–Naur Form (EBNF).
-It enables a top-down (recursive-descent) parser to run in linear time. This parser takes the original 
-array of tokens (**Σ**) and places them as leaf nodes into a tree structure. This tree is assembled by
-starting at a predetermined root (**S**) and placing each token by traversing and constructing internal
-nodes (**N**) according to a set of rules (**P**).
- 
+After lexical analysis, the token stream is passed to the parser. The parser transforms the linear sequence 
+of tokens into a structured representation of the program known as the Abstract Syntax Tree (AST). AST construction 
+is governed by a context-free grammar (CFG) that defines the syntactic structure of the language. 
 
-#### Extended Backus–Naur Form
+This project defines its grammar using Extended Backus–Naur Form (EBNF). EBNF was selected because it naturally 
+supports a top-down (recursive-descent) parsing strategy with linear-time complexity under the given grammar constraints. 
+
+This parser begins at a predetermined start symbol (**S**) and incrementally constructs the AST by:
+- Consuming the terminal symbols (**Σ**) produced by the lexer, and placing them as leaf nodes.
+- Creating non-terminal symbols (**N**) according to the CFG production rules (**P**), and placing them as internal nodes.
+
+The resulting AST captures the hierarchical structure of the program and serves as the input to subsequent 
+semantic analysis and code generation stages.
+
+#### Extended Backus–Naur Form Definition
 *EBNF* := (*Σ*, *N*, *P*, *S*), where:
 - **Σ** – terminal symbols (tokens produced by the lexer)
 - **N** – non-terminal symbols (see `source`, `statement`, `expression` below)
@@ -127,8 +152,6 @@ In the syntax rules below, each line should be read as `non-terminal symbol ::= 
 >- `|` = alternative
 >- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
-### Interpreted Result
-TODO
 
 <!-- PRACTICAL IMPLEMENTATION -->
 ## Practical Implementation
@@ -138,17 +161,27 @@ TODO
 >
 >field
 > └─ "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
->     └─> Ast.Field(constant=boolean, name=identifier, value=expression)
+>     └─> Ast.Field(name=identifier, typeName=identifier, constant=bool, value=expression)
 >  
 > method
 > └─ "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO" { statement } "END"
->     └─> Ast.Method(name=identifier, parameters=identifier(s), statements=statement(s))
+>     └─> Ast.Method(name=identifier, 
+>                    parameters=identifier(s), 
+>                    parameterTypeNames=identifier(s), 
+>                    returnTypeName=identifier,
+>                    statements=statement(s))
 >```
 >
 >```text
 >statement
+> ├─ expression "=" expression ";"
+> │   └─> Ast.Statement.Assignment(receiver=expression, value=expression)
+> │
+> ├─ expression ";"
+> │   └─> Ast.Statement.Expression(expression=expression)
+> │
 > ├─ "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
-> │   └─> Ast.Statement.Declaration(name=identifier, value=expression)
+> │   └─> Ast.Statement.Declaration(name=identifier, typeName=identifier, value=expression)
 > │
 > ├─ "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END" 
 > │   └─> Ast.Statement.If(condition=expression, 
@@ -157,24 +190,16 @@ TODO
 > │
 > ├─ "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" 
 > │   │                     { statement } "END"
-> │   └─> Ast.Statement.For(initialization=Declaration(name=identifier, 
-> │                                                    value=Optional.empty
-> │                                                    ), 
+> │   └─> Ast.Statement.For(initialization=(Ast.Statement.Assignment), 
 > │                         condition=expression, 
-> │                         increment=null, 
+> │                         increment=(Ast.Statement.Assignment), 
 > │                         statements=statement(s))
 > │
 > ├─ "WHILE" expression "DO" { statement } "END"
 > │   └─> Ast.Statement.While(condition=expression, statements=statement(s))
 > │
-> ├─ "RETURN" expression ";"
-> │   └─> Ast.Statement.Return(value=expression)
-> │
-> ├─ expression "=" expression ";"
-> │   └─> Ast.Statement.Assignment(receiver=expression, value=expression)
-> │
-> └─ expression ";"
->     └─> Ast.Statement.Expression(expression=expression)
+> └─ "RETURN" expression ";"
+>     └─> Ast.Statement.Return(value=expression)
 >```
 >
 >```text
@@ -232,166 +257,125 @@ TODO
 >                                     arguments=expression(s))
 >```
 
-## Examples
-### Example 1:
+## Example
 ```
-LET x = 10;
+LET x: Integer = 10;
 ```
-In this example source code, as with all source code in this language, the entry point will be `source`. It is important to
-note that this code would fail to interpret, as the interpreter requires a `main()` function as an entry point to the 
-user's program.
+Before getting too far into the weeds, note that this snippet would fail to compile because 
+FreshlyGround requires a `main()` method as an entry point. This example is intentionally minimal in order to 
+illustrate the compilation pipeline on a small, readable input.
 
-Initially each section of the source code would lex into the following tokens: "LET", "x", "=", and "10".
-These will then match the `field` pattern `"LET" identifier "=" expression ";"`, where the `identifier` will map 
-to `x`, and the `expression` will follow the recursive chain: 
+### Lexing and Parsing
+Initially each section of the source code would lex into the following token stream: "LET", "x", ":", "Integer", "=", "10" and ";".
+Because the token stream is syntactically valid, the parser would then match it to the field production: 
+`field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"`. With the field identifier mapping to `x`, 
+the declared type mapping to `Integer`, and the initializer expression to the literal `10` through the following precedence chain:
 
 > `expression` → `logical_expression` → `comparison_expression` → `additive_expression` → `multiplicative_expression` 
 > → `secondary_expression` → `primary_expression` → `integer`
 
-This will result in `"LET" "x" "=" integer ";"` and `integer` will map to `10`.
+A simplified view of this mapping would look like:
 
 ```text
-source
-└─ field
-    ├─ "LET"
-    ├─ identifier("x")
-    ├─ "="
-    ├─ expression
-    │   └─ logical_expression
-    │       └─ comparison_expression
-    │           └─ additive_expression
-    │               └─ multiplicative_expression
-    │                   └─ secondary_expression
-    │                       └─ primary_expression
-    │                           └─ integer("10")
-    └─ ";"
+field
+ ├─ "LET"
+ ├─ identifier("x")
+ ├─ ":"
+ ├─ identifier("Integer")
+ ├─ "="
+ ├─ expression
+ │   └─ logical_expression
+ │       └─ comparison_expression
+ │           └─ additive_expression
+ │               └─ multiplicative_expression
+ │                   └─ secondary_expression
+ │                       └─ primary_expression
+ │                           └─ integer("10")
+ └─ ";"
 ```
 
-Getting this one step closer to the actual coded implementation for this project. The tree can be thought of as:
+Note: At this time the field type (`Integer`) and expression literal type (`integer`) match; that is to say
+the statement is semantically correct. This is not always the case and is not checked by the lexer or parser.
+
+All programs in this language parse from the source entry point. Conceptually, this example becomes a source 
+node containing a single field and no methods:
 
 ```yaml
 Ast.Source
-└─ fields: [
-    Ast.Field
+ └─ fields: [
+   Ast.Field
     ├─ name: "x"
+    ├─ typeName: "Integer"
     ├─ constant: false
     └─ value: Optional.of(
-        Ast.Expression.Literal
-        └─ literal: 10
-        )
+       Ast.Expression.Literal
+        ├─ literal: 10
+        └─ type: null
+         )
+    └─ variable: null
     ]
-└─ methods: []
+ └─ methods: []
 ```
 
-Finally, in code, this code this AST is embodied as:
+### Analyzing
+The analyzer performs a pre-order traversal over the AST and applies the language’s scope and environment rules. 
+During this pass, it:
+- Declares `x` in the current scope as an `Environment.Variable`
+- Resolves the declared type to a concrete `Environment.Type`
+- Infers and assigns the literal type to a concrete `Environment.Type`.
+- Attaches the variable and type metadata onto the AST ("Decorates").
+
+For readability, `Scope{ parent = null, variables = {}, functions = {} }` has been shortened to `Scope{...}`.
 
 ```java
-Ast ast =
-    new Ast.Source(
-        List.of(
-            new Ast.Field(
-                "x",
-                false,
-                Optional.of(new Ast.Expression.Literal(BigInteger.TEN))
-            )
-        ),
-        List.of()
-    );
-```
-
-This AST can then be interpreted by pre-order traversal. Starting at the source and recursively moving down, the 
-interpreter constructs and manages a scope object:
-
-```java
-Scope{ parent    = Scope{...}, 
-       variables = { x = Variable{
-                                   name  = 'x', 
-                                   value = Object{ 
-                                                   scope = Scope{...}, 
-                                                   value = 10 
-                                                  } 
-                                 } 
-       },
-       functions = {}
+// Current Scope
+Scope{ parent=Scope{...}, 
+       variables={ "x" -> Environment.Variable(
+           name="x",
+           jvmName="x",
+           constant=false,
+           type=Environment.Type(
+               name="Integer", 
+               jvmName="int",
+               // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
+               scope=Scope{ parent=Scope{ parent=Scope{...} } })
+       )},
+       functions={}
 }
 ```
-**Note:** `Scope{ parent = null, variables = {}, functions = {} }` has been shortened to `Scope{...}` for readability.
+
+```yaml
+Ast.Source
+ └─ fields: [
+    Ast.Field
+     ├─ name: "x"
+     ├─ typeName: "Integer"
+     ├─ constant: false
+     └─ value:
+        Ast.Expression.Literal
+         ├─ literal: 10
+         └─ type:
+            Environment.Type
+             ├─ name: "Integer"
+             ├─ jvmName: "int"
+             └─ scope: Scope{ parent=Scope{ parent=Scope{...} } }
+     └─ variable:
+        Environment.Variable
+         ├─ name: "x"
+         ├─ jvmName: "x"
+         ├─ constant: false
+         └─ type:
+            Environment.Type
+             ├─ name: "Integer"
+             ├─ jvmName: "int"
+             └─ scope: Scope{ parent=Scope{ parent=Scope{...} } }
+    ]
+ └─ methods: []
+```
 
 Finally, as mentioned before, the interpreter would give a `RuntimeException` due to there being no `main()` function.
 
-### Example 2:
-```
-DEF main() DO
-    print("Hello Wrold");
-    RETURN 0;
-END
-```
-As in the previous example the source code will lex into tokens that will then be mapped onto an AST according to EBNF syntax above.
-However, this time the `method` pattern, `"DEF" identifier "(" [ identifier { "," identifier } ] ")" "DO" { statement } "END"`, 
-will be matched. 
-
-```yaml
-Ast.Source
-├─ fields: []
-└─ methods: [
-    Ast.Method
-    ├─ name: "main"
-    ├─ parameters: []
-    └─ statements: [
-        Ast.Statement.Expression
-        └─ expression: Ast.Expression.Function
-            ├─ receiver: Optional.empty
-            ├─ name: "print"
-            └─ arguments: [
-                Ast.Expression.Literal,
-                └─ value: "Hello World"
-                ]
-        Ast.Statement.Return
-        └─ expression: Ast.Expression.Literal
-            └─ value: 0
-        ]
-    ]
-```
-
-```java
-Ast program =
-    new Ast.Source(
-        List.of(),
-        List.of(
-            new Ast.Method(
-                "main",
-                List.of(),
-                List.of(
-                    new Ast.Statement.Expression(
-                        new Ast.Expression.Function(
-                            Optional.empty(),
-                            "print",
-                            List.of(
-                                new Ast.Expression.Literal("Hello World")
-                            )
-                        )
-                    ),
-                    new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO))
-                )
-            )
-        )
-    );
-```
-
-The AST can then be interpreted and a scope object constructed:
-
-```java
-Scope{ parent    = Scope{...},
-       variables = {}, 
-       functions = { 
-                     print/1 = Function{ name = 'print', arity = 1, function = plc.project.Interpreter$$Lambda/hex_address },
-                     main/0  = Function{ name = 'main', arity = 0, function = plc.project.Interpreter$$Lambda/hex_address } 
-       }
-}
-```
-
-Finally, the main function will be called as an entry point, this will run the print statement and return zero.
-
+---
 
 ideas
 Java attempts to define more at language design time to allow the JVM to be portable.

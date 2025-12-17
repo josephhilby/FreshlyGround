@@ -36,8 +36,18 @@ public final class Environment {
         TYPES.put(type.getName(), type);
     }
 
+    /**
+     * Represents a nominal type in the language's type system.
+     *
+     * <p>Each {@code Type} owns a {@link Scope} that is parented to the scope of its
+     * supertype, forming a simple type hierarchy (e.g., {@code Decimal → Comparable → Any}).
+     * This scope chain is used to model inherited type-level operations and built-in
+     * functions via lexical lookup.</p>
+     *
+     * <p>The type hierarchy is intentionally shallow and closed: all types are singletons
+     * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
+     */
     public static final class Type {
-
         public static final Type ANY = new Type("Any", "Object", new Scope(null));
         public static final Type NIL = new Type("Nil", "Void", new Scope(ANY.scope));
         public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY.scope));
@@ -135,10 +145,6 @@ public final class Environment {
             return value;
         }
 
-        public void setField(String name, PlcObject value) {
-            scope.lookupVariable(name).setValue(value);
-        }
-
         public PlcObject callMethod(String name, List<PlcObject> arguments) {
             Function function = scope.lookupFunction(name, arguments.size() + 1);
             arguments = new ArrayList<>(arguments);
@@ -163,18 +169,12 @@ public final class Environment {
         private final String jvmName;
         private final boolean constant;
         private final Type type;
-        private PlcObject value;
 
-        public Variable(String name, boolean constant, PlcObject value) {
-            this(name, name, Type.ANY, constant, value);
-        }
-
-        public Variable(String name, String jvmName, Type type, boolean constant, PlcObject value) {
+        public Variable(String name, String jvmName, Type type, boolean constant) {
             this.name = name;
             this.jvmName = jvmName;
             this.type = type;
             this.constant = constant;
-            this.value = value;
         }
 
         public Type getType() {
@@ -193,14 +193,6 @@ public final class Environment {
             return constant;
         }
 
-        public PlcObject getValue() {
-            return value;
-        }
-
-        public void setValue(PlcObject value) {
-            this.value = value;
-        }
-
         @Override
         public boolean equals(Object obj) {
             return obj instanceof Variable &&
@@ -217,10 +209,9 @@ public final class Environment {
                     ", jvmName'" + jvmName + '\'' +
                     ", type=" + type +
                     ", constant=" + constant +
-                    ", value=" + value +
+//                    ", value=" + value +
                     '}';
         }
-
     }
 
     public static final class Function implements Named, Typed<Type> {
@@ -230,13 +221,6 @@ public final class Environment {
         private final List<Type> parameterTypes;
         private final Type returnType;
         private final java.util.function.Function<List<PlcObject>, PlcObject> function;
-
-        public Function(String name, int arity, java.util.function.Function<List<PlcObject>, PlcObject> function) {
-            this(name, name, new ArrayList<>(), Type.ANY, function);
-            for (int i = 0; i < arity; i++) {
-                this.parameterTypes.add(Type.ANY);
-            }
-        }
 
         public Function(String name, String jvmName, List<Type> parameterTypes, Type returnType, java.util.function.Function<List<PlcObject>, PlcObject> function) {
             this.name = name;
@@ -266,11 +250,6 @@ public final class Environment {
             return returnType;
         }
 
-        // to maintain backwards compatibility, we include getArity
-        public int getArity() {
-            return parameterTypes.size();
-        }
-
         public PlcObject invoke(List<PlcObject> arguments) {
             return function.apply(arguments);
         }
@@ -278,24 +257,23 @@ public final class Environment {
         @Override
         public boolean equals(Object obj) {
             return obj instanceof Function &&
-                    name.equals(((Function) obj).name) &&
-                    jvmName.equals(((Function) obj).jvmName) &&
-                    parameterTypes.equals(((Function) obj).parameterTypes) &&
-                    returnType.equals(((Function) obj).returnType);
+                name.equals(((Function) obj).name) &&
+                jvmName.equals(((Function) obj).jvmName) &&
+                parameterTypes.equals(((Function) obj).parameterTypes) &&
+                returnType.equals(((Function) obj).returnType);
         }
 
         @Override
         public String toString() {
             return "Function{" +
-                    "name='" + name + '\'' +
-                    ", jvmName='" + jvmName + '\'' +
-                    ", arity=" + parameterTypes.size() +
-                    ", parameterTypes=" + parameterTypes +
-                    ", returnType=" + returnType +
-                    ", function=" + function +
-                    '}';
+                "name='" + name + '\'' +
+                ", jvmName='" + jvmName + '\'' +
+                ", arity=" + parameterTypes.size() +
+                ", parameterTypes=" + parameterTypes +
+                ", returnType=" + returnType +
+                ", function=" + function +
+                '}';
         }
-
     }
 
     static {
@@ -312,9 +290,8 @@ public final class Environment {
         Type.INTEGER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER, args -> Environment.NIL);
         Type.DECIMAL.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL, args -> Environment.NIL);
         Type.CHARACTER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.CHARACTER), Type.CHARACTER, args -> Environment.NIL);
-        Type.STRING.scope.defineVariable("length", "length()", Type.INTEGER, false, Environment.NIL);
+        Type.STRING.scope.defineVariable("length", "length()", Type.INTEGER, false);
         Type.STRING.scope.defineFunction("slice", "substring", Arrays.asList(Type.ANY, Type.INTEGER, Type.INTEGER), Type.STRING, args -> Environment.NIL);
         Type.STRING.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.STRING), Type.STRING, args -> Environment.NIL);
     }
-
 }
