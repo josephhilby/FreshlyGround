@@ -1,4 +1,7 @@
-package plc.project;
+package freshlyground.frontend;
+
+import freshlyground.semantic.Environment;
+import freshlyground.semantic.Scope;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -12,7 +15,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Scope scope;
     private Environment.Type returnType;
 
-    public Analyzer(Scope parent) {
+    public Analyzer(Scope global) {
+        scope = global;
+    }
+
+    public Analyzer(Scope parent, boolean test) {
         scope = new Scope(parent);
         scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
     }

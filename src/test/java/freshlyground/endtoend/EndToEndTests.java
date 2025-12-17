@@ -1,5 +1,9 @@
-package plc.project;
+package freshlyground.endtoend;
 
+import freshlyground.backend.Generator;
+import freshlyground.frontend.*;
+import freshlyground.semantic.Environment;
+import freshlyground.semantic.Scope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -761,7 +765,7 @@ public class EndToEndTests {
         Ast ast = function.apply(parser);
 
         // ast -> ANALYZER -> ast (decorated)
-        Analyzer analyzer = new Analyzer(scope);
+        Analyzer analyzer = new Analyzer(scope, true);
         analyzer.visit(ast);
 
         // ast (decorated) -> GENERATOR -> java

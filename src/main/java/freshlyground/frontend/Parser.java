@@ -1,4 +1,4 @@
-package plc.project;
+package freshlyground.frontend;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

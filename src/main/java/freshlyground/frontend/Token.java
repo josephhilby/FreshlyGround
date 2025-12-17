@@ -1,4 +1,4 @@
-package plc.project;
+package freshlyground.frontend;
 
 /**
  * A {@code Token} represents a single lexical unit produced by the {@link Lexer}.

@@ -1,4 +1,4 @@
-package plc.project;
+package freshlyground.semantic;
 
 import java.util.Arrays;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package plc.project;
+package freshlyground.frontend;
 
 /**
  * A {@code ParseException} represents an unrecoverable syntax error encountered

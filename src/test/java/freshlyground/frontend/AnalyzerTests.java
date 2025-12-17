@@ -1,5 +1,7 @@
-package plc.project;
+package freshlyground.frontend;
 
+import freshlyground.semantic.Environment;
+import freshlyground.semantic.Scope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1073,7 +1075,7 @@ public final class AnalyzerTests {
      * is expected to throw a {@link RuntimeException}.
      */
     private static <T extends Ast> Analyzer test(T ast, T expected, Scope scope) {
-        Analyzer analyzer = new Analyzer(scope);
+        Analyzer analyzer = new Analyzer(scope, true);
         if (expected != null) {
             analyzer.visit(ast);
             Assertions.assertEquals(expected, ast);

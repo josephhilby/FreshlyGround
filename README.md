@@ -2,7 +2,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/<your_repo>">
-    <img src="images/banner.png" alt="Logo" width="80%">
+    <img src="assets/banner.png" alt="Logo" width="80%">
   </a>
 
   <h3>

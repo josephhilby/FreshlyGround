@@ -1,4 +1,4 @@
-package plc.project;
+package freshlyground.frontend;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

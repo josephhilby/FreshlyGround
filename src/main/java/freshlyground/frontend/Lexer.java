@@ -1,4 +1,4 @@
-package plc.project;
+package freshlyground.frontend;
 
 import java.util.ArrayList;
 import java.util.List;

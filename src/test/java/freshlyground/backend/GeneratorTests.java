@@ -1,5 +1,8 @@
-package plc.project;
+package freshlyground.backend;
 
+import freshlyground.frontend.Ast;
+import freshlyground.semantic.Environment;
+import freshlyground.semantic.Scope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
