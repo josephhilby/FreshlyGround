@@ -39,7 +39,7 @@ public class CompilerMain {
         Ast.Source ast = parser.parseSource();
 
         if (opt.dumpAst) {
-            System.out.println("Ast:");
+            System.out.println("Undecorated AST:");
             System.out.println(ast);
             System.out.println();
         }
@@ -49,7 +49,7 @@ public class CompilerMain {
         analyzer.visit(ast);
 
         if (opt.dumpDecorated) {
-            System.out.println("Decorated:");
+            System.out.println("Decorated AST:");
             System.out.println(ast);
             System.out.println();
         }

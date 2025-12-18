@@ -6,14 +6,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * See each project assignment specification for specific notes on the AST classes
- * and how to use this hierarchy.
- */
 public abstract class Ast {
 
     public static final class Source extends Ast {
-
         private final List<Field> fields;
         private final List<Method> methods;
 
@@ -22,13 +17,8 @@ public abstract class Ast {
             this.methods = methods;
         }
 
-        public List<Ast.Field> getFields() {
-            return fields;
-        }
-
-        public List<Method> getMethods() {
-            return methods;
-        }
+        public List<Ast.Field> getFields() { return fields; }
+        public List<Method> getMethods() { return methods; }
 
         @Override
         public boolean equals(Object obj) {
@@ -48,7 +38,6 @@ public abstract class Ast {
     }
 
     public static final class Field extends Ast {
-
         private final String name;
         private final String typeName;
         private final boolean constant;
@@ -62,33 +51,20 @@ public abstract class Ast {
             this.value = value;
         }
 
-        public String getName() {
-            return name;
-        }
-
-        public String getTypeName() {
-            return typeName;
-        }
-
-        public boolean getConstant() {
-            return constant;
-        }
-
-        public Optional<Ast.Expression> getValue() {
-            return value;
-        }
+        public String getName() { return name; }
+        public String getTypeName() { return typeName; }
+        public boolean getConstant() { return constant; }
+        public Optional<Ast.Expression> getValue() { return value; }
 
         public Environment.Variable getVariable() {
             if (variable == null) {
                 throw new IllegalStateException("variable is uninitialized");
             }
+
             return variable;
         }
 
-        public void setVariable(Environment.Variable variable) {
-            this.variable = variable;
-        }
-
+        public void setVariable(Environment.Variable variable) { this.variable = variable; }
 
         @Override
         public boolean equals(Object obj) {
@@ -113,7 +89,6 @@ public abstract class Ast {
     }
 
     public static final class Method extends Ast {
-
         private final String name;
         private final List<String> parameters;
         private final List<String> parameterTypeNames;
@@ -122,7 +97,6 @@ public abstract class Ast {
         private Environment.Function function = null;
 
         public Method(String name, List<String> parameters, List<String> parameterTypeNames, Optional<String> returnTypeName, List<Statement> statements) {
-
             this.name = name;
             this.parameters = parameters;
             this.parameterTypeNames = parameterTypeNames;
@@ -130,37 +104,21 @@ public abstract class Ast {
             this.statements = statements;
         }
 
-        public String getName() {
-            return name;
-        }
-
-        public List<String> getParameters() {
-            return parameters;
-        }
-
-        public List<String> getParameterTypeNames() {
-            return parameterTypeNames;
-        }
-
-        public Optional<String> getReturnTypeName() {
-            return returnTypeName;
-        }
-
-        public List<Statement> getStatements() {
-            return statements;
-        }
+        public String getName() { return name; }
+        public List<String> getParameters() { return parameters; }
+        public List<String> getParameterTypeNames() { return parameterTypeNames; }
+        public Optional<String> getReturnTypeName() { return returnTypeName; }
+        public List<Statement> getStatements() { return statements; }
 
         public Environment.Function getFunction() {
             if (function == null) {
                 throw new IllegalStateException("function is uninitialized");
             }
+
             return function;
         }
 
-        public void setFunction(Environment.Function function) {
-            this.function = function;
-        }
-
+        public void setFunction(Environment.Function function) { this.function = function; }
 
         @Override
         public boolean equals(Object obj) {
@@ -173,7 +131,6 @@ public abstract class Ast {
                     Objects.equals(function, ((Ast.Method) obj).function);
         }
 
-
         @Override
         public String toString() {
             return "Method{" +
@@ -185,22 +142,18 @@ public abstract class Ast {
                     ", function=" + function +
                     '}';
         }
-
     }
 
     public static abstract class Statement extends Ast {
 
         public static final class Expression extends Statement {
-
             private final Ast.Expression expression;
 
             public Expression(Ast.Expression expression) {
                 this.expression = expression;
             }
 
-            public Ast.Expression getExpression() {
-                return expression;
-            }
+            public Ast.Expression getExpression() { return expression; }
 
             @Override
             public boolean equals(Object obj) {
@@ -214,14 +167,12 @@ public abstract class Ast {
                         "expression=" + expression +
                         '}';
             }
-
         }
 
         public static final class Declaration extends Statement {
-
-            private String name;
+            private final String name;
             private final Optional<String> typeName;
-            private Optional<Ast.Expression> value;
+            private final Optional<Ast.Expression> value;
             private Environment.Variable variable = null;
 
             public Declaration(String name, Optional<String> typeName, Optional<Ast.Expression> value) {
@@ -230,30 +181,22 @@ public abstract class Ast {
                 this.value = value;
             }
 
-            public String getName() {
-                return name;
-            }
-
-            public Optional<String> getTypeName() {
-                return typeName;
-            }
-
-            public Optional<Ast.Expression> getValue() {
-                return value;
-            }
+            public String getName() { return name; }
+            public Optional<String> getTypeName() { return typeName; }
+            public Optional<Ast.Expression> getValue() { return value; }
 
             public Environment.Variable getVariable() {
                 if (variable == null) {
                     throw new IllegalStateException("variable is uninitialized");
                 }
+
                 return variable;
             }
 
             public void setVariable(Environment.Variable variable) {
                 this.variable = variable;
             }
-            
-            
+
             @Override
             public boolean equals(Object obj) {
                 return obj instanceof Declaration &&
@@ -272,11 +215,9 @@ public abstract class Ast {
                         ", variable=" + variable +
                         '}';
             }
-
         }
 
         public static final class Assignment extends Statement {
-
             private final Ast.Expression receiver;
             private final Ast.Expression value;
 
@@ -285,13 +226,8 @@ public abstract class Ast {
                 this.value = value;
             }
 
-            public Ast.Expression getReceiver() {
-                return receiver;
-            }
-
-            public Ast.Expression getValue() {
-                return value;
-            }
+            public Ast.Expression getReceiver() { return receiver; }
+            public Ast.Expression getValue() { return value; }
 
             @Override
             public boolean equals(Object obj) {
@@ -301,21 +237,18 @@ public abstract class Ast {
             }
 
             @Override
-            public final String toString() {
+            public String toString() {
                 return "Ast.Statement.Assignment{" +
                         "receiver=" + receiver +
                         ", value=" + value +
                         '}';
             }
-
         }
 
         public static final class If extends Statement {
-
             private final Ast.Expression condition;
             private final List<Statement> thenStatements;
             private final List<Statement> elseStatements;
-
 
             public If(Ast.Expression condition, List<Statement> thenStatements, List<Statement> elseStatements) {
                 this.condition = condition;
@@ -323,17 +256,9 @@ public abstract class Ast {
                 this.elseStatements = elseStatements;
             }
 
-            public Ast.Expression getCondition() {
-                return condition;
-            }
-
-            public List<Statement> getThenStatements() {
-                return thenStatements;
-            }
-
-            public List<Statement> getElseStatements() {
-                return elseStatements;
-            }
+            public Ast.Expression getCondition() { return condition; }
+            public List<Statement> getThenStatements() { return thenStatements; }
+            public List<Statement> getElseStatements() { return elseStatements; }
 
             @Override
             public boolean equals(Object obj) {
@@ -351,11 +276,9 @@ public abstract class Ast {
                         ", elseStatements=" + elseStatements +
                         '}';
             }
-
         }
 
         public static final class For extends Statement {
-
             private final Statement initialization;
             private final Ast.Expression condition;
             private final Statement increment;
@@ -368,50 +291,18 @@ public abstract class Ast {
                 this.statements = statements;
             }
 
-            public Ast.Statement getInitialization() {
-                return initialization;
-            }
-
-            public Ast.Expression getCondition() {
-                return condition;
-            }
-
-            public Ast.Statement getIncrement() {
-                return increment;
-            }
-
-            public List<Statement> getStatements() {
-                return statements;
-            }
+            public Ast.Statement getInitialization() { return initialization; }
+            public Ast.Expression getCondition() { return condition; }
+            public Ast.Statement getIncrement() { return increment; }
+            public List<Statement> getStatements() { return statements; }
 
             @Override
             public boolean equals(Object obj) {
-
-                boolean init, incr;
-                For myFor = null;
-
-                if (obj instanceof For) {
-                    myFor = (For) obj;
-                } else {
-                    return false;
-                }
-
-                if (initialization == null || myFor.initialization == null) {
-                    init = initialization == myFor.initialization;
-                } else {
-                    init = initialization.equals(myFor.initialization);
-                }
-
-                if (increment == null || myFor.increment == null) {
-                    incr = increment == myFor.increment;
-                } else {
-                    incr = increment.equals(myFor.increment);
-                }
-
-                return  init &&
-                        condition.equals(myFor.condition) &&
-                        incr &&
-                        statements.equals(myFor.statements);
+                return obj instanceof For &&
+                    initialization.equals(((For) obj).initialization) &&
+                    condition.equals(((For) obj).condition) &&
+                    increment.equals(((For) obj).increment) &&
+                    statements.equals(((For) obj).statements);
             }
 
             @Override
@@ -426,7 +317,6 @@ public abstract class Ast {
         }
 
         public static final class While extends Statement {
-
             private final Ast.Expression condition;
             private final List<Statement> statements;
 
@@ -435,13 +325,8 @@ public abstract class Ast {
                 this.statements = statements;
             }
 
-            public Ast.Expression getCondition() {
-                return condition;
-            }
-
-            public List<Statement> getStatements() {
-                return statements;
-            }
+            public Ast.Expression getCondition() { return condition; }
+            public List<Statement> getStatements() { return statements; }
 
             @Override
             public boolean equals(Object obj) {
@@ -457,20 +342,16 @@ public abstract class Ast {
                         ", statements=" + statements +
                         '}';
             }
-
         }
 
         public static final class Return extends Statement {
-
             private final Ast.Expression value;
 
             public Return(Ast.Expression value) {
                 this.value = value;
             }
 
-            public Ast.Expression getValue() {
-                return value;
-            }
+            public Ast.Expression getValue() { return value; }
 
             @Override
             public boolean equals(Object obj) {
@@ -484,38 +365,32 @@ public abstract class Ast {
                         "value=" + value +
                         '}';
             }
-
         }
     }
 
     public static abstract class Expression extends Ast {
+        protected Environment.Type type;
 
-        public abstract Environment.Type getType();
+        public Environment.Type getType() {
+            if (type == null) {
+                throw new IllegalStateException("type is uninitialized");
+            }
+
+            return type;
+        }
+
+        public final void setType(Environment.Type type) {
+            this.type = type;
+        }
 
         public static final class Literal extends Ast.Expression {
-
             private final Object literal;
-            private Environment.Type type = null;
             
             public Literal(Object literal) {
                 this.literal = literal;
             }
 
-            public Object getLiteral() {
-                return literal;
-            }
-
-            @Override
-            public Environment.Type getType() {
-                if (type == null) {
-                    throw new IllegalStateException("type is uninitialized");
-                }
-                return type;
-            }
-
-            public void setType(Environment.Type type) {
-                this.type = type;
-            }
+            public Object getLiteral() { return literal; }
 
             @Override
             public boolean equals(Object obj) {
@@ -531,34 +406,16 @@ public abstract class Ast {
                         ", type=" + type +
                         '}';
             }
-
         }
 
         public static final class Group extends Ast.Expression {
-
             private final Ast.Expression expression;
-            private Environment.Type type = null;
 
             public Group(Ast.Expression expression) {
                 this.expression = expression;
             }
 
-            public Ast.Expression getExpression() {
-                return expression;
-            }
-
-            @Override
-            public Environment.Type getType() {
-                if (type == null) {
-                    throw new IllegalStateException("type is uninitialized");
-                }
-                return type;
-            }
-
-            public void setType(Environment.Type type) {
-                this.type = type;
-            }
-
+            public Ast.Expression getExpression() { return expression; }
 
             @Override
             public boolean equals(Object obj) {
@@ -567,7 +424,6 @@ public abstract class Ast {
                         Objects.equals(type, ((Group) obj).type);
             }
 
-
             @Override
             public String toString() {
                 return "Ast.Expression.Group{" +
@@ -575,15 +431,12 @@ public abstract class Ast {
                         ", type=" + type +
                         '}';
             }
-
         }
 
         public static final class Binary extends Ast.Expression {
-
             private final String operator;
             private final Ast.Expression left;
             private final Ast.Expression right;
-            private Environment.Type type = null;
 
             public Binary(String operator, Ast.Expression left, Ast.Expression right) {
                 this.operator = operator;
@@ -591,29 +444,9 @@ public abstract class Ast {
                 this.right = right;
             }
 
-            public String getOperator() {
-                return operator;
-            }
-
-            public Ast.Expression getLeft() {
-                return left;
-            }
-
-            public Ast.Expression getRight() {
-                return right;
-            }
-
-            @Override
-            public Environment.Type getType() {
-                if (type == null) {
-                    throw new IllegalStateException("type is uninitialized");
-                }
-                return type;
-            }
-
-            public void setType(Environment.Type type) {
-                this.type = type;
-            }
+            public String getOperator() { return operator; }
+            public Ast.Expression getLeft() { return left; }
+            public Ast.Expression getRight() { return right; }
 
             @Override
             public boolean equals(Object obj) {
@@ -633,11 +466,9 @@ public abstract class Ast {
                         ", type=" + type +
                         '}';
             }
-
         }
 
         public static final class Access extends Ast.Expression {
-
             private final Optional<Ast.Expression> receiver;
             private final String name;
             private Environment.Variable variable = null;
@@ -647,18 +478,14 @@ public abstract class Ast {
                 this.name = name;
             }
 
-            public Optional<Ast.Expression> getReceiver() {
-                return receiver;
-            }
-
-            public String getName() {
-                return name;
-            }
+            public Optional<Ast.Expression> getReceiver() { return receiver; }
+            public String getName() { return name; }
 
             public Environment.Variable getVariable() {
                 if (variable == null) {
                     throw new IllegalStateException("variable is uninitialized");
                 }
+
                 return variable;
             }
 
@@ -679,7 +506,6 @@ public abstract class Ast {
                         Objects.equals(variable, ((Access) obj).variable);
             }
 
-
             @Override
             public String toString() {
                 return "Ast.Expression.Access{" +
@@ -688,11 +514,9 @@ public abstract class Ast {
                         ", variable=" + variable +
                         '}';
             }
-
         }
 
         public static final class Function extends Ast.Expression {
-
             private final Optional<Ast.Expression> receiver;
             private final String name;
             private final List<Ast.Expression> arguments;
@@ -704,28 +528,19 @@ public abstract class Ast {
                 this.arguments = arguments;
             }
 
-            public Optional<Ast.Expression> getReceiver() {
-                return receiver;
-            }
-
-            public String getName() {
-                return name;
-            }
-
-            public List<Ast.Expression> getArguments() {
-                return arguments;
-            }
+            public Optional<Ast.Expression> getReceiver() { return receiver; }
+            public String getName() { return name; }
+            public List<Ast.Expression> getArguments() { return arguments; }
 
             public Environment.Function getFunction() {
                 if (function == null) {
                     throw new IllegalStateException("function is uninitialized");
                 }
+
                 return function;
             }
 
-            public void setFunction(Environment.Function function) {
-                this.function = function;
-            }
+            public void setFunction(Environment.Function function) { this.function = function; }
 
             @Override
             public Environment.Type getType() {
@@ -750,7 +565,6 @@ public abstract class Ast {
                         ", function=" + function +
                         '}';
             }
-
         }
     }
 
@@ -808,33 +622,19 @@ public abstract class Ast {
         }
 
         T visit(Ast.Source ast);
-
         T visit(Ast.Field ast);
-
         T visit(Ast.Method ast);
-
         T visit(Ast.Statement.Expression ast);
-
         T visit(Ast.Statement.Declaration ast);
-
         T visit(Ast.Statement.Assignment ast);
-
         T visit(Ast.Statement.If ast);
-
         T visit(Ast.Statement.For ast);
-
         T visit(Ast.Statement.While ast);
-
         T visit(Ast.Statement.Return ast);
-
         T visit(Ast.Expression.Literal ast);
-
         T visit(Ast.Expression.Group ast);
-
         T visit(Ast.Expression.Binary ast);
-
         T visit(Ast.Expression.Access ast);
-
         T visit(Ast.Expression.Function ast);
     }
 }

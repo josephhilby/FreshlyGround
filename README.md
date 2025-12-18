@@ -87,7 +87,7 @@ This project defines its grammar using Extended Backus–Naur Form (EBNF). EBNF 
 supports a top-down (recursive-descent) parsing strategy with linear-time complexity. 
 
 This parser begins at a predetermined start symbol (**S**) and incrementally constructs the AST by:
-- Consuming a terminal symbols (**Σ**) produced by the lexer, and placing it as leaf nodes.
+- Consuming a terminal symbol (**Σ**) produced by the lexer, and placing it as leaf nodes.
 - Creating non-terminal symbols (**N**) according to the CFG production rules (**P**), and placing them as internal nodes.
 
 The resulting AST captures the hierarchical structure of the program and serves as the input to subsequent 
@@ -192,7 +192,7 @@ FreshlyGround enforces lexical (static) scoping with the following rules:
 > └─ "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
 >     └─> Ast.Field(name=identifier, typeName=identifier, constant=bool, value=expression)
 >  
-> method
+>method
 > └─ "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] 
 >     │ "DO" { statement } "END"
 >     └─> Ast.Method(name=identifier, 
@@ -291,9 +291,8 @@ FreshlyGround enforces lexical (static) scoping with the following rules:
 ```
 LET x: Integer = 10;
 ```
-Before getting too far into the weeds, note that this snippet would fail to compile because 
-FreshlyGround requires a `main()` method as an entry point. This example will ignore that and remain intentionally minimal 
-in order to illustrate the compilation pipeline on a small, readable input.
+While the above snippet is valid, by itself it would fail to compile. This is because FreshlyGround requires a `main()` 
+method as an entry point in all source code files. For simplicity, we will not include a `main()` method in this example.
 
 ### Syntactic Analysis (Lexing and Parsing)
 The lexer tokenizes the source code into a typed token stream. For this input, the relevant tokens correspond to:
@@ -330,9 +329,9 @@ field
 
 At this time the parser has enforced only syntax. While the field type (`Integer`) and expression literal type 
 (`integer`) do match -- that is to say the statement is semantically correct -- if they did not, the parser would 
-not care. That will be checked later.
+not care. Semantics will be checked later.
 
-All programs in FreshlyGround parse from the source entry point. Conceptually, this example becomes a `source` 
+All programs in FreshlyGround parse from the source entry point. Consequently, this example becomes a `source` 
 node containing a single field and no methods:
 
 ```yaml
@@ -356,8 +355,8 @@ The analyzer performs a pre-order traversal over the AST and applies the languag
 Where the scope will define visibility and environment will define meaning. During this pass, it:
 - Declares `x` in the current scope as an `Environment.Variable`
 - Resolves the declared type to a concrete `Environment.Type`
-- Infers and assigns the literal type to a concrete `Environment.Type`.
-- Attaches the variable and type metadata onto the AST ("Decorates").
+- Infers and assigns the literal type to a concrete `Environment.Type`
+- Attaches the variable and type metadata onto the AST (i.e., "Decorates the AST")
 
 ```java
 // Current Scope

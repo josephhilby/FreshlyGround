@@ -42,11 +42,11 @@ public final class AnalyzerTests {
         Environment.Function _main = new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER);
         Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
         Environment.Function _reverse = new Environment.Function("reverse", "reverse", Arrays.asList(Environment.Type.STRING), Environment.Type.STRING);
-        Environment.Function _slice = Environment.Type.STRING.getFunction("slice", 2);
+        Environment.Function _slice = Environment.Type.STRING.lookupFunction("slice", 2);
 
 
         Environment.Variable _s = new Environment.Variable("s", "s", Environment.Type.STRING, false);
-        Environment.Variable _length = Environment.Type.STRING.getField("length");
+        Environment.Variable _length = Environment.Type.STRING.lookupVariable("length");
 
         return Stream.of(
             Arguments.of("Valid Main",

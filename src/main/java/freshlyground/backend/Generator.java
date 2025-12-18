@@ -301,6 +301,6 @@ public final class Generator implements Ast.Visitor<Void> {
     }
 
     private String getJavaType(String plcTypeName) {
-        return Environment.getType(plcTypeName).getJvmName();
+        return Environment.lookupType(plcTypeName).getJvmName();
     }
 }

@@ -1563,7 +1563,7 @@ public class GeneratorTests {
     private static Stream<Arguments> testFunctionExpression() {
         Environment.Function _print = new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
         Environment.Function _func = new Environment.Function("func", "func", Arrays.asList(), Environment.Type.INTEGER);
-        Environment.Function _slice = Environment.Type.STRING.getFunction("slice", 2);
+        Environment.Function _slice = new Environment.Function("slice", "substring", Arrays.asList(Environment.Type.ANY, Environment.Type.INTEGER, Environment.Type.INTEGER), Environment.Type.STRING);
 
         return Stream.of(
             //Function (6)

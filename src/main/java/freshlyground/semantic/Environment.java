@@ -1,18 +1,29 @@
 package freshlyground.semantic;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <p>{@code Environment} defines the data structures used during semantic analysis
+ * and code generation (types, variables, functions). It does not model runtime values
+ * or execution.</p>
+ *
+ * <p>Built-in bindings (global functions and type members) are installed separately
+ * by {@link Builtins}.</p>
+ */
 public final class Environment {
 
+    /**
+     * Closed set of nominal types supported by the compiler.
+     */
     private static final Map<String, Type> TYPES = new HashMap<>();
 
-    public static Type getType(String name) {
+    public static Type lookupType(String name) {
         if (!TYPES.containsKey(name)) {
             throw new RuntimeException("Unknown type " + name + ".");
         }
+
         return TYPES.get(name);
     }
 
@@ -20,7 +31,19 @@ public final class Environment {
         if (TYPES.containsKey(type.getName())) {
             throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
         }
+
         TYPES.put(type.getName(), type);
+    }
+
+    static {
+        registerType(Type.ANY);
+        registerType(Type.NIL);
+        registerType(Type.COMPARABLE);
+        registerType(Type.BOOLEAN);
+        registerType(Type.INTEGER);
+        registerType(Type.DECIMAL);
+        registerType(Type.CHARACTER);
+        registerType(Type.STRING);
     }
 
     /**
@@ -54,25 +77,22 @@ public final class Environment {
             this.scope = scope;
         }
 
-        public String getName() {
-            return name;
-        }
+        public String getName() { return name; }
+        public String getJvmName() { return jvmName; }
+        public Scope getScope() { return this.scope; }
 
-        public String getJvmName() {
-            return jvmName;
-        }
-
-        public Scope getScope() {
-            return this.scope;
-        }
-
-        public Variable getField(String name) {
-            return scope.lookupVariable(name);
-        }
-
-        public Function getFunction(String name, int arity) {
-            return scope.lookupFunction(name, arity + 1);
-        }
+        /**
+         * Looks up a member function by name and explicit arity.
+         *
+         * <p>Member functions are stored in the type scope with an implicit receiver
+         * parameter as argument 0 (i.e., {@code this}). Therefore, this method adds 1
+         * to the explicit arity when performing lookup.</p>
+         *
+         * @param name the member function name
+         * @param arity the number of explicit arguments at the call site
+         */
+        public Function lookupFunction(String name, int arity) { return scope.lookupFunction(name, arity + 1); }
+        public Variable lookupVariable(String name) { return scope.lookupVariable(name); }
 
         @Override
         public String toString() {
@@ -82,81 +102,9 @@ public final class Environment {
                     ", scope='" + scope + '\'' +
                     '}';
         }
-
     }
 
-    /**
-     * A thing which is Typed implements this class.
-     *
-     * Declares methods for getting the type of the thing.
-     */
-    public interface Typed<T> {
-        T getType();
-    }
-
-    /**
-     * A thing which is Named implements this interface.
-     *
-     * Declares methods for getting the name and jvmName for the thing.
-     */
-    public interface Named {
-        String getName();
-        String getJvmName();
-    }
-
-    public static final class Variable implements Named, Typed<Type> {
-
-        private final String name;
-        private final String jvmName;
-        private final boolean constant;
-        private final Type type;
-
-        public Variable(String name, String jvmName, Type type, boolean constant) {
-            this.name = name;
-            this.jvmName = jvmName;
-            this.type = type;
-            this.constant = constant;
-        }
-
-        public Type getType() {
-            return type;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getJvmName() {
-            return jvmName;
-        }
-        
-        public boolean getConstant() {
-            return constant;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj instanceof Variable &&
-                    name.equals(((Variable) obj).name) &&
-                    jvmName.equals(((Variable) obj).jvmName) &&
-                    constant == ((Variable) obj).constant &&
-                    type.equals(((Variable) obj).type);
-        }
-
-        @Override
-        public String toString() {
-            return "Variable{" +
-                    "name='" + name + '\'' +
-                    ", jvmName'" + jvmName + '\'' +
-                    ", type=" + type +
-                    ", constant=" + constant +
-//                    ", value=" + value +
-                    '}';
-        }
-    }
-
-    public static final class Function implements Named, Typed<Type> {
-
+    public static final class Function {
         private final String name;
         private final String jvmName;
         private final List<Type> parameterTypes;
@@ -169,26 +117,10 @@ public final class Environment {
             this.returnType = returnType;
         }
 
-        public String getName() {
-            return name;
-        }
-
-        public String getJvmName() {
-            return jvmName;
-        }
-
-        public List<Type> getParameterTypes() {
-            return parameterTypes;
-        }
-
-        public Type getReturnType() {
-            return returnType;
-        }
-
-        public Type getType() {
-            return returnType;
-        }
-
+        public String getName() { return name; }
+        public String getJvmName() { return jvmName; }
+        public List<Type> getParameterTypes() { return parameterTypes; }
+        public Type getReturnType() { return returnType; }
 
         @Override
         public boolean equals(Object obj) {
@@ -211,22 +143,41 @@ public final class Environment {
         }
     }
 
-    static {
-        registerType(Type.ANY);
-        registerType(Type.NIL);
-        registerType(Type.COMPARABLE);
-        registerType(Type.BOOLEAN);
-        registerType(Type.INTEGER);
-        registerType(Type.DECIMAL);
-        registerType(Type.CHARACTER);
-        registerType(Type.STRING);
-        Type.ANY.scope.defineFunction("stringify", "toString", Arrays.asList(), Type.STRING);
-        Type.COMPARABLE.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.COMPARABLE), Type.COMPARABLE);
-        Type.INTEGER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER);
-        Type.DECIMAL.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL);
-        Type.CHARACTER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.CHARACTER), Type.CHARACTER);
-        Type.STRING.scope.defineVariable("length", "length()", Type.INTEGER, false);
-        Type.STRING.scope.defineFunction("slice", "substring", Arrays.asList(Type.ANY, Type.INTEGER, Type.INTEGER), Type.STRING);
-        Type.STRING.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.STRING), Type.STRING);
+    public static final class Variable {
+        private final String name;
+        private final String jvmName;
+        private final boolean constant;
+        private final Type type;
+
+        public Variable(String name, String jvmName, Type type, boolean constant) {
+            this.name = name;
+            this.jvmName = jvmName;
+            this.type = type;
+            this.constant = constant;
+        }
+
+        public String getName() { return name; }
+        public String getJvmName() { return jvmName; }
+        public boolean getConstant() { return constant; }
+        public Type getType() { return type; }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof Variable &&
+                name.equals(((Variable) obj).name) &&
+                jvmName.equals(((Variable) obj).jvmName) &&
+                constant == ((Variable) obj).constant &&
+                type.equals(((Variable) obj).type);
+        }
+
+        @Override
+        public String toString() {
+            return "Variable{" +
+                "name='" + name + '\'' +
+                ", jvmName'" + jvmName + '\'' +
+                ", type=" + type +
+                ", constant=" + constant +
+                '}';
+        }
     }
 }

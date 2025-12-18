@@ -1,12 +1,12 @@
 package freshlyground.frontend;
 
+import freshlyground.semantic.Builtins;
 import freshlyground.semantic.Environment;
 import freshlyground.semantic.Scope;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,11 +17,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Analyzer(Scope global) {
         scope = global;
+        Builtins.install(scope);
     }
 
     public Analyzer(Scope parent, boolean test) {
         scope = new Scope(parent);
-        scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
+        Builtins.install(scope);
     }
 
     public Scope getScope() {
@@ -63,7 +64,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(value.get());
 
             Environment.Type actual = value.get().getType();
-            Environment.Type target = Environment.getType(typeName);
+            Environment.Type target = Environment.lookupType(typeName);
             requireAssignable(target, actual);
         }
 
@@ -73,7 +74,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define variable in current scope, then set
-        Environment.Variable variable = scope.defineVariable(name, name, Environment.getType(typeName), constant);
+        Environment.Variable variable = scope.defineVariable(name, name, Environment.lookupType(typeName), constant);
         ast.setVariable(variable);
         return null;
     }
@@ -89,13 +90,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // check and set parameter types
         for (String type : ast.getParameterTypeNames()) {
-            paramTypes.add(Environment.getType(type));
+            paramTypes.add(Environment.lookupType(type));
         }
 
         // check and save return type
         returnType = Environment.Type.NIL;
         if (ast.getReturnTypeName().isPresent()) {
-            returnType = Environment.getType(ast.getReturnTypeName().get());
+            returnType = Environment.lookupType(ast.getReturnTypeName().get());
         }
 
         // define and set function in current scope
@@ -155,12 +156,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
             type = ast.getValue().get().getType();
 
         } else {
-            type = Environment.getType(ast.getTypeName().get());
+            type = Environment.lookupType(ast.getTypeName().get());
         }
 
         // throws a RuntimeException if: value exists AND not assignable to variable
         if (ast.getValue().isPresent() && ast.getTypeName().isPresent()) {
-            requireAssignable(Environment.getType(ast.getTypeName().get()), ast.getValue().get().getType());
+            requireAssignable(Environment.lookupType(ast.getTypeName().get()), ast.getValue().get().getType());
         }
 
         // define and set variable in current scope
@@ -424,7 +425,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
-            variable = receiver.getType().getField(ast.getName());
+            variable = receiver.getType().lookupVariable(ast.getName());
 
         } else {
             variable = scope.lookupVariable(ast.getName());
@@ -449,7 +450,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
 
-            function = receiver.getType().getFunction(ast.getName(), arguments.size());
+            function = receiver.getType().lookupFunction(ast.getName(), arguments.size());
             parameterOffset = 1;
         } else {
             function = scope.lookupFunction(ast.getName(), arguments.size());
