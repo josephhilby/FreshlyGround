@@ -1,4 +1,7 @@
-package freshlyground.frontend;
+package freshlyground.compiler.frontend;
+
+import freshlyground.common.CompilerException;
+import freshlyground.common.Token;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +21,13 @@ import java.util.List;
  * <p>To use the lexer call: {@code List<Token> tokens = new Lexer(source_code).lex()}<p/>
  *
  * <p>If the lexer encounters invalid syntax (e.g., an unterminated string or
- * malformed literal), it must throw a {@link ParseException} at the character
+ * malformed literal), it must throw a {@link CompilerException} at the character
  * index where the error occurred.</p>
  */
 public final class Lexer {
-
     private final CharStream chars;
+    private boolean peek(String... patterns) { return chars.peek(patterns); }
+    private boolean match(String... patterns) { return chars.match(patterns); }
 
     public Lexer(String input) {
         chars = new CharStream(input);
@@ -57,19 +61,8 @@ public final class Lexer {
      * lexing routine.
      *
      * <p>Since whitespace is already handled by {@link #lex()}, the current
-     * character is guaranteed to begin a valid token, as defined by the following
-     * rules: </p>
-     *
-     * <pre>
-     * identifier := [A-Za-z_] [A-Za-z0-9_-]*
-     * operator   := [<>!=] =? | 'any character'
-     *
-     * integer    := 0 | [+-]? [1-9] [0-9]*
-     * decimal    := [+-]? [0-9]+ \. [0-9]+
-     * character  := ^' ([^'\n\r\\] | 'escape') '$
-     * string     := ^" ([^"\n\r\\] | 'escape')* "$
-     * escape     := ^\\ [bnrt'"\\]$
-     * </pre>
+     * character is guaranteed to begin a valid token, as defined by its specific
+     * lexical grammar rule. </p>
      *
      * @return the next {@link Token} identified in the input stream.
      */
@@ -80,8 +73,8 @@ public final class Lexer {
         if (peek("[0-9]")
                 || (
                     peek("[+-]", "[0-9]")
-                    && chars.previous != Token.Type.INTEGER
-                    && chars.previous != Token.Type.DECIMAL
+                    && chars.getPrevious() != Token.Type.INTEGER
+                    && chars.getPrevious() != Token.Type.DECIMAL
                     )) {
             return lexNumber(match("[+-]"));
         }
@@ -152,7 +145,7 @@ public final class Lexer {
     public Token lexCharacter() {
         matchCharacter();
         match("[^']");
-        if (match("'") && chars.length > 2) {
+        if (match("'") && chars.getLength() > 2) {
             return chars.emit(Token.Type.CHARACTER);
         }
         lexError("Missing char literal or empty/invalid character");
@@ -255,81 +248,13 @@ public final class Lexer {
     }
 
     /**
-     * A helper function throws a {@link ParseException} at the current
+     * A helper function throws a {@link CompilerException} at the current
      * {@link CharStream} index, with the provided error message.
      */
     private void lexError(String message) {
-        throw new ParseException(
+        throw new CompilerException(
             message,
-            chars.index
+            chars.getIndex()
         );
-    }
-
-    /**
-     * A helper function that returns true if the next sequence of characters
-     * match the given patterns, which should be a regex. For example,
-     * {@code peek("a", "b", "c")} would return true if the next {@link CharStream}
-     * characters are {@code 'abc'}.
-     */
-    public boolean peek(String... patterns) {
-        for (int i = 0; i < patterns.length; i++) {
-            if (!chars.has(i) || !String.valueOf(chars.get(i)).matches(patterns[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * A helper function that returns true in the same way as {@link #peek(String...)},
-     * but also advances the character stream past all matched characters if peek returns
-     * true.
-     */
-    public boolean match(String... patterns) {
-        boolean peek = peek(patterns);
-        if (peek) {
-            for (int i = 0; i < patterns.length; i++) {
-                chars.advance();
-            }
-        }
-        return peek;
-    }
-
-    /**
-     * A helper class maintaining the input string, current index of the char
-     * stream, and the current length of the token being matched.
-     */
-    public static final class CharStream {
-
-        private final String input;
-        private int index = 0;
-        private int length = 0;
-        private Token.Type previous = null;
-
-        public CharStream(String input) { this.input = input; }
-
-        public boolean has(int offset) {
-            return index + offset < input.length();
-        }
-
-        public char get(int offset) {
-            return input.charAt(index + offset);
-        }
-
-        public void advance() {
-            index++;
-            length++;
-        }
-
-        public void skip() {
-            length = 0;
-        }
-
-        public Token emit(Token.Type type) {
-            int start = index - length;
-            skip();
-            previous = type;
-            return new Token(type, input.substring(start, index), start);
-        }
     }
 }

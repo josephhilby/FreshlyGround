@@ -1,4 +1,4 @@
-package freshlyground.semantic;
+package freshlyground.compiler.semantic;
 
 import java.util.Arrays;
 

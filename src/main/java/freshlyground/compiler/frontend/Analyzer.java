@@ -1,8 +1,9 @@
-package freshlyground.frontend;
+package freshlyground.compiler.frontend;
 
-import freshlyground.semantic.Builtins;
-import freshlyground.semantic.Environment;
-import freshlyground.semantic.Scope;
+import freshlyground.common.CompilerException;
+import freshlyground.compiler.semantic.Builtins;
+import freshlyground.compiler.semantic.Environment;
+import freshlyground.compiler.semantic.Scope;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -41,10 +42,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(method);
         }
 
-        // throws a RuntimeException if: no 'main/0' type INT
+        // throws a CompilerException if: no 'main/0' type INT
         Environment.Function main = scope.lookupFunction("main", 0);
         if (main.getReturnType() != Environment.Type.INTEGER) {
-            throw new RuntimeException("main() return type must be an integer");
+            throw new CompilerException("main() return type must be an integer");
         }
 
         return null;
@@ -59,7 +60,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Optional<Ast.Expression> value = ast.getValue();
 
         // visit the value, if exists
-        // throws a RuntimeException if: value not assignable declared type
+        // throws a CompilerException if: value not assignable declared type
         if (value.isPresent()) {
             visit(value.get());
 
@@ -68,9 +69,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(target, actual);
         }
 
-        // throws a RuntimeException if: constant and no value assigned
+        // throws a CompilerException if: constant and no value assigned
         if (constant && value.isEmpty()) {
-            throw new RuntimeException("CONST must have a value");
+            throw new CompilerException("CONST must have a value");
         }
 
         // define variable in current scope, then set
@@ -129,9 +130,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // expression [ = expression ];
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        // throws a RuntimeException if: the expression is not an Ast.Expression.Function
+        // throws a CompilerException if: the expression is not an Ast.Expression.Function
         if (!(ast.getExpression() instanceof Ast.Expression.Function)) {
-            throw new RuntimeException("Expression must be a function");
+            throw new CompilerException("Expression must be a function");
         }
 
         // visit expression
@@ -145,9 +146,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
         String name = ast.getName();
         Environment.Type type;
 
-        // throws a RuntimeException if: no value AND no type
+        // throws a CompilerException if: no value AND no type
         if (ast.getValue().isEmpty() && ast.getTypeName().isEmpty()) {
-            throw new RuntimeException("Must have declared type or value");
+            throw new CompilerException("Must have declared type or value");
         }
 
         // visit value (if present) then set type
@@ -159,7 +160,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             type = Environment.lookupType(ast.getTypeName().get());
         }
 
-        // throws a RuntimeException if: value exists AND not assignable to variable
+        // throws a CompilerException if: value exists AND not assignable to variable
         if (ast.getValue().isPresent() && ast.getTypeName().isPresent()) {
             requireAssignable(Environment.lookupType(ast.getTypeName().get()), ast.getValue().get().getType());
         }
@@ -173,9 +174,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // receiver = value;
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        // throws a RuntimeException if: receiver is not Access
+        // throws a CompilerException if: receiver is not Access
         if (!(ast.getReceiver() instanceof Ast.Expression.Access receiver)) {
-            throw new RuntimeException("Receiver must be an access expression");
+            throw new CompilerException("Receiver must be an access expression");
         }
 
         visit(receiver);
@@ -183,10 +184,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // can't assign to constant
         if (receiver.getVariable().getConstant()) {
-            throw new RuntimeException("Cannot reassign constant");
+            throw new CompilerException("Cannot reassign constant");
         }
 
-        // throws a RuntimeException if: value is not assignable to receiver
+        // throws a CompilerException if: value is not assignable to receiver
         requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
         return null;
     }
@@ -198,12 +199,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         visit(condition);
 
-        // throws a RuntimeException if: condition not Bool
+        // throws a CompilerException if: condition not Bool
         requireAssignable(Environment.Type.BOOLEAN, condition.getType());
 
-        // throws a RuntimeException if: thenStatements empty
+        // throws a CompilerException if: thenStatements empty
         if (ast.getThenStatements().isEmpty()) {
-            throw new RuntimeException("IF block must contain at least one then statement");
+            throw new CompilerException("IF block must contain at least one then statement");
         }
 
         // visit then statements inside new scope
@@ -224,16 +225,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Ast.Statement.Assignment initialization;
         Ast.Statement.Assignment increment;
 
-        // throws a RuntimeException if: statements empty
+        // throws a CompilerException if: statements empty
         if (ast.getStatements().isEmpty()) {
-            throw new RuntimeException("FOR block must contain at least one statement");
+            throw new CompilerException("FOR block must contain at least one statement");
         }
 
         if (ast.getInitialization() != null) {
             visit(ast.getInitialization());
             initialization = (Ast.Statement.Assignment) ast.getInitialization();
 
-            // throws a RuntimeException if: initialization exists AND not Comparable
+            // throws a CompilerException if: initialization exists AND not Comparable
             requireAssignable(Environment.Type.COMPARABLE, initialization.getReceiver().getType());
         }
 
@@ -243,14 +244,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
             if (ast.getInitialization() != null) {
                 initialization = (Ast.Statement.Assignment) ast.getInitialization();
-                // throws a RuntimeException if: initialization AND increment exists AND NOT same type
+                // throws a CompilerException if: initialization AND increment exists AND NOT same type
                 requireAssignable(initialization.getReceiver().getType(), increment.getReceiver().getType());
             }
         }
 
         visit(ast.getCondition());
 
-        // throws a RuntimeException if: condition not Bool
+        // throws a CompilerException if: condition not Bool
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
 
         visitStatements(ast.getStatements());
@@ -263,7 +264,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Statement.While ast) {
         visit(ast.getCondition());
 
-        // throws a RuntimeException if: value is not Boolean
+        // throws a CompilerException if: value is not Boolean
         requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
 
         // visits WHILE statements in new scope
@@ -292,7 +293,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getValue());
         Environment.Type actualReturn = ast.getValue().getType();
 
-        // throws a RuntimeException if: value NOT assignable to return type
+        // throws a CompilerException if: value NOT assignable to return type
         requireAssignable(returnType, actualReturn);
 
         return null;
@@ -320,8 +321,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             if (bigInteger.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0 ||
                 bigInteger.compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) < 0) {
 
-                // throws a RuntimeException if: INT out of range
-                throw new RuntimeException("INT Overflow or Underflow");
+                // throws a CompilerException if: INT out of range
+                throw new CompilerException("INT Overflow or Underflow");
             }
             ast.setType(Environment.Type.INTEGER);
 
@@ -329,23 +330,23 @@ public final class Analyzer implements Ast.Visitor<Void> {
             if (bigDecimal.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0 ||
                 bigDecimal.compareTo(BigDecimal.valueOf(Double.MIN_VALUE)) < 0) {
 
-                // throws a RuntimeException if: DOUBLE out of range
-                throw new RuntimeException("DOUBLE Overflow or Underflow");
+                // throws a CompilerException if: DOUBLE out of range
+                throw new CompilerException("DOUBLE Overflow or Underflow");
             }
             ast.setType(Environment.Type.DECIMAL);
 
         } else {
-            // throws a RuntimeException if: Unknown Type
-            throw new RuntimeException("Unknown Type");
+            // throws a CompilerException if: Unknown Type
+            throw new CompilerException("Unknown Type");
         }
         return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        // throws a RuntimeException if: expression not a binary expression
+        // throws a CompilerException if: expression not a binary expression
         if (!(ast.getExpression() instanceof Ast.Expression.Binary)) {
-            throw new RuntimeException("Group expression must be binary");
+            throw new CompilerException("Group expression must be binary");
         }
 
         visit(ast.getExpression());
@@ -363,7 +364,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Environment.Type leftType = ast.getLeft().getType();
         Environment.Type rightType = ast.getRight().getType();
 
-        // throws a RuntimeException if: all errant casts
+        // throws a CompilerException if: all errant casts
         if (check(operator, "AND", "OR")) {
             requireAssignables(Environment.Type.BOOLEAN, leftType, rightType);
             ast.setType(Environment.Type.BOOLEAN);
@@ -386,12 +387,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 ast.setType(Environment.Type.DECIMAL);
 
             } else {
-                throw new RuntimeException("Arithmetic Operators must have matching types, INT or DECIMAL");
+                throw new CompilerException("Arithmetic Operators must have matching types, INT or DECIMAL");
             }
 
         } else {
-            // throws a RuntimeException if: Unknown Operator
-            throw new RuntimeException("Unknown Operator: " + operator);
+            // throws a CompilerException if: Unknown Operator
+            throw new CompilerException("Unknown Operator: " + operator);
         }
 
         return null;
@@ -475,7 +476,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (type1.equals(type2)) {
             return;
         }
-        throw new RuntimeException("Types mismatch");
+        throw new CompilerException("Types mismatch");
     }
 
     // helper
@@ -503,7 +504,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
      * <p>This method enforces the same type lattice implied by the scoped type hierarchy,
      * ensuring consistency between semantic type checking and type-level scope inheritance.</p>
      *
-     * @throws RuntimeException if the assignment is not permitted by the language rules
+     * @throws CompilerException if the assignment is not permitted by the language rules
      */
     public static void requireAssignable(Environment.Type target, Environment.Type actual) {
         if (target == actual ||
@@ -515,7 +516,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             return;
         }
 
-        // else RuntimeException
-        throw new RuntimeException("Type mismatch");
+        // else CompilerException
+        throw new CompilerException("Type mismatch");
     }
 }

@@ -1,7 +1,8 @@
-package freshlyground.backend;
+package freshlyground.compiler.backend;
 
-import freshlyground.semantic.Environment;
-import freshlyground.frontend.Ast;
+import freshlyground.common.CompilerException;
+import freshlyground.compiler.semantic.Environment;
+import freshlyground.compiler.frontend.Ast;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -238,7 +239,7 @@ public final class Generator implements Ast.Visitor<Void> {
             print("null");
 
         } else {
-            throw new RuntimeException("Unknown Type: " + ast.getType());
+            throw new CompilerException("Unknown Type: " + ast.getType());
         }
         return null;
     }

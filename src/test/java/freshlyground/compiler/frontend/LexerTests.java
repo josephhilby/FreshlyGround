@@ -1,5 +1,8 @@
-package freshlyground.frontend;
+package freshlyground.compiler.frontend;
 
+import freshlyground.common.CompilerException;
+import freshlyground.common.Token;
+import freshlyground.compiler.frontend.Lexer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -293,7 +296,7 @@ public class LexerTests {
 
     @Test
     void testException() {
-        ParseException exception = Assertions.assertThrows(ParseException.class,
+        CompilerException exception = Assertions.assertThrows(CompilerException.class,
                 () -> new Lexer("\"unterminated").lex());
         Assertions.assertEquals(13, exception.getIndex());
     }
@@ -309,7 +312,7 @@ public class LexerTests {
             } else {
                 Assertions.assertNotEquals(new Token(expected, input, 0), new Lexer(input).lexToken());
             }
-        } catch (ParseException e) {
+        } catch (CompilerException e) {
             Assertions.assertFalse(success, e.getMessage());
         }
     }
@@ -325,7 +328,7 @@ public class LexerTests {
             } else {
                 Assertions.assertNotEquals(expected, new Lexer(input).lex());
             }
-        } catch (ParseException e) {
+        } catch (CompilerException e) {
             Assertions.assertFalse(success, e.getMessage());
         }
     }

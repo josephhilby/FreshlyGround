@@ -1,8 +1,9 @@
-package freshlyground.backend;
+package freshlyground.compiler.backend;
 
-import freshlyground.frontend.Ast;
-import freshlyground.semantic.Environment;
-import freshlyground.semantic.Scope;
+import freshlyground.compiler.backend.Generator;
+import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.semantic.Environment;
+import freshlyground.compiler.semantic.Scope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

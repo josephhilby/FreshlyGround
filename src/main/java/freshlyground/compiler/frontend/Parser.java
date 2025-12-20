@@ -1,4 +1,7 @@
-package freshlyground.frontend;
+package freshlyground.compiler.frontend;
+
+import freshlyground.common.CompilerException;
+import freshlyground.common.Token;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -9,8 +12,9 @@ import java.util.function.Supplier;
 
 
 public final class Parser {
-
     private final TokenStream tokens;
+    private boolean peek(Object... patterns) { return tokens.peek(patterns); }
+    private boolean match(Object... patterns) { return tokens.match(patterns); }
 
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
@@ -20,7 +24,7 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     // source ::= { field } { method }
-    public Ast.Source parseSource() throws ParseException {
+    public Ast.Source parseSource() throws CompilerException {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
 
@@ -45,7 +49,7 @@ public final class Parser {
      */
     // field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
     //            LET CONST name : type = expression;
-    public Ast.Field parseField() throws ParseException {
+    public Ast.Field parseField() throws CompilerException {
         keywordCheck("LET");
         boolean constant = match("CONST");
         String name = currentToken().literal();
@@ -74,7 +78,7 @@ public final class Parser {
      */
     // method ::= "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO" { statement } "END"
     //             DEF name(parameter : parameterType) : returnType DO statement(s) END
-    public Ast.Method parseMethod() throws ParseException {
+    public Ast.Method parseMethod() throws CompilerException {
         // TODO: Clean up
         keywordCheck("DEF");
         String name = currentToken().literal();
@@ -116,7 +120,7 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     // statement ::= "LET" | "IF" | "FOR" | "WHILE" | "RETURN" | expression [ "=" expression ] ";"
-    public Ast.Statement parseStatement() throws ParseException {
+    public Ast.Statement parseStatement() throws CompilerException {
         if (match("LET")) {
             return parseDeclarationStatement();
         }
@@ -148,7 +152,7 @@ public final class Parser {
      */
     // "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
     //  LET name : type = expression;
-    public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
+    public Ast.Statement.Declaration parseDeclarationStatement() throws CompilerException {
         String name = currentToken().literal();
         typeCheck(Token.Type.IDENTIFIER);
 
@@ -174,7 +178,7 @@ public final class Parser {
      */
     // "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
     //  IF condition DO thenStatements ELSE elseStatements END
-    public Ast.Statement.If parseIfStatement() throws ParseException {
+    public Ast.Statement.If parseIfStatement() throws CompilerException {
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> thenStatements = new ArrayList<>();
         List<Ast.Statement> elseStatements = new ArrayList<>();
@@ -200,7 +204,7 @@ public final class Parser {
      */
     // "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
     //  FOR (initialization; condition; increment) statements END
-    public Ast.Statement.For parseForStatement() throws ParseException {
+    public Ast.Statement.For parseForStatement() throws CompilerException {
         keywordCheck("(");
         Ast.Statement initialization = null;
         if (tokens.get(0).type() == Token.Type.IDENTIFIER) {
@@ -232,7 +236,7 @@ public final class Parser {
      */
     // "WHILE" expression "DO" { statement } "END"
     //  WHILE condition DO statements END
-    public Ast.Statement.While parseWhileStatement() throws ParseException {
+    public Ast.Statement.While parseWhileStatement() throws CompilerException {
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
 
@@ -251,7 +255,7 @@ public final class Parser {
      */
     // "RETURN" expression ";"
     //  RETURN value;
-    public Ast.Statement.Return parseReturnStatement() throws ParseException {
+    public Ast.Statement.Return parseReturnStatement() throws CompilerException {
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Return(expression);
@@ -259,7 +263,7 @@ public final class Parser {
 
     // expression "=" expression ";"
     // receiver = value;
-    public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws ParseException {
+    public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws CompilerException {
         Ast.Expression value = parseExpression();
         keywordCheck(";");
         return new Ast.Statement.Assignment(receiver, value);
@@ -267,14 +271,14 @@ public final class Parser {
 
     // expression ";"
     // receiver;
-    public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws ParseException {
+    public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws CompilerException {
         keywordCheck(";");
         return new Ast.Statement.Expression(expression);
     }
 
     // identifier "=" expression
     // receiver = value
-    private Ast.Statement.Assignment parseLoopStatement() throws ParseException {
+    private Ast.Statement.Assignment parseLoopStatement() throws CompilerException {
         Ast.Expression receiver = parseExpression();
         keywordCheck("=");
         Ast.Expression value = parseExpression();
@@ -285,7 +289,7 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     // expression ::= logical_expression
-    public Ast.Expression parseExpression() throws ParseException {
+    public Ast.Expression parseExpression() throws CompilerException {
         return parseLogicalExpression();
     }
 
@@ -294,7 +298,7 @@ public final class Parser {
      */
     // logical_expression ::= comparison_expression
     //     { ( "AND" | "OR" ) comparison_expression }
-    public Ast.Expression parseLogicalExpression() throws ParseException {
+    public Ast.Expression parseLogicalExpression() throws CompilerException {
         return parseBinaryExpression(this::parseEqualityExpression, "AND",  "OR");
     }
 
@@ -303,7 +307,7 @@ public final class Parser {
      */
     // comparison_expression ::= additive_expression
     //      { ( "<" | "<=" | ">" | ">=" | "==" | "!=" ) additive_expression }
-    public Ast.Expression parseEqualityExpression() throws ParseException {
+    public Ast.Expression parseEqualityExpression() throws CompilerException {
         return parseBinaryExpression(this::parseAdditiveExpression, "<", "<=", ">", ">=", "==", "!=");
     }
 
@@ -312,7 +316,7 @@ public final class Parser {
      */
     // additive_expression ::= multiplicative_expression
     //      { ( "+" | "-" ) multiplicative_expression }
-    public Ast.Expression parseAdditiveExpression() throws ParseException {
+    public Ast.Expression parseAdditiveExpression() throws CompilerException {
         return parseBinaryExpression(this::parseMultiplicativeExpression, "+", "-");
     }
 
@@ -321,7 +325,7 @@ public final class Parser {
      */
     // multiplicative_expression ::= secondary_expression
     //      { ( "*" | "/" ) secondary_expression }
-    public Ast.Expression parseMultiplicativeExpression() throws ParseException {
+    public Ast.Expression parseMultiplicativeExpression() throws CompilerException {
         return parseBinaryExpression(this::parseSecondaryExpression, "*", "/");
     }
 
@@ -332,7 +336,7 @@ public final class Parser {
     //      { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
     //
     // receiver.literal(parameters)
-    public Ast.Expression parseSecondaryExpression() throws ParseException {
+    public Ast.Expression parseSecondaryExpression() throws CompilerException {
         Ast.Expression receiver = parsePrimaryExpression();
         while (match(".")) {
             typeCheck(Token.Type.IDENTIFIER, false);
@@ -354,11 +358,11 @@ public final class Parser {
     //     character | string |
     //     "(" expression ")" |
     //     identifier [ "(" [ expression { "," expression } ] ")" ]
-    public Ast.Expression parsePrimaryExpression() throws ParseException {
+    public Ast.Expression parsePrimaryExpression() throws CompilerException {
         return parsePrimaryExpression(Optional.empty());
     }
 
-    public Ast.Expression parsePrimaryExpression(Optional<Ast.Expression> receiver) throws ParseException {
+    public Ast.Expression parsePrimaryExpression(Optional<Ast.Expression> receiver) throws CompilerException {
         Token.Type type = currentToken().type();
         String literal = currentToken().literal();
 
@@ -426,7 +430,7 @@ public final class Parser {
 
     // generic to parse for binary expression
     private Ast.Expression parseBinaryExpression(Supplier<Ast.Expression> expression,
-                                                 String... operators) throws ParseException {
+                                                 String... operators) throws CompilerException {
         Ast.Expression left = expression.get();
 
         while (check(operators)) {
@@ -516,7 +520,7 @@ public final class Parser {
     // helper
     private void parseError(String message, int tokenOffset) {
         int index = tokenLocation(tokenOffset);
-        throw new ParseException(message, index);
+        throw new CompilerException(message, index);
     }
 
     // helper
@@ -565,80 +569,4 @@ public final class Parser {
         }
         return true;
     }
-
-    /**
-     * As in the lexer, returns {@code true} if the current sequence of tokens
-     * matches the given patterns. Unlike the lexer, the pattern is not a regex;
-     * instead it is either a {@link Token.Type}, which matches if the token's
-     * type is the same, or a {@link String}, which matches if the token's
-     * literal is the same.
-     *
-     * In other words, {@code Token(IDENTIFIER, "literal")} is matched by both
-     * {@code peek(Token.Type.IDENTIFIER)} and {@code peek("literal")}.
-     */
-    private boolean peek(Object... patterns) {
-        for (int i = 0; i < patterns.length; i++) {
-            if (!tokens.has(i)) {
-                return false;
-            } else if (patterns[i] instanceof Token.Type) {
-                if (patterns[i] != tokens.get(i).type()) {
-                    return false;
-                }
-            } else if (patterns[i] instanceof String) {
-                if (!patterns[i].equals(tokens.get(i).literal())) {
-                    return false;
-                }
-            } else {
-                throw new AssertionError("Invalid pattern object: " + patterns[i].getClass());
-            }
-        }
-        return true;
-    }
-
-    /**
-     * As in the lexer, returns {@code true} if {@link #peek(Object...)} is true
-     * and advances the token stream.
-     */
-    private boolean match(Object... patterns) {
-        boolean peek = peek(patterns);
-        if (peek) {
-            for (int i = 0; i < patterns.length; i++) {
-                tokens.advance();
-            }
-        }
-        return peek;
-    }
-
-    private static final class TokenStream {
-
-        private final List<Token> tokens;
-        private int index = 0;
-
-        private TokenStream(List<Token> tokens) {
-            this.tokens = tokens;
-        }
-
-        /**
-         * Returns true if there is a token at index + offset.
-         */
-        public boolean has(int offset) {
-            return index + offset < tokens.size();
-        }
-
-        /**
-         * Gets the token at index + offset.
-         */
-        public Token get(int offset) {
-            return tokens.get(index + offset);
-        }
-
-        /**
-         * Advances to the next token, incrementing the index.
-         */
-        public void advance() {
-            index++;
-        }
-
-    }
-
 }

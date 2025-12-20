@@ -1,5 +1,7 @@
-package freshlyground.frontend;
+package freshlyground.compiler.frontend;
 
+import freshlyground.common.CompilerException;
+import freshlyground.common.Token;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -158,7 +160,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testSourceError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testSourceError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseSource);
     }
 
@@ -186,7 +188,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr", 48),
                     new Token(Token.Type.OPERATOR, ";", 52)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Must have all LET statements before DEF",
                 30
             )
@@ -244,7 +246,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testFieldError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testFieldError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseField);
     }
 
@@ -260,7 +262,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "Type", 17),
                     new Token(Token.Type.OPERATOR, ";", 21)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "CONST must have an initial value",
                 21
             ),
@@ -271,7 +273,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "name", 4),
                     new Token(Token.Type.OPERATOR, ";", 8)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: :",
                 8
             )
@@ -360,7 +362,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testExpressionStatementError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testExpressionStatementError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -371,7 +373,7 @@ final class ParserTests {
                     // name
                     new Token(Token.Type.IDENTIFIER, "name", 0)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: ;",
                 4
             )
@@ -461,7 +463,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testAssignmentStatementError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testAssignmentStatementError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -474,7 +476,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "=", 5),
                     new Token(Token.Type.OPERATOR, ";", 7)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Primary Expression",
                 7
             ),
@@ -485,7 +487,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "=", 5),
                     new Token(Token.Type.IDENTIFIER, "value", 7)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: ;",
                 12
             )
@@ -540,7 +542,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testIfStatementError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testIfStatementError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -555,7 +557,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ";", 12),
                     new Token(Token.Type.IDENTIFIER, "END", 14)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: DO",
                 8
             ),
@@ -566,7 +568,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr", 3),
                     new Token(Token.Type.IDENTIFIER, "THEN", 8)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: DO",
                 8
             )
@@ -620,7 +622,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testForStatementError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testForStatementError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -644,7 +646,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "stmt1", 36),
                     new Token(Token.Type.OPERATOR, ";", 41)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
                 42
             )
@@ -679,7 +681,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testWhileStatementError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testWhileStatementError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -694,7 +696,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "stmt", 14),
                     new Token(Token.Type.OPERATOR, ";", 18)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
                 19
             )
@@ -723,7 +725,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testReturnStatementError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testReturnStatementError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -735,7 +737,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "RETURN", 0),
                     new Token(Token.Type.OPERATOR, ";", 6)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Primary Expression",
                 6
             )
@@ -903,7 +905,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testGroupExpressionError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testGroupExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
     }
 
@@ -915,7 +917,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "(", 0),
                     new Token(Token.Type.IDENTIFIER, "expr", 1)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: )",
                 5
             ),
@@ -926,7 +928,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr", 1),
                     new Token(Token.Type.OPERATOR, "]", 5)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: )",
                 5
             ),
@@ -938,7 +940,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "+", 7),
                     new Token(Token.Type.IDENTIFIER, "expr2", 9)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: )",
                 14
             ),
@@ -951,7 +953,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr2", 7),
                     new Token(Token.Type.OPERATOR, ")", 11)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: )",
                 7
             )
@@ -1138,7 +1140,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testBinaryExpressionError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testBinaryExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseExpression);
     }
 
@@ -1150,7 +1152,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr", 0),
                     new Token(Token.Type.OPERATOR, "-", 5)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
                 6
             ),
@@ -1160,7 +1162,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
                     new Token(Token.Type.OPERATOR, "+", 6)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
                 7
             ),
@@ -1170,7 +1172,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
                     new Token(Token.Type.IDENTIFIER, "AND", 6)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
                 9
             ),
@@ -1180,7 +1182,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "expr1", 0),
                     new Token(Token.Type.OPERATOR, "*", 6)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
                 7
             )
@@ -1214,7 +1216,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testAccessExpressionError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testAccessExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseExpression);
     }
 
@@ -1227,7 +1229,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ".", 3),
                     new Token(Token.Type.INTEGER, "5", 4)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Type Error. Expected: IDENTIFIER, Got: INTEGER",
                 4
             ),
@@ -1236,7 +1238,7 @@ final class ParserTests {
                     // ?
                     new Token(Token.Type.OPERATOR, "?", 0)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Primary Expression",
                 0
             )
@@ -1315,7 +1317,7 @@ final class ParserTests {
 
     @ParameterizedTest
     @MethodSource
-    void testFunctionExpressionError(String test, List<Token> tokens, Class<? extends ParseException> expectedType, String expectedMessage, int expectedIndex) {
+    void testFunctionExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
         testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseExpression);
     }
 
@@ -1330,7 +1332,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ",", 9),
                     new Token(Token.Type.IDENTIFIER, ")", 10)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Missing: )",
                 11
             ),
@@ -1345,7 +1347,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ",", 17),
                     new Token(Token.Type.OPERATOR, ")", 19)
                 ),
-                ParseException.class,
+                CompilerException.class,
                 "Invalid Primary Expression",
                 19
             )
@@ -1434,7 +1436,7 @@ final class ParserTests {
     }
 
     /**
-     * Standard test function. If expected is null, a ParseException is expected
+     * Standard test function. If expected is null, a CompilerException is expected
      * to be thrown (not used in the provided tests).
      */
     private static <T extends Ast> void test(List<Token> tokens,
@@ -1444,17 +1446,17 @@ final class ParserTests {
         if (expected != null) {
             Assertions.assertEquals(expected, function.apply(parser));
         } else {
-            Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
+            Assertions.assertThrows(CompilerException.class, () -> function.apply(parser));
         }
     }
 
     private static <T extends Ast> void testError(List<Token> tokens,
-                                                  Class<? extends ParseException> expectedType,
+                                                  Class<? extends CompilerException> expectedType,
                                                   String expectedMessage,
                                                   int expectedIndex,
                                                   Function<Parser, T> function) {
         Parser parser = new Parser(tokens);
-        ParseException ex = Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
+        CompilerException ex = Assertions.assertThrows(CompilerException.class, () -> function.apply(parser));
 
         Assertions.assertEquals(expectedType, ex.getClass());
         Assertions.assertEquals(expectedMessage, ex.getMessage());

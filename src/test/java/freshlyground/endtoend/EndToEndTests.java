@@ -1,9 +1,13 @@
 package freshlyground.endtoend;
 
-import freshlyground.backend.Generator;
-import freshlyground.frontend.*;
-import freshlyground.semantic.Environment;
-import freshlyground.semantic.Scope;
+import freshlyground.compiler.backend.Generator;
+import freshlyground.common.Token;
+import freshlyground.compiler.frontend.Analyzer;
+import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.Lexer;
+import freshlyground.compiler.frontend.Parser;
+import freshlyground.compiler.semantic.Environment;
+import freshlyground.compiler.semantic.Scope;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

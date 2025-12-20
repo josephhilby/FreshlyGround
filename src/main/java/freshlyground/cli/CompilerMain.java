@@ -1,8 +1,12 @@
 package freshlyground.cli;
 
-import freshlyground.backend.Generator;
-import freshlyground.frontend.*;
-import freshlyground.semantic.Scope;
+import freshlyground.compiler.backend.Generator;
+import freshlyground.common.Token;
+import freshlyground.compiler.frontend.Analyzer;
+import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.Lexer;
+import freshlyground.compiler.frontend.Parser;
+import freshlyground.compiler.semantic.Scope;
 
 import java.io.IOException;
 import java.io.PrintWriter;

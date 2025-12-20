@@ -1,4 +1,6 @@
-package freshlyground.frontend;
+package freshlyground.common;
+
+import freshlyground.compiler.frontend.Lexer;
 
 /**
  * A {@code Token} represents a single lexical unit produced by the {@link Lexer}.
