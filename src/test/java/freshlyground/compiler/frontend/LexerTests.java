@@ -2,7 +2,6 @@ package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
 import freshlyground.common.Token;
-import freshlyground.compiler.frontend.Lexer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

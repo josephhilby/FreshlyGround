@@ -6,6 +6,28 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * An {@code Ast} represents an abstract syntax tree (AST) produced by the
+ * {@link Parser}, after successfully recognizing the program’s context-free grammar
+ * (CFG). Each AST captures an assembled, syntactically valid, representation of
+ * the users program. Each AST consists of:
+ *
+ * <ul>
+ *   <li>{@link Source} — the root node representing the entire program.</li>
+ *   <li>{@link Field} — a declaration of program-level state.</li>
+ *   <li>{@link Method} — a declaration of program-level behavior.</li>
+ *   <li>{@link Statement} — an executable unit that performs an action,
+ *       potentially involving one or more expressions.</li>
+ *   <li>{@link Expression} — a value-producing construct that describes
+ *       computation and resolves to a type and value.</li>
+ * </ul>
+ *
+ * <p>
+ * AST nodes are immutable with respect to syntactic structure; semantic
+ * information (such as resolved symbols and types) are attached during
+ * the {@link Analyzer} pass.
+ * </p>
+ */
 public abstract class Ast {
 
     public static final class Source extends Ast {

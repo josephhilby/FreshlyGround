@@ -3,8 +3,8 @@ package freshlyground.common;
 import freshlyground.compiler.frontend.Lexer;
 
 /**
- * A {@code Token} represents a single lexical unit produced by the {@link Lexer}.
- * Each token captures:
+ * A {@code Token} represents a single lexical unit of lexical grammar
+ * produced by the {@link Lexer}. Each token captures:
  *
  * <ul>
  *   <li>{@link Type} — categorizes the token (e.g., identifier, integer, decimal,
@@ -12,10 +12,6 @@ import freshlyground.compiler.frontend.Lexer;
  *   <li>{@code literal} — the exact character sequence consumed from the source.</li>
  *   <li>{@code index} — the zero-based position in the input stream where the token begins.</li>
  * </ul>
- *
- * <p>Tokens are immutable value objects and are compared using structural equality;
- * two tokens are considered equal iff their type, literal, and index
- * are equal.</p>
  */
 public record Token(Type type, String literal, int index) {
 

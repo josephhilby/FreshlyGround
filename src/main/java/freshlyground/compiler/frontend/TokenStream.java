@@ -13,9 +13,11 @@ public final class TokenStream extends Stream<Token, Object> {
             if (pattern instanceof Token.Type type) {
                 return token.type() == type;
             }
+
             if (pattern instanceof String literal) {
                 return token.literal().equals(literal);
             }
+
             return false;
         });
         this.tokens = tokens;

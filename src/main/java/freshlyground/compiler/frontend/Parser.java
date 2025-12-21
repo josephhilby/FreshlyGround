@@ -10,7 +10,29 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-
+/**
+ * The parser is responsible for converting a stream of tokens into an {@link Ast}
+ * by means of a context-free grammar. Its operation is centered around two core
+ * components:
+ *
+ * <ul>
+ *   <li>{@link TokenStream} — maintains the parser’s state in evaluating the given token stream,
+ *       including the current index, and AST construction.</li>
+ *   <li>{@link #parseSource()} — iterates over the token stream repeatedly calling {@link #parseField()} or
+ *       {@link #parseMethod()} to produce {@link Ast.Field}s or {@link Ast.Method}s, automatically skipping
+ *       over whitespace.</li>
+ * </ul>
+ *
+ * <p>
+ * To use the parser call: {@code Ast ast = new Parser(tokens).parseSource()}
+ * <p/>
+ *
+ * <p>
+ * If the parser encounters invalid syntax in the form of context-free grammar
+ * (e.g., an unterminated declaration or other invalid production rule), it will throw a
+ * {@link CompilerException} at the character index where the error occurred.
+ * </p>
+ */
 public final class Parser {
     private final TokenStream tokens;
     private boolean peek(Object... patterns) { return tokens.peek(patterns); }
