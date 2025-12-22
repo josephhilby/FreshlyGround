@@ -1,7 +1,5 @@
 package freshlyground.compiler.frontend;
 
-import freshlyground.compiler.frontend.Analyzer;
-import freshlyground.compiler.frontend.Ast;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
 import org.junit.jupiter.api.Assertions;
@@ -35,8 +33,8 @@ public final class AnalyzerTests {
     public void testSource(String test, Ast.Source ast, Ast.Source expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
-            expected.getFields().forEach(field -> Assertions.assertEquals(field.getVariable(), analyzer.scope.lookupVariable(field.getName())));
-            expected.getMethods().forEach(method -> Assertions.assertEquals(method.getFunction(), analyzer.scope.lookupFunction(method.getName(), method.getParameters().size())));
+            expected.getFields().forEach(field -> Assertions.assertEquals(field.getVariable(), analyzer.getScope().lookupVariable(field.getName())));
+            expected.getMethods().forEach(method -> Assertions.assertEquals(method.getFunction(), analyzer.getScope().lookupFunction(method.getName(), method.getParameters().size())));
         }
     }
 
@@ -367,7 +365,7 @@ public final class AnalyzerTests {
     public void testField(String test, Ast.Field ast, Ast.Field expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
-            Assertions.assertEquals(expected.getVariable(), analyzer.scope.lookupVariable(expected.getName()));
+            Assertions.assertEquals(expected.getVariable(), analyzer.getScope().lookupVariable(expected.getName()));
         }
     }
 
@@ -401,7 +399,7 @@ public final class AnalyzerTests {
     public void testMethod(String test, Ast.Method ast, Ast.Method expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
-            Assertions.assertEquals(expected.getFunction(), analyzer.scope.lookupFunction(expected.getName(), expected.getParameters().size()));
+            Assertions.assertEquals(expected.getFunction(), analyzer.getScope().lookupFunction(expected.getName(), expected.getParameters().size()));
         }
     }
 
@@ -488,7 +486,7 @@ public final class AnalyzerTests {
     public void testDeclarationStatement(String test, Ast.Statement.Declaration ast, Ast.Statement.Declaration expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
-            Assertions.assertEquals(expected.getVariable(), analyzer.scope.lookupVariable(expected.getName()));
+            Assertions.assertEquals(expected.getVariable(), analyzer.getScope().lookupVariable(expected.getName()));
         }
     }
     private static Stream<Arguments> testDeclarationStatement() {

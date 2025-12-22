@@ -10,6 +10,7 @@ delegated entirely to the JVM.
 >- Binding Time := the point at which the binding is created
 >- Lifetime := period of time from binding creation to destruction
 >- Scope := region of the program where a binding is visible
+>- Environment := definition of symbols and types
 
 #### Binding Times
 Bindings are established progressively throughout the compilation process:
@@ -28,3 +29,9 @@ FreshlyGround enforces lexical (static) scoping with the following rules:
 > 2. References are resolved by walking outward through parent scopes
 > 3. Redeclaration outside same scope (Shadowing) is allowed.
 > 4. Redeclaration in same scope is not allowed.
+
+
+AST: what was written (syntax)
+Environment: what symbols are (semantics)
+Scope: what names resolve to
+Binding: what AST nodes resolve to

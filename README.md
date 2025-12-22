@@ -16,8 +16,8 @@
 ## About The Project
 FreshlyGround is a **novel programming language compiler** whose source code is compiled into bytecode
 for execution on the **Java Virtual Machine (JVM)**. This project was adapted from an academic compiler
-project created in **COP 4020** at the **University of Florida**, and follows the methodology  outlined in the 
-book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
+project created in **COP 4020** at the **University of Florida**, and loosely follows the methodology 
+outlined in the book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
 
 The compiler is structured as a sequence of well-defined, ordered, single-responsibility passes. Each pass performs 
 a distinct transformation on the program representation, following a clear separation of concerns between tokenization, 
@@ -107,65 +107,62 @@ Ast.Source
      ├─ constant: false
      └─ value:
         Ast.Expression.Literal
-         ├─ literal: 10
-         └─ type: null
-     └─ variable: null
+         └─ literal: 10
      ]
  └─ methods: []
 ```
 
 ### Semantic Analysis (Analyzing)
-The analyzer performs a pre-order traversal over the AST and applies the language’s scope and environment rules. 
-Where the scope will define visibility and environment will define meaning. During this pass, it:
-- Declares `x` in the current scope as an `Environment.Variable`
-- Resolves the declared type to a concrete `Environment.Type`
-- Infers and assigns the literal type to a concrete `Environment.Type`
-- Attaches the variable and type metadata onto the AST (i.e., "Decorates the AST")
+The analyzer performs a pre-order traversal over the AST and applies the language’s scope and environment rules,
+using:
+- Environment to provide compile-time semantic descriptors of `Type`, `Variable`, and `Function`
+- Bindings to match AST nodes to their semantic descriptors
+- Scope to model lexical visibility of those descriptors at any point
 
-```java
+During this specific pass, it:
+- Resolves the field node's declared type to a concrete `Environment.Type`
+- Infers and resolves the literal node's type to a concrete `Environment.Type`
+- Ensures the two types are compatible according to the languages semantic rules
+- Declares `x` in the current scope as an `Environment.Variable`
+- Binds the variable and type metadata to the respective AST nodes (i.e., "decorates the AST via external bindings")
+
+```text
 // Current Scope
 Scope{ parent=null, 
-       variables={ "x" -> Environment.Variable(
-           name="x",
-           jvmName="x",
-           constant=false,
-           type=Environment.Type(
-               name="Integer", 
-               jvmName="int",
-               // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
-               scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
+       variables={ 
+           "x" -> Environment.Variable(
+               name="x",
+               jvmName="x",
+               constant=false,
+               type=Environment.Type(
+                   name="Integer", 
+                   jvmName="int",
+                   // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
+                   scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
        )},
        functions={}
 }
 ```
 
-```yaml
-Ast.Source
- └─ fields: [
-    Ast.Field
-     ├─ name: "x"
-     ├─ typeName: "Integer"
-     ├─ constant: false
-     └─ value:
-        Ast.Expression.Literal
-         ├─ literal: 10
-         └─ type:
-            Environment.Type
-             ├─ name: "Integer"
-             ├─ jvmName: "int"
-             └─ scope: Integer.scope ⊆ Comparable.scope ⊆ Any.scope
-     └─ variable:
-        Environment.Variable
-         ├─ name: "x"
-         ├─ jvmName: "x"
-         ├─ constant: false
-         └─ type:
-            Environment.Type
-             ├─ name: "Integer"
-             ├─ jvmName: "int"
-             └─ scope: Integer.scope ⊆ Comparable.scope ⊆ Any.scope
-    ]
- └─ methods: []
+```text
+// Global Bindings
+Binding{ 
+    Ast.Field("x") -> Environment.Variable(
+        name="x",
+        jvmName="x",
+        constant=false,
+        type=Environment.Type(
+            name="Integer",
+            jvmName="int",
+            // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
+            scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
+    
+    Ast.Expression.Literal(10) -> Environment.Type(
+        name="Integer",
+        jvmName="int",
+        scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
+    
+}
 ```
 
 ## Documentation 

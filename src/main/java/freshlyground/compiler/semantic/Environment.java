@@ -1,8 +1,11 @@
 package freshlyground.compiler.semantic;
 
+import freshlyground.compiler.frontend.Ast;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * <p>{@code Environment} defines the data structures used during semantic analysis
@@ -27,7 +30,7 @@ public final class Environment {
         return TYPES.get(name);
     }
 
-    public static void registerType(Type type) {
+    private static void registerType(Type type) {
         if (TYPES.containsKey(type.getName())) {
             throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
         }
@@ -124,11 +127,13 @@ public final class Environment {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Function &&
-                name.equals(((Function) obj).name) &&
-                jvmName.equals(((Function) obj).jvmName) &&
-                parameterTypes.equals(((Function) obj).parameterTypes) &&
-                returnType.equals(((Function) obj).returnType);
+            if (this == obj) return true;
+            if (!(obj instanceof Function other)) return false;
+
+            return Objects.equals(name, other.name) &&
+                Objects.equals(jvmName, other.jvmName) &&
+                Objects.equals(parameterTypes, other.parameterTypes) &&
+                Objects.equals(returnType, other.returnType);
         }
 
         @Override
@@ -146,8 +151,8 @@ public final class Environment {
     public static final class Variable {
         private final String name;
         private final String jvmName;
-        private final boolean constant;
         private final Type type;
+        private final boolean constant;
 
         public Variable(String name, String jvmName, Type type, boolean constant) {
             this.name = name;
@@ -158,16 +163,18 @@ public final class Environment {
 
         public String getName() { return name; }
         public String getJvmName() { return jvmName; }
-        public boolean getConstant() { return constant; }
         public Type getType() { return type; }
+        public boolean getConstant() { return constant; }
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Variable &&
-                name.equals(((Variable) obj).name) &&
-                jvmName.equals(((Variable) obj).jvmName) &&
-                constant == ((Variable) obj).constant &&
-                type.equals(((Variable) obj).type);
+            if (this == obj) return true;
+            if (!(obj instanceof Variable other)) return false;
+
+            return Objects.equals(name, other.name) &&
+                Objects.equals(jvmName, other.jvmName) &&
+                Objects.equals(constant, other.constant) &&
+                Objects.equals(type, other.type);
         }
 
         @Override

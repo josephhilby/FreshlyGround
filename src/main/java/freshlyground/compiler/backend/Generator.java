@@ -8,7 +8,6 @@ import java.io.PrintWriter;
 import java.util.List;
 
 public final class Generator implements Ast.Visitor<Void> {
-
     private final PrintWriter writer;
     private int indent = 0;
 

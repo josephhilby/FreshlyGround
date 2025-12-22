@@ -30,13 +30,14 @@ import java.util.Optional;
  */
 public abstract class Ast {
 
+    // { fields } { methods }
     public static final class Source extends Ast {
         private final List<Field> fields;
         private final List<Method> methods;
 
         public Source(List<Field> fields, List<Method> methods) {
-            this.fields = fields;
-            this.methods = methods;
+            this.fields = List.copyOf(Objects.requireNonNull(fields, "fields are required, may be ArrayList<>()"));
+            this.methods = List.copyOf(Objects.requireNonNull(methods, "methods are required, may be ArrayList<>()"));
         }
 
         public List<Ast.Field> getFields() { return fields; }
@@ -44,9 +45,11 @@ public abstract class Ast {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Source &&
-                    fields.equals(((Source) obj).fields) &&
-                    methods.equals(((Source) obj).methods);
+            if (this == obj) return true;
+            if (!(obj instanceof Source other)) return false;
+
+            return Objects.equals(fields, other.fields) &&
+                Objects.equals(methods, other.methods);
         }
 
         @Override
@@ -59,6 +62,7 @@ public abstract class Ast {
 
     }
 
+    // LET [ constant ] name : typeName [ = value ] ;
     public static final class Field extends Ast {
         private final String name;
         private final String typeName;
@@ -67,10 +71,10 @@ public abstract class Ast {
         private Environment.Variable variable = null;
 
         public Field(String name, String typeName, boolean constant, Optional<Ast.Expression> value) {
-            this.name = name;
-            this.typeName = typeName;
+            this.name = Objects.requireNonNull(name, "name is required");
+            this.typeName = Objects.requireNonNull(typeName, "typeName is required");
             this.constant = constant;
-            this.value = value;
+            this.value = Objects.requireNonNull(value, "value is required, may be Optional.empty()");
         }
 
         public String getName() { return name; }
@@ -90,12 +94,14 @@ public abstract class Ast {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Field &&
-                    name.equals(((Field) obj).name) &&
-                    typeName.equals(((Field) obj).typeName) &&
-                    constant == ((Field) obj).constant &&
-                    value.equals(((Field) obj).value) &&
-                    Objects.equals(variable, ((Field) obj).variable);
+            if (this == obj) return true;
+            if (!(obj instanceof Field other)) return false;
+
+            return Objects.equals(name, other.name) &&
+                Objects.equals(typeName, other.typeName) &&
+                Objects.equals(constant, other.constant) &&
+                Objects.equals(value, other.value) &&
+                Objects.equals(variable, other.variable);
         }
 
         @Override
@@ -110,6 +116,7 @@ public abstract class Ast {
         }
     }
 
+    // DEF name ( { parameters : parameterTypeNames } ) [ : returnTypeName ] DO { statements } END
     public static final class Method extends Ast {
         private final String name;
         private final List<String> parameters;
@@ -119,11 +126,11 @@ public abstract class Ast {
         private Environment.Function function = null;
 
         public Method(String name, List<String> parameters, List<String> parameterTypeNames, Optional<String> returnTypeName, List<Statement> statements) {
-            this.name = name;
-            this.parameters = parameters;
-            this.parameterTypeNames = parameterTypeNames;
-            this.returnTypeName = returnTypeName;
-            this.statements = statements;
+            this.name = Objects.requireNonNull(name, "name is required");
+            this.parameters = List.copyOf(Objects.requireNonNull(parameters, "parameters are required, may be ArrayList<>()"));
+            this.parameterTypeNames = List.copyOf(Objects.requireNonNull(parameterTypeNames, "parameterTypeNames is required, may be ArrayList<>()"));
+            this.returnTypeName = Objects.requireNonNull(returnTypeName, "returnTypeName is required, may be Optional.empty()");
+            this.statements = List.copyOf(Objects.requireNonNull(statements, "statements are required, may be ArrayList<>()"));
         }
 
         public String getName() { return name; }
@@ -144,13 +151,15 @@ public abstract class Ast {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Ast.Method &&
-                    name.equals(((Ast.Method) obj).name) &&
-                    parameters.equals(((Ast.Method) obj).parameters) &&
-                    parameterTypeNames.equals(((Ast.Method) obj).parameterTypeNames) &&
-                    returnTypeName.equals(((Ast.Method) obj).returnTypeName) &&
-                    statements.equals(((Ast.Method) obj).statements) &&
-                    Objects.equals(function, ((Ast.Method) obj).function);
+            if (this == obj) return true;
+            if (!(obj instanceof Method other)) return false;
+
+            return Objects.equals(name, other.name) &&
+                Objects.equals(parameters, other.parameters) &&
+                Objects.equals(parameterTypeNames, other.parameterTypeNames) &&
+                Objects.equals(returnTypeName, other.returnTypeName) &&
+                Objects.equals(statements, other.statements) &&
+                Objects.equals(function, other.function);
         }
 
         @Override
@@ -168,19 +177,22 @@ public abstract class Ast {
 
     public static abstract class Statement extends Ast {
 
+        // expression ;
         public static final class Expression extends Statement {
             private final Ast.Expression expression;
 
             public Expression(Ast.Expression expression) {
-                this.expression = expression;
+                this.expression = Objects.requireNonNull(expression, "expression is required");
             }
 
             public Ast.Expression getExpression() { return expression; }
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Ast.Statement.Expression &&
-                        expression.equals(((Ast.Statement.Expression) obj).expression);
+                if (this == obj) return true;
+                if (!(obj instanceof Statement.Expression other)) return false;
+
+                return Objects.equals(expression, other.expression);
             }
 
             @Override
@@ -191,6 +203,7 @@ public abstract class Ast {
             }
         }
 
+        // LET name [ : typeName ] [ = value ] ;
         public static final class Declaration extends Statement {
             private final String name;
             private final Optional<String> typeName;
@@ -198,9 +211,9 @@ public abstract class Ast {
             private Environment.Variable variable = null;
 
             public Declaration(String name, Optional<String> typeName, Optional<Ast.Expression> value) {
-                this.name = name;
-                this.typeName = typeName;
-                this.value = value;
+                this.name = Objects.requireNonNull(name, "name is required");
+                this.typeName = Objects.requireNonNull(typeName, "typeName is required, may be Optional.empty()");
+                this.value = Objects.requireNonNull(value, "value is required, may be Optional.empty()");
             }
 
             public String getName() { return name; }
@@ -221,11 +234,13 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Declaration &&
-                        name.equals(((Declaration) obj).name) &&
-                        typeName.equals(((Declaration) obj).typeName) &&
-                        value.equals(((Declaration) obj).value) &&
-                        Objects.equals(variable, ((Declaration) obj).variable);
+                if (this == obj) return true;
+                if (!(obj instanceof Declaration other)) return false;
+
+                return Objects.equals(name, other.name) &&
+                    Objects.equals(typeName, other.typeName) &&
+                    Objects.equals(value, other.value) &&
+                    Objects.equals(variable, other.variable);
             }
 
             @Override
@@ -239,13 +254,14 @@ public abstract class Ast {
             }
         }
 
+        // expression = expression ;
         public static final class Assignment extends Statement {
             private final Ast.Expression receiver;
             private final Ast.Expression value;
 
             public Assignment(Ast.Expression receiver, Ast.Expression value) {
-                this.receiver = receiver;
-                this.value = value;
+                this.receiver = Objects.requireNonNull(receiver, "receiver is required");
+                this.value = Objects.requireNonNull(value, "value is required");
             }
 
             public Ast.Expression getReceiver() { return receiver; }
@@ -253,9 +269,11 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Assignment &&
-                        receiver.equals(((Assignment) obj).receiver) &&
-                        value.equals(((Assignment) obj).value);
+                if (this == obj) return true;
+                if (!(obj instanceof Assignment other)) return false;
+
+                return Objects.equals(receiver, other.receiver) &&
+                    Objects.equals(value, other.value);
             }
 
             @Override
@@ -267,15 +285,16 @@ public abstract class Ast {
             }
         }
 
+        // IF condition DO { thenStatements } [ ELSE { elseStatements } ] END
         public static final class If extends Statement {
             private final Ast.Expression condition;
             private final List<Statement> thenStatements;
             private final List<Statement> elseStatements;
 
             public If(Ast.Expression condition, List<Statement> thenStatements, List<Statement> elseStatements) {
-                this.condition = condition;
-                this.thenStatements = thenStatements;
-                this.elseStatements = elseStatements;
+                this.condition = Objects.requireNonNull(condition, "condition is required");
+                this.thenStatements = List.copyOf(Objects.requireNonNull(thenStatements, "thenStatements is required, may be ArrayList<>()"));
+                this.elseStatements = List.copyOf(Objects.requireNonNull(elseStatements, "elseStatements is required, may be ArrayList<>()"));
             }
 
             public Ast.Expression getCondition() { return condition; }
@@ -284,10 +303,12 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof If &&
-                        condition.equals(((If) obj).condition) &&
-                        thenStatements.equals(((If) obj).thenStatements) &&
-                        elseStatements.equals(((If) obj).elseStatements);
+                if (this == obj) return true;
+                if (!(obj instanceof If other)) return false;
+
+                return Objects.equals(condition, other.condition) &&
+                    Objects.equals(thenStatements, other.thenStatements) &&
+                    Objects.equals(elseStatements, other.elseStatements);
             }
 
             @Override
@@ -300,6 +321,7 @@ public abstract class Ast {
             }
         }
 
+        // FOR ( [ initialization ] ; condition ; [ increment ] ) { statements } END
         public static final class For extends Statement {
             private final Statement initialization;
             private final Ast.Expression condition;
@@ -308,9 +330,9 @@ public abstract class Ast {
 
             public For(Statement initialization, Ast.Expression condition, Statement increment, List<Statement> statements) {
                 this.initialization = initialization;
-                this.condition = condition;
+                this.condition = Objects.requireNonNull(condition, "condition is required");
                 this.increment = increment;
-                this.statements = statements;
+                this.statements = List.copyOf(Objects.requireNonNull(statements, "statements is required, may be ArrayList<>()"));
             }
 
             public Ast.Statement getInitialization() { return initialization; }
@@ -320,11 +342,13 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof For &&
-                    initialization.equals(((For) obj).initialization) &&
-                    condition.equals(((For) obj).condition) &&
-                    increment.equals(((For) obj).increment) &&
-                    statements.equals(((For) obj).statements);
+                if (this == obj) return true;
+                if (!(obj instanceof For other)) return false;
+
+                return Objects.equals(initialization, other.initialization) &&
+                    Objects.equals(condition, other.condition) &&
+                    Objects.equals(increment, other.increment) &&
+                    Objects.equals(statements, other.statements);
             }
 
             @Override
@@ -338,13 +362,14 @@ public abstract class Ast {
             }
         }
 
+        // WHILE condition DO { statements } END
         public static final class While extends Statement {
             private final Ast.Expression condition;
             private final List<Statement> statements;
 
             public While(Ast.Expression condition, List<Statement> statements) {
-                this.condition = condition;
-                this.statements = statements;
+                this.condition = Objects.requireNonNull(condition, "condition is required");
+                this.statements = List.copyOf(Objects.requireNonNull(statements, "statements is required, may be ArrayList<>()"));
             }
 
             public Ast.Expression getCondition() { return condition; }
@@ -352,9 +377,11 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof While &&
-                        condition.equals(((While) obj).condition) &&
-                        statements.equals(((While) obj).statements);
+                if (this == obj) return true;
+                if (!(obj instanceof While other)) return false;
+
+                return Objects.equals(condition, other.condition) &&
+                    Objects.equals(statements, other.statements);
             }
 
             @Override
@@ -366,19 +393,22 @@ public abstract class Ast {
             }
         }
 
+        // RETURN value ;
         public static final class Return extends Statement {
             private final Ast.Expression value;
 
             public Return(Ast.Expression value) {
-                this.value = value;
+                this.value = Objects.requireNonNull(value, "value is required");
             }
 
             public Ast.Expression getValue() { return value; }
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Return &&
-                        value.equals(((Return) obj).value);
+                if (this == obj) return true;
+                if (!(obj instanceof Return other)) return false;
+
+                return Objects.equals(value, other.value);
             }
 
             @Override
@@ -405,6 +435,7 @@ public abstract class Ast {
             this.type = type;
         }
 
+        // NIL | TRUE | FALSE | integer | decimal | character | string
         public static final class Literal extends Ast.Expression {
             private final Object literal;
             
@@ -416,9 +447,11 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Literal &&
-                        Objects.equals(literal, ((Literal) obj).literal) &&
-                        Objects.equals(type, ((Literal) obj).type);
+                if (this == obj) return true;
+                if (!(obj instanceof Literal other)) return false;
+
+                return Objects.equals(literal, other.literal) &&
+                    Objects.equals(type, other.type);
             }
 
             @Override
@@ -430,20 +463,23 @@ public abstract class Ast {
             }
         }
 
+        // ( expression )
         public static final class Group extends Ast.Expression {
             private final Ast.Expression expression;
 
             public Group(Ast.Expression expression) {
-                this.expression = expression;
+                this.expression = Objects.requireNonNull(expression, "expression is required");
             }
 
             public Ast.Expression getExpression() { return expression; }
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Group &&
-                        expression.equals(((Group) obj).expression) &&
-                        Objects.equals(type, ((Group) obj).type);
+                if (this == obj) return true;
+                if (!(obj instanceof Group other)) return false;
+
+                return Objects.equals(expression, other.expression) &&
+                    Objects.equals(type, other.type);
             }
 
             @Override
@@ -455,15 +491,16 @@ public abstract class Ast {
             }
         }
 
+        // expression AND | OR | < | <= | > | >= | == | != | + | - | * | / expression
         public static final class Binary extends Ast.Expression {
             private final String operator;
             private final Ast.Expression left;
             private final Ast.Expression right;
 
             public Binary(String operator, Ast.Expression left, Ast.Expression right) {
-                this.operator = operator;
-                this.left = left;
-                this.right = right;
+                this.operator = Objects.requireNonNull(operator, "operator is required");
+                this.left = Objects.requireNonNull(left, "left is required");
+                this.right = Objects.requireNonNull(right, "right is required");
             }
 
             public String getOperator() { return operator; }
@@ -472,11 +509,13 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Binary &&
-                        operator.equals(((Binary) obj).operator) &&
-                        left.equals(((Binary) obj).left) &&
-                        right.equals(((Binary) obj).right) &&
-                        Objects.equals(type, ((Binary) obj).type);
+                if (this == obj) return true;
+                if (!(obj instanceof Binary other)) return false;
+
+                return Objects.equals(operator, other.operator) &&
+                    Objects.equals(left, other.left) &&
+                    Objects.equals(right, other.right) &&
+                    Objects.equals(type, other.type);
             }
 
             @Override
@@ -490,14 +529,15 @@ public abstract class Ast {
             }
         }
 
+        // receiver.name
         public static final class Access extends Ast.Expression {
             private final Optional<Ast.Expression> receiver;
             private final String name;
             private Environment.Variable variable = null;
 
             public Access(Optional<Ast.Expression> receiver, String name) {
-                this.receiver = receiver;
-                this.name = name;
+                this.receiver = Objects.requireNonNull(receiver, "receiver is required, may be Optional.empty()");
+                this.name = Objects.requireNonNull(name , "name is required");
             }
 
             public Optional<Ast.Expression> getReceiver() { return receiver; }
@@ -522,10 +562,13 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Access &&
-                        receiver.equals(((Access) obj).receiver) &&
-                        name.equals(((Access) obj).name) &&
-                        Objects.equals(variable, ((Access) obj).variable);
+                if (this == obj) return true;
+                if (!(obj instanceof Access other)) return false;
+
+                return Objects.equals(receiver, other.receiver) &&
+                    Objects.equals(name, other.name) &&
+                    Objects.equals(variable, other.variable) &&
+                    Objects.equals(type, other.type);
             }
 
             @Override
@@ -538,6 +581,7 @@ public abstract class Ast {
             }
         }
 
+        // receiver.name( { arguments } )
         public static final class Function extends Ast.Expression {
             private final Optional<Ast.Expression> receiver;
             private final String name;
@@ -545,9 +589,9 @@ public abstract class Ast {
             private Environment.Function function = null;
 
             public Function(Optional<Ast.Expression> receiver, String name, List<Ast.Expression> arguments) {
-                this.receiver = receiver;
-                this.name = name;
-                this.arguments = arguments;
+                this.receiver = Objects.requireNonNull(receiver, "receiver is required, may be Optional.empty()");
+                this.name = Objects.requireNonNull(name, "name is required");
+                this.arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments is required, may be ArrayList<>()"));
             }
 
             public Optional<Ast.Expression> getReceiver() { return receiver; }
@@ -571,11 +615,14 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Ast.Expression.Function &&
-                        receiver.equals(((Ast.Expression.Function) obj).receiver) &&
-                        name.equals(((Ast.Expression.Function) obj).name) &&
-                        arguments.equals(((Ast.Expression.Function) obj).arguments) &&
-                        Objects.equals(function, ((Ast.Expression.Function) obj).function);
+                if (this == obj) return true;
+                if (!(obj instanceof Function other)) return false;
+
+                return Objects.equals(receiver, other.receiver) &&
+                    Objects.equals(name, other.name) &&
+                    Objects.equals(arguments, other.arguments) &&
+                    Objects.equals(function, other.function) &&
+                    Objects.equals(type, other.type);
             }
 
             @Override

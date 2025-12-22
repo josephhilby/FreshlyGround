@@ -11,7 +11,7 @@ import java.util.Objects;
  * <ul>
  *   <li>{@link #index} — the zero-based position in the input sequence of elements.</li>
  *   <li>{@link #peek} — matching elements to a given pattern and NOT advancing the index.</li>
- *   <li>{@link #match} — matching elements to a given pattern and advancing the index</li>
+ *   <li>{@link #match} — matching elements to a given pattern and advancing the index.</li>
  * </ul>
  *
  * <p>
