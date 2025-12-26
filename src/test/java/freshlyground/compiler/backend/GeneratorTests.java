@@ -17,7 +17,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class GeneratorTests {
-
     private static final Environment.Type OBJECT_TYPE;
     static {
         Scope objectScope = new Scope(Environment.Type.ANY.getScope());
