@@ -1,7 +1,6 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.Environment;
 
 import java.util.List;
 import java.util.Objects;
