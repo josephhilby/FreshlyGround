@@ -1,18 +1,29 @@
 package freshlyground.compiler.backend;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.Ast;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.List;
 
 public final class Generator implements Ast.Visitor<Void> {
+    private final StringWriter stringWriter;
     private final PrintWriter writer;
+    private final Bindings bindings;
     private int indent = 0;
 
-    public Generator(PrintWriter writer) {
-        this.writer = writer;
+    public Generator(Bindings bindings) {
+        this.stringWriter = new StringWriter();
+        this.writer = new PrintWriter(stringWriter);
+        this.bindings = bindings;
+    }
+
+    public String emit(Ast ast) {
+        visit(ast);
+        return stringWriter.toString();
     }
 
     private void print(Object... objects) {
@@ -86,7 +97,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        print(ast.getFunction().getReturnType().getJvmName(), " ", ast.getFunction().getName());
+        print(bindings.getMethod(ast).getType().getJvmName(), " ", bindings.getMethod(ast).getName());
 
         if (ast.getParameters().isEmpty()) {
             print("() {");
@@ -123,7 +134,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        print(ast.getVariable().getType().getJvmName(), " ", ast.getVariable().getJvmName());
+        print(bindings.getVariable(ast).getType().getJvmName(), " ", bindings.getVariable(ast).getJvmName());
 
         if (ast.getValue().isPresent()) {
             print(" = ", ast.getValue().get());
@@ -219,26 +230,26 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        if (ast.getType().equals(Environment.Type.INTEGER)) {
+        if (bindings.getType(ast).equals(Environment.Type.INTEGER)) {
             print(ast.getLiteral());
 
-        } else if (ast.getType().equals(Environment.Type.DECIMAL)) {
+        } else if (bindings.getType(ast).equals(Environment.Type.DECIMAL)) {
             print(ast.getLiteral());
 
-        } else if (ast.getType().equals(Environment.Type.STRING)) {
+        } else if (bindings.getType(ast).equals(Environment.Type.STRING)) {
             print("\"", ast.getLiteral(), "\"");
 
-        } else if (ast.getType().equals(Environment.Type.CHARACTER)) {
+        } else if (bindings.getType(ast).equals(Environment.Type.CHARACTER)) {
             print("'", ast.getLiteral(), "'");
 
-        } else if (ast.getType().equals(Environment.Type.BOOLEAN)) {
+        } else if (bindings.getType(ast).equals(Environment.Type.BOOLEAN)) {
             print(ast.getLiteral());
 
-        } else if (ast.getType().equals(Environment.Type.NIL)) {
+        } else if (bindings.getType(ast).equals(Environment.Type.NIL)) {
             print("null");
 
         } else {
-            throw new CompilerException("Unknown Type: " + ast.getType());
+            throw new CompilerException("Unknown Type: " + bindings.getType(ast));
         }
         return null;
     }
@@ -270,9 +281,9 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", ast.getVariable().getJvmName());
+            print(receiver, ".", bindings.getVariable(ast).getJvmName());
         } else {
-            print(ast.getVariable().getJvmName());
+            print(bindings.getVariable(ast).getJvmName());
         }
         return null;
     }
@@ -281,9 +292,9 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Function ast) {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", ast.getFunction().getJvmName(), "(");
+            print(receiver, ".", bindings.getFunction(ast).getJvmName(), "(");
         } else {
-            print(ast.getFunction().getJvmName(), "(");
+            print(bindings.getFunction(ast).getJvmName(), "(");
         }
 
         if (!ast.getArguments().isEmpty()) {

@@ -1,6 +1,7 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Builtins;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
@@ -14,20 +15,22 @@ import java.util.Optional;
 
 public final class Analyzer implements Ast.Visitor<Void> {
     public Scope scope;
-    private Environment.Type returnType;
+    public Bindings bindings;
+    private Environment.Type currentReturnType;
 
-    public Analyzer(Scope global) {
-        scope = global;
+    public Analyzer() {
+        scope = new Scope(null);
+        bindings = new Bindings();
         Builtins.install(scope);
     }
 
-    public Analyzer(Scope parent, boolean test) {
-        scope = new Scope(parent);
-        Builtins.install(scope);
-    }
+    public Scope getScope() { return scope; }
+    public Bindings getBindings() { return bindings; }
+    public void setReturnType(Environment.Type returnType) { this.currentReturnType = returnType; }
 
-    public Scope getScope() {
-        return scope;
+    public Bindings decorate(Ast ast) {
+        visit(ast);
+        return bindings;
     }
 
     // [ fields ] [ methods ]
@@ -44,7 +47,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // throws a CompilerException if: no 'main/0' type INT
         Environment.Function main = scope.lookupFunction("main", 0);
-        if (main.getReturnType() != Environment.Type.INTEGER) {
+        if (main.getType() != Environment.Type.INTEGER) {
             throw new CompilerException("main() return type must be an integer");
         }
 
@@ -64,7 +67,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (value.isPresent()) {
             visit(value.get());
 
-            Environment.Type actual = value.get().getType();
+            Environment.Type actual = bindings.getType(value.get());
             Environment.Type target = Environment.lookupType(typeName);
             requireAssignable(target, actual);
         }
@@ -76,7 +79,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // define variable in current scope, then set
         Environment.Variable variable = scope.defineVariable(name, name, Environment.lookupType(typeName), constant);
-        ast.setVariable(variable);
+        bindings.setVariable(ast, variable);
         return null;
     }
 
@@ -95,14 +98,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // check and save return type
-        returnType = Environment.Type.NIL;
+        currentReturnType = Environment.Type.NIL;
         if (ast.getReturnTypeName().isPresent()) {
-            returnType = Environment.lookupType(ast.getReturnTypeName().get());
+            currentReturnType = Environment.lookupType(ast.getReturnTypeName().get());
         }
 
         // define and set function in current scope
-        Environment.Function function = scope.defineFunction(name, name, paramTypes, returnType);
-        ast.setFunction(function);
+        Environment.Function function = scope.defineFunction(name, name, paramTypes, currentReturnType);
+        bindings.setMethod(ast, function);
 
         // visit statements (including parameters) in new scope
         visitAllStatements(parameters, paramTypes, statements);
@@ -127,15 +130,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
     }
 
-    // expression [ = expression ];
+    // expression;
     @Override
     public Void visit(Ast.Statement.Expression ast) {
-        // throws a CompilerException if: the expression is not an Ast.Expression.Function
-        if (!(ast.getExpression() instanceof Ast.Expression.Function)) {
-            throw new CompilerException("Expression must be a function");
-        }
-
-        // visit expression
         visit(ast.getExpression());
         return null;
     }
@@ -144,51 +141,45 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
         String name = ast.getName();
+
         Environment.Type type;
 
-        // throws a CompilerException if: no value AND no type
-        if (ast.getValue().isEmpty() && ast.getTypeName().isEmpty()) {
-            throw new CompilerException("Must have declared type or value");
-        }
-
-        // visit value (if present) then set type
-        if (ast.getValue().isPresent()) {
+        if (ast.getTypeName().isPresent() && ast.getValue().isPresent()) {
             visit(ast.getValue().get());
-            type = ast.getValue().get().getType();
-
-        } else {
             type = Environment.lookupType(ast.getTypeName().get());
+        } else if (ast.getTypeName().isPresent()) {
+            type = Environment.lookupType(ast.getTypeName().get());
+        } else {
+            visit(ast.getValue().get());
+            type = bindings.getType(ast.getValue().get());
+
         }
 
         // throws a CompilerException if: value exists AND not assignable to variable
         if (ast.getValue().isPresent() && ast.getTypeName().isPresent()) {
-            requireAssignable(Environment.lookupType(ast.getTypeName().get()), ast.getValue().get().getType());
+            Environment.Type target = Environment.lookupType(ast.getTypeName().get());
+            requireAssignable(target, type);
         }
 
         // define and set variable in current scope
         Environment.Variable variable = scope.defineVariable(name, name, type, false);
-        ast.setVariable(variable);
+        bindings.setVariable(ast, variable);
         return null;
     }
 
     // receiver = value;
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
-        // throws a CompilerException if: receiver is not Access
-        if (!(ast.getReceiver() instanceof Ast.Expression.Access receiver)) {
-            throw new CompilerException("Receiver must be an access expression");
-        }
-
-        visit(receiver);
+        visit(ast.getReceiver());
         visit(ast.getValue());
 
         // can't assign to constant
-        if (receiver.getVariable().getConstant()) {
+        if (bindings.getVariable(ast.getReceiver()).getConstant()) {
             throw new CompilerException("Cannot reassign constant");
         }
 
         // throws a CompilerException if: value is not assignable to receiver
-        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+        requireAssignable(bindings.getVariable(ast.getReceiver()).getType(), bindings.getType(ast.getValue()));
         return null;
     }
 
@@ -200,7 +191,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(condition);
 
         // throws a CompilerException if: condition not Bool
-        requireAssignable(Environment.Type.BOOLEAN, condition.getType());
+        requireAssignable(Environment.Type.BOOLEAN, bindings.getType(condition));
 
         // throws a CompilerException if: thenStatements empty
         if (ast.getThenStatements().isEmpty()) {
@@ -225,34 +216,29 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Ast.Statement.Assignment initialization;
         Ast.Statement.Assignment increment;
 
-        // throws a CompilerException if: statements empty
-        if (ast.getStatements().isEmpty()) {
-            throw new CompilerException("FOR block must contain at least one statement");
-        }
-
         if (ast.getInitialization() != null) {
             visit(ast.getInitialization());
-            initialization = (Ast.Statement.Assignment) ast.getInitialization();
+            initialization = ast.getInitialization();
 
             // throws a CompilerException if: initialization exists AND not Comparable
-            requireAssignable(Environment.Type.COMPARABLE, initialization.getReceiver().getType());
+            requireAssignable(Environment.Type.COMPARABLE, bindings.getType(initialization.getReceiver()));
         }
 
         if (ast.getIncrement() != null) {
             visit(ast.getIncrement());
-            increment = (Ast.Statement.Assignment) ast.getIncrement();
+            increment = ast.getIncrement();
 
             if (ast.getInitialization() != null) {
-                initialization = (Ast.Statement.Assignment) ast.getInitialization();
+                initialization = ast.getInitialization();
                 // throws a CompilerException if: initialization AND increment exists AND NOT same type
-                requireAssignable(initialization.getReceiver().getType(), increment.getReceiver().getType());
+                requireAssignable(bindings.getType(initialization.getReceiver()), bindings.getType(increment.getReceiver()));
             }
         }
 
         visit(ast.getCondition());
 
         // throws a CompilerException if: condition not Bool
-        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+        requireAssignable(Environment.Type.BOOLEAN, bindings.getType(ast.getCondition()));
 
         visitStatements(ast.getStatements());
 
@@ -265,7 +251,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getCondition());
 
         // throws a CompilerException if: value is not Boolean
-        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+        requireAssignable(Environment.Type.BOOLEAN, bindings.getType(ast.getCondition()));
 
         // visits WHILE statements in new scope
         visitStatements(ast.getStatements());
@@ -291,10 +277,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Statement.Return ast) {
         visit(ast.getValue());
-        Environment.Type actualReturn = ast.getValue().getType();
+        Environment.Type actualReturn = bindings.getType(ast.getValue());
 
         // throws a CompilerException if: value NOT assignable to return type
-        requireAssignable(returnType, actualReturn);
+        requireAssignable(currentReturnType, actualReturn);
 
         return null;
     }
@@ -306,16 +292,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // validate and set literal type
         if (literal instanceof String) {
-            ast.setType(Environment.Type.STRING);
+            bindings.setType(ast, Environment.Type.STRING);
 
         } else if (literal instanceof Character) {
-            ast.setType(Environment.Type.CHARACTER);
+            bindings.setType(ast, Environment.Type.CHARACTER);
 
         } else if (literal instanceof Boolean) {
-            ast.setType(Environment.Type.BOOLEAN);
+            bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (literal == null) {
-            ast.setType(Environment.Type.NIL);
+            bindings.setType(ast, Environment.Type.NIL);
 
         } else if (literal instanceof BigInteger bigInteger) {
             if (bigInteger.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0 ||
@@ -324,7 +310,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 // throws a CompilerException if: INT out of range
                 throw new CompilerException("INT Overflow or Underflow");
             }
-            ast.setType(Environment.Type.INTEGER);
+            bindings.setType(ast, Environment.Type.INTEGER);
 
         } else if (literal instanceof BigDecimal bigDecimal) {
             if (bigDecimal.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0 ||
@@ -333,7 +319,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 // throws a CompilerException if: DOUBLE out of range
                 throw new CompilerException("DOUBLE Overflow or Underflow");
             }
-            ast.setType(Environment.Type.DECIMAL);
+            bindings.setType(ast, Environment.Type.DECIMAL);
 
         } else {
             // throws a CompilerException if: Unknown Type
@@ -344,13 +330,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Group ast) {
-        // throws a CompilerException if: expression not a binary expression
-        if (!(ast.getExpression() instanceof Ast.Expression.Binary)) {
-            throw new CompilerException("Group expression must be binary");
-        }
-
         visit(ast.getExpression());
-        ast.setType(ast.getExpression().getType());
+        bindings.setType(ast, bindings.getType(ast.getExpression()));
 
         return null;
     }
@@ -361,30 +342,30 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getLeft());
         visit(ast.getRight());
 
-        Environment.Type leftType = ast.getLeft().getType();
-        Environment.Type rightType = ast.getRight().getType();
+        Environment.Type leftType = bindings.getType(ast.getLeft());
+        Environment.Type rightType = bindings.getType(ast.getRight());
 
         // throws a CompilerException if: all errant casts
         if (check(operator, "AND", "OR")) {
             requireAssignables(Environment.Type.BOOLEAN, leftType, rightType);
-            ast.setType(Environment.Type.BOOLEAN);
+            bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "==", "!=", "<=", ">=", "<", ">")) {
             requireAssignables(Environment.Type.COMPARABLE, leftType, rightType);
             compareTypes(leftType, rightType);
-            ast.setType(Environment.Type.BOOLEAN);
+            bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
-            ast.setType(Environment.Type.STRING);
+            bindings.setType(ast, Environment.Type.STRING);
 
         } else if (check(operator, "+", "-", "*", "/")) {
             if (check(Environment.Type.INTEGER, leftType)) {
                 requireAssignables(Environment.Type.INTEGER, leftType, rightType);
-                ast.setType(Environment.Type.INTEGER);
+                bindings.setType(ast, Environment.Type.INTEGER);
 
             } else if (check(Environment.Type.DECIMAL, leftType)) {
                 requireAssignables(Environment.Type.DECIMAL, leftType, rightType);
-                ast.setType(Environment.Type.DECIMAL);
+                bindings.setType(ast, Environment.Type.DECIMAL);
 
             } else {
                 throw new CompilerException("Arithmetic Operators must have matching types, INT or DECIMAL");
@@ -422,19 +403,26 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Access ast) {
         Environment.Variable variable;
+
         // if receiver, visit
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
-            variable = receiver.getType().lookupVariable(ast.getName());
+
+            Environment.Type receiverType = bindings.getType(receiver);
+            if (receiverType == null) {
+                throw new CompilerException("Receiver: type is unresolved");
+            }
+
+            variable = receiverType.lookupVariable(ast.getName());
 
         } else {
             variable = scope.lookupVariable(ast.getName());
         }
 
-        // set variable
-        ast.setVariable(variable);
-
+        // set variable and type
+        bindings.setVariable(ast, variable);
+        bindings.setType(ast, variable.getType());
         return null;
     }
 
@@ -451,20 +439,25 @@ public final class Analyzer implements Ast.Visitor<Void> {
             Ast.Expression receiver = ast.getReceiver().get();
             visit(receiver);
 
-            function = receiver.getType().lookupFunction(ast.getName(), arguments.size());
+            Environment.Type receiverType = bindings.getType(receiver);
+            if (receiverType == null) {
+                throw new CompilerException("Receiver: type is unresolved");
+            }
+
+            function = receiverType.lookupFunction(ast.getName(), arguments.size());
             parameterOffset = 1;
         } else {
             function = scope.lookupFunction(ast.getName(), arguments.size());
         }
 
         // set function
-        ast.setFunction(function);
+        bindings.setFunction(ast, function);
 
         // checks provided arguments are assignable to parameter types
         parameterTypes = function.getParameterTypes();
         for (Ast.Expression argument : arguments) {
             visit(argument);
-            requireAssignable(parameterTypes.get(parameterOffset), argument.getType());
+            requireAssignable(parameterTypes.get(parameterOffset), bindings.getType(argument));
             parameterOffset++;
         }
 

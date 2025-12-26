@@ -54,7 +54,7 @@ final class ParserTests {
             ),
             Arguments.of("Method",
                  Arrays.asList(
-                    //DEF name(): Type DO stmt; END
+                    //DEF name(): Type DO func(); END
                     new Token(Token.Type.IDENTIFIER, "DEF", 0),
                     new Token(Token.Type.IDENTIFIER, "name", 4),
                     new Token(Token.Type.OPERATOR, "(", 8),
@@ -62,39 +62,43 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ":", 10),
                     new Token(Token.Type.IDENTIFIER, "Type", 12),
                     new Token(Token.Type.IDENTIFIER, "DO", 17),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 20),
-                    new Token(Token.Type.OPERATOR, ";", 24),
-                    new Token(Token.Type.IDENTIFIER, "END", 26)
+                    new Token(Token.Type.IDENTIFIER, "func", 20),
+                     new Token(Token.Type.OPERATOR, "(", 24),
+                     new Token(Token.Type.OPERATOR, ")", 25),
+                    new Token(Token.Type.OPERATOR, ";", 26),
+                    new Token(Token.Type.IDENTIFIER, "END", 28)
                 ),
                 new Ast.Source(
                     Arrays.asList(),
                     Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(), Optional.of("Type"), Arrays.asList(
-                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                        new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of()))
                     )))
                 )
             ),
             Arguments.of("Method w/o Type",
                 Arrays.asList(
-                    // DEF name() DO stmt; END
+                    // DEF name() DO func(); END
                     new Token(Token.Type.IDENTIFIER, "DEF", 0),
                     new Token(Token.Type.IDENTIFIER, "name", 4),
                     new Token(Token.Type.OPERATOR, "(", 8),
                     new Token(Token.Type.OPERATOR, ")", 9),
                     new Token(Token.Type.IDENTIFIER, "DO", 11),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 14),
-                    new Token(Token.Type.OPERATOR, ";", 18),
-                    new Token(Token.Type.IDENTIFIER, "END", 20)
+                    new Token(Token.Type.IDENTIFIER, "func", 14),
+                    new Token(Token.Type.OPERATOR, "(", 18),
+                    new Token(Token.Type.OPERATOR, ")", 19),
+                    new Token(Token.Type.OPERATOR, ";", 20),
+                    new Token(Token.Type.IDENTIFIER, "END", 22)
                 ),
                 new Ast.Source(
                     Arrays.asList(),
                     Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList(
-                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                        new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of()))
                     )))
                 )
             ),
             Arguments.of("Method with Params",
                 Arrays.asList(
-                    // DEF name(x: Type, y: Type, z: Type): Type DO stmt; END
+                    // DEF name(x: Type, y: Type, z: Type): Type DO func(); END
                     new Token(Token.Type.IDENTIFIER, "DEF", 0),
                     new Token(Token.Type.IDENTIFIER, "name", 4),
                     new Token(Token.Type.OPERATOR, "(", 8),
@@ -113,21 +117,23 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ":", 15),
                     new Token(Token.Type.IDENTIFIER, "Type4", 17),
                     new Token(Token.Type.IDENTIFIER, "DO", 22),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 25),
-                    new Token(Token.Type.OPERATOR, ";", 29),
-                    new Token(Token.Type.IDENTIFIER, "END", 31)
+                    new Token(Token.Type.IDENTIFIER, "func", 25),
+                    new Token(Token.Type.OPERATOR, "(", 29),
+                    new Token(Token.Type.OPERATOR, ")", 30),
+                    new Token(Token.Type.OPERATOR, ";", 31),
+                    new Token(Token.Type.IDENTIFIER, "END", 33)
                 ),
                 new Ast.Source(
                     Arrays.asList(),
                     Arrays.asList(new Ast.Method("name", Arrays.asList("x", "y", "z"), Arrays.asList("Type1", "Type2", "Type3"), Optional.of("Type4"), Arrays.asList(
-                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                        new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of()))
                     )))
                 )
             ),
             Arguments.of("Field Method",
                 Arrays.asList(
                     // LET name: Type1 = expr;
-                    // DEF name(): Type2 DO stmt; END
+                    // DEF name(): Type2 DO func(); END
                     new Token(Token.Type.IDENTIFIER, "LET", 0),
                     new Token(Token.Type.IDENTIFIER, "name", 4),
                     new Token(Token.Type.OPERATOR, ":", 8),
@@ -142,16 +148,18 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ":", 33),
                     new Token(Token.Type.IDENTIFIER, "Type2", 35),
                     new Token(Token.Type.IDENTIFIER, "DO", 44),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 47),
-                    new Token(Token.Type.OPERATOR, ";", 51),
-                    new Token(Token.Type.IDENTIFIER, "END", 53)
+                    new Token(Token.Type.IDENTIFIER, "func", 47),
+                    new Token(Token.Type.OPERATOR, "(", 51),
+                    new Token(Token.Type.OPERATOR, ")", 52),
+                    new Token(Token.Type.OPERATOR, ";", 53),
+                    new Token(Token.Type.IDENTIFIER, "END", 55)
                 ),
                 new Ast.Source(
                     Arrays.asList(new Ast.Field("name", "Type1", false, Optional.of(
                         new Ast.Expression.Access(Optional.empty(), "expr")
                     ))),
                     Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(), Optional.of("Type2"), Arrays.asList(
-                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
+                        new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of()))
                     )))
                 )
             )
@@ -168,7 +176,7 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("Field Method",
                 Arrays.asList(
-                    // DEF name(): Type2 DO stmt; END
+                    // DEF name(): Type2 DO func(); END
                     // LET name: Type1 = expr;
                     new Token(Token.Type.IDENTIFIER, "DEF", 0),
                     new Token(Token.Type.IDENTIFIER, "name", 4),
@@ -177,20 +185,22 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ":", 10),
                     new Token(Token.Type.IDENTIFIER, "Type2", 12),
                     new Token(Token.Type.IDENTIFIER, "DO", 18),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 21),
-                    new Token(Token.Type.OPERATOR, ";", 25),
-                    new Token(Token.Type.IDENTIFIER, "END", 27),
-                    new Token(Token.Type.IDENTIFIER, "LET", 30),
-                    new Token(Token.Type.IDENTIFIER, "name", 34),
-                    new Token(Token.Type.OPERATOR, ":", 38),
-                    new Token(Token.Type.IDENTIFIER, "Type1", 40),
-                    new Token(Token.Type.OPERATOR, "=", 46),
-                    new Token(Token.Type.IDENTIFIER, "expr", 48),
-                    new Token(Token.Type.OPERATOR, ";", 52)
+                    new Token(Token.Type.IDENTIFIER, "func", 21),
+                    new Token(Token.Type.OPERATOR, "(", 25),
+                    new Token(Token.Type.OPERATOR, ")", 26),
+                    new Token(Token.Type.OPERATOR, ";", 27),
+                    new Token(Token.Type.IDENTIFIER, "END", 29),
+                    new Token(Token.Type.IDENTIFIER, "LET", 32),
+                    new Token(Token.Type.IDENTIFIER, "name", 36),
+                    new Token(Token.Type.OPERATOR, ":", 40),
+                    new Token(Token.Type.IDENTIFIER, "Type1", 42),
+                    new Token(Token.Type.OPERATOR, "=", 48),
+                    new Token(Token.Type.IDENTIFIER, "expr", 50),
+                    new Token(Token.Type.OPERATOR, ";", 54)
                 ),
                 CompilerException.class,
                 "Must have all LET statements before DEF",
-                30
+                32
             )
         );
     }
@@ -339,14 +349,6 @@ final class ParserTests {
 
     private static Stream<Arguments> testExpressionStatement() {
         return Stream.of(
-            Arguments.of("Variable",
-                Arrays.asList(
-                    // name;
-                    new Token(Token.Type.IDENTIFIER, "name", 0),
-                    new Token(Token.Type.OPERATOR, ";", 4)
-                ),
-                new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(),"name"))
-            ),
             Arguments.of("Function Expression",
                 Arrays.asList(
                     //name();
@@ -355,7 +357,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ")", 5),
                     new Token(Token.Type.OPERATOR, ";", 6)
                 ),
-                new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", Arrays.asList()))
+                new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "name", List.of()))
             )
         );
     }
@@ -370,12 +372,14 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("Missing ;",
                 Arrays.asList(
-                    // name
-                    new Token(Token.Type.IDENTIFIER, "name", 0)
+                    // func()
+                    new Token(Token.Type.IDENTIFIER, "func", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.OPERATOR, ")", 5)
                 ),
                 CompilerException.class,
                 "Missing: ;",
-                4
+                6
             )
         );
     }
@@ -504,37 +508,43 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("If",
                 Arrays.asList(
-                    //IF expr DO stmt; END
+                    //IF expr DO func(); END
                     new Token(Token.Type.IDENTIFIER, "IF", 0),
                     new Token(Token.Type.IDENTIFIER, "expr", 3),
                     new Token(Token.Type.IDENTIFIER, "DO", 8),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 11),
-                    new Token(Token.Type.OPERATOR, ";", 15),
-                    new Token(Token.Type.IDENTIFIER, "END", 17)
+                    new Token(Token.Type.IDENTIFIER, "func", 11),
+                    new Token(Token.Type.OPERATOR, "(", 15),
+                    new Token(Token.Type.OPERATOR, ")", 16),
+                    new Token(Token.Type.OPERATOR, ";", 17),
+                    new Token(Token.Type.IDENTIFIER, "END", 19)
                 ),
                 new Ast.Statement.If(
                     new Ast.Expression.Access(Optional.empty(), "expr"),
-                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))),
+                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of()))),
                     Arrays.asList()
                 )
             ),
             Arguments.of("Else",
                 Arrays.asList(
-                    //IF expr DO stmt1; ELSE stmt2; END
+                    //IF expr DO funcOne(); ELSE funcTwo(); END
                     new Token(Token.Type.IDENTIFIER, "IF", 0),
                     new Token(Token.Type.IDENTIFIER, "expr", 3),
                     new Token(Token.Type.IDENTIFIER, "DO", 8),
-                    new Token(Token.Type.IDENTIFIER, "stmt1", 11),
-                    new Token(Token.Type.OPERATOR, ";", 16),
-                    new Token(Token.Type.IDENTIFIER, "ELSE", 18),
-                    new Token(Token.Type.IDENTIFIER, "stmt2", 23),
-                    new Token(Token.Type.OPERATOR, ";", 28),
-                    new Token(Token.Type.IDENTIFIER, "END", 30)
+                    new Token(Token.Type.IDENTIFIER, "funcOne", 11),
+                    new Token(Token.Type.OPERATOR, "(", 18),
+                    new Token(Token.Type.OPERATOR, ")", 19),
+                    new Token(Token.Type.OPERATOR, ";", 20),
+                    new Token(Token.Type.IDENTIFIER, "ELSE", 22),
+                    new Token(Token.Type.IDENTIFIER, "funcTwo", 27),
+                    new Token(Token.Type.OPERATOR, "(", 32),
+                    new Token(Token.Type.OPERATOR, ")", 33),
+                    new Token(Token.Type.OPERATOR, ";", 34),
+                    new Token(Token.Type.IDENTIFIER, "END", 36)
                 ),
                 new Ast.Statement.If(
                     new Ast.Expression.Access(Optional.empty(), "expr"),
-                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))),
-                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt2")))
+                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "funcOne", List.of()))),
+                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "funcTwo", List.of())))
                 )
             )
         );
@@ -585,7 +595,7 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("For Loop",
                 Arrays.asList(
-                    // FOR (id = expr1; expr2; id = expr3) stmt1; END
+                    // FOR (id = expr1; expr2; id = expr3) func(); END
                     new Token(Token.Type.IDENTIFIER, "FOR", 0),
                     new Token(Token.Type.OPERATOR, "(", 4),
                     new Token(Token.Type.IDENTIFIER, "id", 5),
@@ -598,9 +608,11 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "=", 27),
                     new Token(Token.Type.IDENTIFIER, "expr3", 29),
                     new Token(Token.Type.OPERATOR, ")", 34),
-                    new Token(Token.Type.IDENTIFIER, "stmt1", 36),
-                    new Token(Token.Type.OPERATOR, ";", 41),
-                    new Token(Token.Type.IDENTIFIER, "END", 43)
+                    new Token(Token.Type.IDENTIFIER, "func", 36),
+                    new Token(Token.Type.OPERATOR, "(", 41),
+                    new Token(Token.Type.OPERATOR, ")", 42),
+                    new Token(Token.Type.OPERATOR, ";", 43),
+                    new Token(Token.Type.IDENTIFIER, "END", 45)
                 ),
                 new Ast.Statement.For(
                     new Ast.Statement.Assignment(
@@ -613,7 +625,7 @@ final class ParserTests {
                         new Ast.Expression.Access(Optional.empty(), "expr3")
                     ),
                     Arrays.asList(
-                        new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt1"))
+                        new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of()))
                     )
                 )
             )
@@ -630,7 +642,7 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("Missing END",
                 Arrays.asList(
-                    // FOR (id = expr1; expr2; id = expr3) stmt1;
+                    // FOR (id = expr1; expr2; id = expr3) func();
                     new Token(Token.Type.IDENTIFIER, "FOR", 0),
                     new Token(Token.Type.OPERATOR, "(", 4),
                     new Token(Token.Type.IDENTIFIER, "id", 5),
@@ -643,12 +655,14 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "=", 27),
                     new Token(Token.Type.IDENTIFIER, "expr3", 29),
                     new Token(Token.Type.OPERATOR, ")", 34),
-                    new Token(Token.Type.IDENTIFIER, "stmt1", 36),
-                    new Token(Token.Type.OPERATOR, ";", 41)
+                    new Token(Token.Type.IDENTIFIER, "func", 36),
+                    new Token(Token.Type.OPERATOR, "(", 40),
+                    new Token(Token.Type.OPERATOR, ")", 41),
+                    new Token(Token.Type.OPERATOR, ";", 42)
                 ),
                 CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
-                42
+                43
             )
         );
     }
@@ -663,17 +677,19 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("While",
                 Arrays.asList(
-                    //WHILE expr DO stmt; END
+                    //WHILE expr DO func(); END
                     new Token(Token.Type.IDENTIFIER, "WHILE", 0),
                     new Token(Token.Type.IDENTIFIER, "expr", 6),
                     new Token(Token.Type.IDENTIFIER, "DO", 11),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 14),
-                    new Token(Token.Type.OPERATOR, ";", 18),
-                    new Token(Token.Type.IDENTIFIER, "END", 20)
+                    new Token(Token.Type.IDENTIFIER, "func", 14),
+                    new Token(Token.Type.OPERATOR, "(", 18),
+                    new Token(Token.Type.OPERATOR, ")", 19),
+                    new Token(Token.Type.OPERATOR, ";", 20),
+                    new Token(Token.Type.IDENTIFIER, "END", 21)
                 ),
                 new Ast.Statement.While(
                     new Ast.Expression.Access(Optional.empty(), "expr"),
-                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))
+                    Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "func", List.of())))
                 )
             )
         );
@@ -689,16 +705,18 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("Missing END",
                 Arrays.asList(
-                    // WHILE expr DO stmt;
+                    // WHILE expr DO func();
                     new Token(Token.Type.IDENTIFIER, "WHILE", 0),
                     new Token(Token.Type.IDENTIFIER, "expr", 6),
                     new Token(Token.Type.IDENTIFIER, "DO", 11),
-                    new Token(Token.Type.IDENTIFIER, "stmt", 14),
-                    new Token(Token.Type.OPERATOR, ";", 18)
+                    new Token(Token.Type.IDENTIFIER, "func", 14),
+                    new Token(Token.Type.OPERATOR, "(", 18),
+                    new Token(Token.Type.OPERATOR, ")", 19),
+                    new Token(Token.Type.OPERATOR, ";", 20)
                 ),
                 CompilerException.class,
                 "Invalid Length. Remaining: 0 Expected: 1",
-                19
+                21
             )
         );
     }

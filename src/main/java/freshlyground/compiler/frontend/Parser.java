@@ -18,13 +18,11 @@ import java.util.function.Supplier;
  * <ul>
  *   <li>{@link TokenStream} — maintains the parser’s state in evaluating the given token stream,
  *       including the current index, and AST construction.</li>
- *   <li>{@link #parseSource()} — iterates over the token stream repeatedly calling {@link #parseField()} or
- *       {@link #parseMethod()} to produce {@link Ast.Field}s or {@link Ast.Method}s, automatically skipping
- *       over whitespace.</li>
+ *   <li>{@link #parse()} — returns an AST after iterating over the token stream.</li>
  * </ul>
  *
  * <p>
- * To use the parser call: {@code Ast ast = new Parser(tokens).parseSource()}
+ * To use the parser call: {@code Ast ast = new Parser(tokens).parse()}
  * <p/>
  *
  * <p>
@@ -41,6 +39,8 @@ public final class Parser {
     public Parser(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
+
+    public Ast parse() { return parseSource(); }
 
     /**
      * Parses the {@code source} rule.
@@ -164,7 +164,7 @@ public final class Parser {
             return parseAssignmentStatement(expression);
         }
 
-        return parseExpressionStatement(expression);
+        return parseExpressionStatement((Ast.Expression.Function) expression);
     }
 
     /**
@@ -228,7 +228,7 @@ public final class Parser {
     //  FOR (initialization; condition; increment) statements END
     public Ast.Statement.For parseForStatement() throws CompilerException {
         keywordCheck("(");
-        Ast.Statement initialization = null;
+        Ast.Statement.Assignment initialization = null;
         if (tokens.get(0).type() == Token.Type.IDENTIFIER) {
             initialization = parseLoopStatement();
         }
@@ -237,7 +237,7 @@ public final class Parser {
         Ast.Expression expression = parseExpression();
         keywordCheck(";");
 
-        Ast.Statement increment = null;
+        Ast.Statement.Assignment increment = null;
         if (tokens.get(0).type() == Token.Type.IDENTIFIER) {
             increment = parseLoopStatement();
         }
@@ -288,12 +288,12 @@ public final class Parser {
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression receiver) throws CompilerException {
         Ast.Expression value = parseExpression();
         keywordCheck(";");
-        return new Ast.Statement.Assignment(receiver, value);
+        return new Ast.Statement.Assignment((Ast.Expression.Access) receiver, value);
     }
 
     // expression ";"
     // receiver;
-    public Ast.Statement.Expression parseExpressionStatement(Ast.Expression expression) throws CompilerException {
+    public Ast.Statement.Expression parseExpressionStatement(Ast.Expression.Function expression) throws CompilerException {
         keywordCheck(";");
         return new Ast.Statement.Expression(expression);
     }
@@ -304,7 +304,7 @@ public final class Parser {
         Ast.Expression receiver = parseExpression();
         keywordCheck("=");
         Ast.Expression value = parseExpression();
-        return new Ast.Statement.Assignment(receiver, value);
+        return new Ast.Statement.Assignment((Ast.Expression.Access) receiver, value);
     }
 
     /**
@@ -485,7 +485,7 @@ public final class Parser {
         return indexes;
     }
 
-    // remove found escape characters from locations but keep escaped escape chars
+    // remove found escape characters from locations but keep escape chars
     private String clean(String string, ArrayList<Integer> indexes) {
         StringBuilder builder = new StringBuilder();
         int i = 0;

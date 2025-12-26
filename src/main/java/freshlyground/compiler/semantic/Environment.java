@@ -1,5 +1,6 @@
 package freshlyground.compiler.semantic;
 
+import freshlyground.common.CompilerException;
 import freshlyground.compiler.frontend.Ast;
 
 import java.util.HashMap;
@@ -24,7 +25,7 @@ public final class Environment {
 
     public static Type lookupType(String name) {
         if (!TYPES.containsKey(name)) {
-            throw new RuntimeException("Unknown type " + name + ".");
+            throw new CompilerException("Unknown type: " + name + ".");
         }
 
         return TYPES.get(name);
@@ -123,7 +124,7 @@ public final class Environment {
         public String getName() { return name; }
         public String getJvmName() { return jvmName; }
         public List<Type> getParameterTypes() { return parameterTypes; }
-        public Type getReturnType() { return returnType; }
+        public Type getType() { return returnType; }
 
         @Override
         public boolean equals(Object obj) {

@@ -41,6 +41,7 @@ semantic analysis and code generation stages.
 >```ebnf
 >non-terminal symbol       ::= production rule
 >---                           ---
+>
 >source                    ::= { field } { method }
 >
 >field                     ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
@@ -48,7 +49,8 @@ semantic analysis and code generation stages.
 >method                    ::= "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")"
 >                            [ ":" identifier ] "DO" { statement } "END"
 >```
->
+> 
+>Statements ::= Do Something
 >```ebnf
 >statement                 ::= "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
 >                            | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
@@ -58,6 +60,7 @@ semantic analysis and code generation stages.
 >                            | expression [ "=" expression ] ";"
 >```
 >
+> Expressions ::= Resolve to Value
 >```ebnf
 >expression                ::= logical_expression
 >
@@ -87,3 +90,9 @@ semantic analysis and code generation stages.
 >- `[ … ]` = optional (zero or one)
 >- `|` = alternative
 >- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
+
+
+The secondary expression definition with the member access (".") is meant to mimic member access and method 
+invocation on a receiver. It is modeling static member lookup on a nominal type:
+- object.field means: evaluate object to some type T, then look in T’s scope for a variable named field.
+- object.method(a, b) means: evaluate object to type T, then look in T’s scope for a function named method with arity 2 (and internally it’s stored with arity 3 because of the implicit receiver/this).
