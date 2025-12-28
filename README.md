@@ -14,14 +14,64 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-FreshlyGround is a **novel programming language compiler** whose source code is compiled into bytecode
-for execution on the **Java Virtual Machine (JVM)**. This project was adapted from an academic compiler
-project created in **COP 4020** at the **University of Florida**, and loosely follows the methodology 
-outlined in the book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
+FreshlyGround is a **novel programming language compiler** whose source code is transpiled into Java. 
+This project was refactored and expanded from an academic transpiler project created in **COP 4020** at the 
+**University of Florida**, and follows the methodology outlined in the book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
 
-The compiler is structured as a sequence of well-defined, ordered, single-responsibility passes. Each pass performs 
-a distinct transformation on the program representation, following a clear separation of concerns between tokenization, 
-syntactic analysis, semantic analysis, and bytecode generation.
+### Requirements
+- Java 21+
+
+### Get Started
+1. Ensure you have Java 21 or higher
+2. Fork and pull this repository
+3. Place your code in `/examples/src`
+   - Note: There is an existing sample file there to transpile (`hello.fg`)
+4. Navigate to root (following paths will assume you are in root)
+5. Transpile with the following:
+> ```bash
+> ./gradlew build
+> ./gradlew compileJava
+> ./build/install/PLC_Project/bin/fgc examples/src/<file_name>.fg examples/dist/Main.java
+> javac examples/dist/Main.java
+> ```
+
+6. Run with the following:
+> ```bash
+> cd examples/dist
+> java Main
+> ```
+
+## Roadmap
+- [x] Complete COP 4020
+- [x] Redesign and Refactor
+    - [x] Remove semantic info from AST
+    - [x] Enforce syntax in AST constructors
+    - [x] Store semantic info in new Bindings class
+    - [x] Add built-ins for common use functions and variables
+    - [x] Create single exception CompilerException class
+    - [x] Remove all syntax error handling from Analyzer
+    - [x] Enforce Java 21 in gradle
+    - [x] Update README
+- [x] Transpiler
+  - [x] Ensure single-responsibility in all passes
+- [x] Command Line Interface (CLI)
+  - [x] Create CompilerMain class for single CLI
+  - [x] Update gradle to "compile" with 'fgc' (FreshlyGround Compiler)
+  - [x] Update README 'Get Started'
+- [ ] Expand Documentation
+  - [ ] Finalize and link /docs files
+- [ ] Clean up and Expand Testing
+  - [ ] Remove testing overlap
+  - [ ] Ensure unit tests only cover class responsibilities
+  - [ ] Lower current End-to-End testing to Interaction Tests
+  - [ ] Create new End-to-End tests through the CLI
+- [ ] Compiler
+  - [ ] Lower from Java to Java Bytecode
+
+## Architecture
+The transpiler is structured as a sequence of well-defined, ordered, single-responsibility passes. Each pass performs
+a distinct transformation on the program representation, following a clear separation of concerns between tokenization,
+syntactic analysis, semantic analysis, and code generation.
 
 ### Compilation Pipeline (Passes)
 
@@ -39,34 +89,34 @@ syntactic analysis, semantic analysis, and bytecode generation.
 
 Digging a bit deeper:
 
-The lexer (`Lexer.java`) performs lexical analysis (or tokenization), converting raw characters into a stream of typed tokens while preserving 
-positional information. The parser (`Parser.java`) iterates over the token stream, validating the program syntax against the 
-language grammar and constructs a hierarchical Abstract Syntax Tree (AST) that captures the program's syntactic structure, 
-without interpreting semantics or types. 
+The lexer (`Lexer.java`) performs lexical analysis (or tokenization), converting raw characters into a stream of 
+typed tokens while preserving positional information. The parser (`Parser.java`) iterates over that token stream, 
+validating the program syntax against the language grammar and constructs a hierarchical Abstract Syntax Tree (AST) 
+that captures the program's syntactic structure, without interpreting semantics or types. 
 
-The analyzer (`Analyzer.java`) then traverses the AST and applies the languages scoping and environment rules,
-performing semantic analysis such as name resolution, type checking, and local type inference for untyped declarations. 
-This pass 'decorates' the AST with resolved symbols and concrete types without altering the original syntax. 
+The analyzer (`Analyzer.java`) then traverses the AST and applies the bindings by means of the languages scoping and 
+environment rules, performing semantic analysis such as name resolution, type checking, and local type inference for 
+untyped declarations. This pass 'decorates' the AST with resolved symbols and concrete types without altering the 
+original syntax. 
 
-Finally, the generator (`Generator.java`) lowers the fully analyzed program into executable JVM bytecode, relying on 
+Finally, the generator (`Generator.java`) translates the fully analyzed program into executable Java, relying on 
 the decorated AST to ensure all identifiers, scopes, and types are resolved prior to code generation.
 
 ## Example
 ```
 LET x: Integer = 10;
 ```
-While the above snippet is valid, by itself it would fail to compile. This is because FreshlyGround requires a `main()` 
-method as an entry point in all source code files. For simplicity, we will not include a `main()` method in this example.
 
 ### Tokenization & Syntactic Analysis (Lexing and Parsing)
-The lexer tokenizes the source code into a typed token stream. For this input, the relevant tokens correspond to:
+The lexer tokenizes the provided source code into a typed token stream. For this input, the relevant tokens would 
+correspond to:
 
 `token stream = { "LET", "x", ":", "Integer", "=", "10", ";" }`
 
-Because the token stream is syntactically valid, the parser matches it to the field production: 
+Because the token stream is syntactically valid, the parser would match it to the field production: 
 
 ```ebnf
-field ::= "LET" [ CONST ] identifier ":" identifier [ "=" expression ] ";"
+field ::= "LET" identifier ":" declared_type "=" expression ";"
 ``` 
 
 With the field identifier mapping to `x`, the declared type mapping to `Integer`, and the initialized expression 
@@ -164,6 +214,3 @@ Binding{
     
 }
 ```
-
-## Documentation 
-(TODO - fill out docs files and add links with small descriptions)

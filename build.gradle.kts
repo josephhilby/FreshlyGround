@@ -26,3 +26,9 @@ application {
 tasks.named<CreateStartScripts>("startScripts") {
     applicationName = "fgc"
 }
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
