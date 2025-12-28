@@ -41,31 +41,30 @@ This project was refactored and expanded from an academic transpiler project cre
 > ```
 
 ## Roadmap
-- [x] Complete COP 4020
+- [x] Complete COP 4020 baseline implementation
 - [x] Redesign and Refactor
     - [x] Remove semantic info from AST
-    - [x] Enforce syntax in AST constructors
-    - [x] Store semantic info in new Bindings class
-    - [x] Add built-ins for common use functions and variables
-    - [x] Create single exception CompilerException class
+    - [x] Enforce syntactic correctness in AST constructors
+    - [x] Implement a dedicated `Bindings` class
+    - [x] Add `Builtins` for common use functions and variables
+    - [x] Centralize error handling with `CompilerException`
     - [x] Remove all syntax error handling from Analyzer
-    - [x] Enforce Java 21 in gradle
+    - [x] Enforce Java 21 via Gradle toolchain
     - [x] Update README
-- [x] Transpiler
+- [x] Transpiler architecture
   - [x] Ensure single-responsibility in all passes
 - [x] Command Line Interface (CLI)
-  - [x] Create CompilerMain class for single CLI
-  - [x] Update gradle to "compile" with 'fgc' (FreshlyGround Compiler)
-  - [x] Update README 'Get Started'
-- [ ] Expand Documentation
-  - [ ] Finalize and link /docs files
+  - [x] Create `CompilerMain` class for single CLI
+  - [x] Set Gradle to install CLI as `fgc` (FreshlyGround Compiler)
 - [ ] Clean up and Expand Testing
-  - [ ] Remove testing overlap
+  - [ ] Reduce overlap between test layers
   - [ ] Ensure unit tests only cover class responsibilities
-  - [ ] Lower current End-to-End testing to Interaction Tests
-  - [ ] Create new End-to-End tests through the CLI
+  - [ ] Reclassify current End-to-End testing to Interaction Tests
+  - [ ] Add CLI-driven End-to-End tests
 - [ ] Compiler
-  - [ ] Lower from Java to Java Bytecode
+    - [ ] Lower from Java source generation to direct Java Bytecode
+- [ ] Expand Documentation
+    - [ ] Finalize and link /docs files
 
 ## Architecture
 The transpiler is structured as a sequence of well-defined, ordered, single-responsibility passes. Each pass performs
@@ -149,7 +148,7 @@ node containing a single field and no methods:
 
 ```yaml
 Ast.Source
- └─ fields: [
+ └─ fields:
     Ast.Field
      ├─ name: "x"
      ├─ typeName: "Integer"
@@ -157,7 +156,6 @@ Ast.Source
      └─ value:
         Ast.Expression.Literal
          └─ literal: 10
-     ]
  └─ methods: []
 ```
 
@@ -169,47 +167,22 @@ using:
 - Scope to model lexical visibility of those descriptors at any point
 
 During this specific pass, it:
-- Resolves the field node's declared type to a concrete `Environment.Type`
-- Infers and resolves the literal node's type to a concrete `Environment.Type`
+- Resolves the field node's declared type to a concrete `Environment.Type.INTEGER`
+- Infers and resolves the literal node's type to a concrete `Environment.Type.INTEGER`
 - Ensures the two types are compatible according to the languages semantic rules
 - Declares `x` in the current scope as an `Environment.Variable`
-- Binds the variable and type metadata to the respective AST nodes (i.e., "decorates the AST via external bindings")
+- Binds the semantic metadata to the respective AST nodes (i.e., "decorates the AST via external bindings")
 
-```text
-// Current Scope
-Scope{ parent=null, 
-       variables={ 
-           "x" -> Environment.Variable(
-               name="x",
-               jvmName="x",
-               constant=false,
-               type=Environment.Type(
-                   name="Integer", 
-                   jvmName="int",
-                   // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
-                   scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
-       )},
-       functions={}
-}
-```
+This results in:
+- A populated scope hierarchy
+- A global bindings table mapping AST nodes to resolved semantics
 
-```text
-// Global Bindings
-Binding{ 
-    Ast.Field("x") -> Environment.Variable(
-        name="x",
-        jvmName="x",
-        constant=false,
-        type=Environment.Type(
-            name="Integer",
-            jvmName="int",
-            // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
-            scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
-    
-    Ast.Expression.Literal(10) -> Environment.Type(
-        name="Integer",
-        jvmName="int",
-        scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
-    
-}
-```
+### Code Generation (emitting)
+The generator traverses the fully analyzed AST and emits Java source code. Because all identifiers, scopes, and 
+types are resolved prior to this pass, code generation is a purely mechanical transformation.
+
+For the example above, the generator emits Java equivalent code targeting the JVM, which can then be compiled using 
+javac or executed as part of a larger Java program.
+
+Future work will replace Java source emission with direct JVM bytecode generation, eliminating the Java code 
+representation entirely.
