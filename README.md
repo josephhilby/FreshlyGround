@@ -64,6 +64,7 @@ This project was refactored and expanded from an academic transpiler project cre
 - [ ] Compiler
     - [ ] Lower from Java source generation to direct Java Bytecode
 - [ ] Expand Documentation
+    - [ ] Finish Javadoc rewrite
     - [ ] Finalize and link /docs files
 
 ## Architecture
