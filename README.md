@@ -23,15 +23,14 @@ This project was refactored and expanded from an academic transpiler project cre
 
 ### Get Started
 1. Ensure you have Java 21 or higher
-2. Fork and pull this repository
+2. Clone this repository
 3. Place your code in `/examples/src`
    - Note: There is an existing sample file there to transpile (`hello.fg`)
 4. Navigate to root (following paths will assume you are in root)
 5. Transpile with the following:
 > ```bash
 > ./gradlew build
-> ./gradlew compileJava
-> ./build/install/PLC_Project/bin/fgc examples/src/<file_name>.fg examples/dist/Main.java
+> ./build/install/FreshlyGround/bin/fgc examples/src/<file_name>.fg examples/dist/Main.java
 > javac examples/dist/Main.java
 > ```
 
