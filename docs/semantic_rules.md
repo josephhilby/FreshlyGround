@@ -35,3 +35,42 @@ AST: what was written (syntax)
 Environment: what symbols are (semantics)
 Scope: what names resolve to
 Binding: what AST nodes resolve to
+
+```text
+// Current Scope
+Scope{ parent=null, 
+       variables={ 
+           "x" -> Environment.Variable(
+               name="x",
+               jvmName="x",
+               constant=false,
+               type=Environment.Type(
+                   name="Integer", 
+                   jvmName="int",
+                   // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
+                   scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
+       )},
+       functions={}
+}
+```
+
+```text
+// Global Bindings
+Binding{ 
+    Ast.Field("x") -> Environment.Variable(
+        name="x",
+        jvmName="x",
+        constant=false,
+        type=Environment.Type(
+            name="Integer",
+            jvmName="int",
+            // triple nested as `Integer` has a scope chain (Integer → Comparable → Any)
+            scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
+    
+    Ast.Expression.Literal(10) -> Environment.Type(
+        name="Integer",
+        jvmName="int",
+        scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
+    
+}
+```
