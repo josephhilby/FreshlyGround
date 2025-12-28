@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("application")
 }
 
 group = "org.example"
@@ -10,13 +11,24 @@ repositories {
 }
 
 dependencies {
-//    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-//    testImplementation("org.junit.jupiter:junit-jupiter")
-//    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+application {
+    mainClass.set("freshlyground.cli.CompilerMain")
+}
+
+tasks.named<CreateStartScripts>("startScripts") {
+    applicationName = "fgc"
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }

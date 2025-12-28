@@ -1,1 +1,1 @@
-rootProject.name = "PLC_Project"
+rootProject.name = "FreshlyGround"
