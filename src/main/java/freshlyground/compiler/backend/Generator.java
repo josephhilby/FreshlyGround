@@ -187,7 +187,7 @@ public final class Generator implements Ast.Visitor<Void> {
         print(ast.getCondition(), "; ");
 
         if (ast.getIncrement() != null) {
-            Ast.Statement.Assignment increment = (Ast.Statement.Assignment) ast.getIncrement();
+            Ast.Statement.Assignment increment = ast.getIncrement();
             print(increment.getReceiver(), " = ", increment.getValue(), " ");
         }
 

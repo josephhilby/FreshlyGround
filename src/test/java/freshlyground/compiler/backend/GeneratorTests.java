@@ -5,6 +5,7 @@ import freshlyground.compiler.frontend.Ast;
 import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

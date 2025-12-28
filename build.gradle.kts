@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("application")
 }
 
 group = "org.example"
@@ -16,4 +17,12 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+application {
+    mainClass.set("freshlyground.cli.CompilerMain")
+}
+
+tasks.named<CreateStartScripts>("startScripts") {
+    applicationName = "fgc"
 }
