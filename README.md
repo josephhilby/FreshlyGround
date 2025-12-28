@@ -14,7 +14,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-FreshlyGround is a **novel programming language compiler** whose source code is transpiled into Java. 
+FreshlyGround is a **novel programming language** whose source code is transpiled into Java. 
 This project was refactored and expanded from an academic transpiler project created in **COP 4020** at the 
 **University of Florida**, and follows the methodology outlined in the book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
 
