@@ -129,15 +129,14 @@ The full language and compiler specification is maintained in /docs:
 - Abstract Syntax Tree (AST) — node taxonomy and structural model
 - Semantic Model — scope, bindings, type system, and resolution rules
 - Compiler Pipeline — pass structure and intermediate representations
-- Backends — JVM (Java / ASM) and WebAssembly (WAT/WASM) targets
+- Backends — WebAssembly (WAT/WASM) targets
 
 #### /docs
 | Topic               | Document                                             |
-| ------------------- | ---------------------------------------------------- |
+| ------------------- |------------------------------------------------------|
 | Overview & Index    | [docs/00_index.md](./docs/00_index.md)               |
 | Language Grammar    | [docs/01_syntax.md](./docs/01_syntax.md)             |
 | AST Specification   | [docs/02_ast_map.md](./docs/02_ast_map.md)           |
 | Semantic Rules      | [docs/03_semantics.md](./docs/03_semantics.md)       |
 | Compiler Pipeline   | [docs/04_pipeline.md](./docs/04_pipeline.md)         |
-| JVM Backend         | [docs/05_jvm_backend.md](./docs/05_jvm_backend.md)   |
-| WebAssembly Backend | [docs/06_wasm_backend.md](./docs/06_wasm_backend.md) |
+| WebAssembly Backend | [docs/06_wasm_backend.md](./docs/05_wasm_backend.md) |
