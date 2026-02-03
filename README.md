@@ -14,14 +14,22 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-FreshlyGround is a **novel programming language** whose source code is transpiled into Java. 
-This project was refactored and expanded from an academic transpiler project created in **COP 4020** at the 
-**University of Florida**, and follows the methodology outlined in the book [*Crafting Interpreters*](https://www.craftinginterpreters.com/).
+FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture 
+that separates syntax, semantics, and code generation into explicit, single-responsibility stages. 
+
+The project originated as an academic transpiler for **COP 4020** at the **University of Florida**, and has since been 
+refactored into a production-style compiler toolchain. Its design is strongly influenced by the principles in 
+[*Crafting Interpreters*](https://www.craftinginterpreters.com/), with an emphasis on explicit intermediate representations, externalized semantic 
+bindings, and pluggable backends.
+
+FreshlyGround currently targets the JVM and is being extended with a WebAssembly backend and a 
+browser-based execution environment.
 
 ### Requirements
 - Java 21+
+- Gradle (via wrapper)
 
-### Get Started
+### Quick Start
 1. Ensure you have Java 21 or higher
 2. Clone this repository
 3. Place your code in `/examples/src`
@@ -40,7 +48,23 @@ This project was refactored and expanded from an academic transpiler project cre
 > java Main
 > ```
 
-## Roadmap
+### Repository Structure
+```text
+.
+├─ assets/            # Repo/docs Images
+├─ api/               # REST adapter (POST /compile → WAT)
+├─ docs/              # Technical reference and language specification
+├─ examples/          # Example programs
+├─ gradle/            # Gradle wrapper
+├─ src/
+│  ├─ main/           # Core compiler passes (cli (fgc), lexer, parser, analyzer, generator)
+│  └─ test/           # Generated outputs
+├─ tests/             # Unit, interaction, and end-to-end tests
+├─ web/               # Web UI
+└─ build.gradle
+```
+
+### Roadmap
 - [x] Complete COP 4020 baseline implementation
 - [x] Redesign and Refactor
     - [x] Remove semantic info from AST
@@ -61,128 +85,59 @@ This project was refactored and expanded from an academic transpiler project cre
   - [ ] Ensure unit tests only cover class responsibilities
   - [ ] Reclassify current End-to-End testing to Interaction Tests
   - [ ] Add CLI-driven End-to-End tests
-- [ ] Compiler
-    - [ ] Lower from Java source generation to direct Java Bytecode
+- [ ] Compiler Backends
+  - [ ] Add WebAssembly backend
+    - [ ] Generate WAT (WebAssembly Text) from AST + Bindings 
+    - [ ] Define minimal host ABI for output (e.g., `print_i32`)
+  - [ ] Lower from Java source generation to direct Java Bytecode with ASM
+- [ ] Web Execution Environment
+  - [ ] Add `/compile` API (POST source → return WAT string)
+  - [ ] Refactor `CompilerMain` into a reusable compiler entrypoint (shared by CLI + API)
+    - [ ] CLI becomes a thin wrapper over the shared entrypoint
+    - [ ] API becomes a thin wrapper over the shared entrypoint
 - [ ] Expand Documentation
-    - [ ] Finalize and link /docs files
+    - [ ] Finalize and link `/docs` files
 
-## Architecture
-The transpiler is structured as a sequence of well-defined, ordered, single-responsibility passes. Each pass performs
-a distinct transformation on the program representation, following a clear separation of concerns between tokenization,
-syntactic analysis, semantic analysis, and code generation.
+## Project Architecture
+FreshlyGround follows a linear, multi-pass compiler pipeline with explicit separation between syntax, semantics, 
+and execution format.
 
 ### Compilation Pipeline (Passes)
+>```text
+>Source
+>  ↓
+>Lexer        → Token Stream
+>  ↓
+>Parser       → Abstract Syntax Tree (AST)
+>  ↓
+>Analyzer     → Bindings + Scoped Semantic Model
+>  ↓
+>Generator    → Backend Output (Java | JVM Bytecode | WAT/WASM)
+>```
 
-> - **Tokenization**  
->   *Source Code* → `Lexer.java` → *Token Stream*
->
-> - **Syntactic Analysis**  
->   *Token Stream* → `Parser.java` → *Abstract Syntax Tree (AST)*
->
-> - **Semantic Analysis**  
->   *AST* → `Analyzer.java` → *Decorated AST*
->
-> - **Bytecode Generation**  
->   *Decorated AST* → `Generator.java` → *Java Bytecode*
+### Design Principles
+- AST is purely syntactic — no embedded semantic metadata
+- Bindings are external — all semantic meaning is attached via a separate mapping layer
+- Backends are pluggable — generators change representation, not language semantics
+- Passes are single-responsibility — each stage performs one transformation only
 
-Digging a bit deeper:
+This structure allows new targets (JVM bytecode, WASM) to be added without modifying the language front-end.
 
-The lexer (`Lexer.java`) performs lexical analysis (or tokenization), converting raw characters into a stream of 
-typed tokens while preserving positional information. The parser (`Parser.java`) iterates over that token stream, 
-validating the program syntax against the language grammar and constructs a hierarchical Abstract Syntax Tree (AST) 
-that captures the program's syntactic structure, without interpreting semantics or types. 
+### Technical Reference
+The full language and compiler specification is maintained in /docs:
+- Language Grammar — EBNF, tokens, and syntactic forms
+- Abstract Syntax Tree (AST) — node taxonomy and structural model
+- Semantic Model — scope, bindings, type system, and resolution rules
+- Compiler Pipeline — pass structure and intermediate representations
+- Backends — JVM (Java / ASM) and WebAssembly (WAT/WASM) targets
 
-The analyzer (`Analyzer.java`) then traverses the AST and applies the bindings by means of the languages scoping and 
-environment rules, performing semantic analysis such as name resolution, type checking, and local type inference for 
-untyped declarations. This pass 'decorates' the AST with resolved symbols and concrete types without altering the 
-original syntax. 
-
-Finally, the generator (`Generator.java`) translates the fully analyzed program into executable Java, relying on 
-the decorated AST to ensure all identifiers, scopes, and types are resolved prior to code generation.
-
-## Example
-```
-LET x: Integer = 10;
-```
-
-### Tokenization & Syntactic Analysis (Lexing and Parsing)
-The lexer tokenizes the provided source code into a typed token stream. For this input, the relevant tokens would 
-correspond to:
-
-`token stream = { "LET", "x", ":", "Integer", "=", "10", ";" }`
-
-Because the token stream is syntactically valid, the parser would match it to the field production: 
-
-```ebnf
-field ::= "LET" identifier ":" declared_type "=" expression ";"
-``` 
-
-With the field identifier mapping to `x`, the declared type mapping to `Integer`, and the initialized expression 
-to the literal `10`, through the following precedence chain:
-
-> `expression` → `logical_expression` → `comparison_expression` → `additive_expression` → `multiplicative_expression` 
-> → `secondary_expression` → `primary_expression` → `integer`
-
-A simplified tree view of this mapping would look like:
-
-```text
-field
- ├─ "LET"
- ├─ identifier("x")
- ├─ ":"
- ├─ identifier("Integer")
- ├─ "="
- ├─ expression
- │   └─ logical_expression
- │       └─ ...
- │           └─ integer("10")
- └─ ";"
-```
-
-At this time the parser has enforced only syntax. While the field type (`Integer`) and expression literal type 
-(`integer`) do match -- that is to say the statement is semantically correct -- if they did not, the parser would 
-not care. Semantics will be checked later.
-
-All programs in FreshlyGround parse from the source entry point. Consequently, this example becomes a `source` 
-node containing a single field and no methods:
-
-```yaml
-Ast.Source
- └─ fields:
-    Ast.Field
-     ├─ name: "x"
-     ├─ typeName: "Integer"
-     ├─ constant: false
-     └─ value:
-        Ast.Expression.Literal
-         └─ literal: 10
- └─ methods: []
-```
-
-### Semantic Analysis (Analyzing)
-The analyzer performs a pre-order traversal over the AST and applies the language’s scope and environment rules,
-using:
-- Environment to provide compile-time semantic descriptors of `Type`, `Variable`, and `Function`
-- Bindings to match AST nodes to their semantic descriptors
-- Scope to model lexical visibility of those descriptors at any point
-
-During this specific pass, it:
-- Resolves the field node's declared type to a concrete `Environment.Type.INTEGER`
-- Infers and resolves the literal node's type to a concrete `Environment.Type.INTEGER`
-- Ensures the two types are compatible according to the languages semantic rules
-- Declares `x` in the current scope as an `Environment.Variable`
-- Binds the semantic metadata to the respective AST nodes (i.e., "decorates the AST via external bindings")
-
-This results in:
-- A populated scope hierarchy
-- A global bindings table mapping AST nodes to resolved semantics
-
-### Code Generation (emitting)
-The generator traverses the fully analyzed AST and emits Java source code. Because all identifiers, scopes, and 
-types are resolved prior to this pass, code generation is a purely mechanical transformation.
-
-For the example above, the generator emits Java equivalent code targeting the JVM, which can then be compiled using 
-javac or executed as part of a larger Java program.
-
-Future work will replace Java source emission with direct JVM bytecode generation, eliminating the Java code 
-representation entirely.
+#### /docs
+| Topic               | Document                                             |
+| ------------------- | ---------------------------------------------------- |
+| Overview & Index    | [docs/00_index.md](./docs/00_index.md)               |
+| Language Grammar    | [docs/01_syntax.md](./docs/01_syntax.md)             |
+| AST Specification   | [docs/02_ast_map.md](./docs/02_ast_map.md)           |
+| Semantic Rules      | [docs/03_semantics.md](./docs/03_semantics.md)       |
+| Compiler Pipeline   | [docs/04_pipeline.md](./docs/04_pipeline.md)         |
+| JVM Backend         | [docs/05_jvm_backend.md](./docs/05_jvm_backend.md)   |
+| WebAssembly Backend | [docs/06_wasm_backend.md](./docs/06_wasm_backend.md) |
