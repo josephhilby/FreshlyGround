@@ -25,11 +25,11 @@ representation (bytecode, WASM, or JVM artifacts) that are deterministically low
 while backend layers are lowered downward from semantic form into executable machine artifacts.
 
 ## Sections
-1. [Language Grammar (EBNF)](./docs/01_syntax.md)
-2. [Abstract Syntax Tree (AST Map)](./docs/02_ast_map.md)
-3. [Semantic Model & Bindings](./docs/03_semantics.md)
-4. [Compiler Pipeline](./docs/04_pipeline.md)
-5. [WebAssembly Backend](./docs/05_wasm_backend.md)
+1. [Language Grammar (EBNF)](./01_syntax.md)
+2. [Abstract Syntax Tree (AST Map)](./02_ast_map.md)
+3. [Semantic Model & Bindings](./03_semantics.md)
+4. [Compiler Pipeline](./04_pipeline.md)
+5. [WebAssembly Backend](./05_wasm_backend.md)
 
 ## Reading Guide
 - Start at **Language Grammar → AST Map** to understand the formal structure of FreshlyGround programs
