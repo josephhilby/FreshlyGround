@@ -98,6 +98,7 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 - [ ] Expand Documentation
     - [ ] Finalize and link `/docs` files
 
+
 ## Project Architecture
 FreshlyGround follows a linear, multi-pass compiler pipeline with explicit separation between syntax, semantics, 
 and execution format. To do this it uses the following components:
