@@ -1,7 +1,7 @@
 # FreshlyGround Language & Compiler Reference
 
 This section documents the complete FreshlyGround language and compiler stack, from raw source text to executable 
-targets (JVM and WebAssembly). Each layer is built strictly from the layer below it, forming a clear abstraction 
+targets (JVM, Hack, and WebAssembly). Each layer is built strictly from the layer below it, forming a clear abstraction 
 ladder from syntax to semantics to machine execution.
 
 Language layers define surface structure and meaning (grammar, AST, scope, and types). Backend layers define execution 
@@ -20,9 +20,6 @@ representation (bytecode, WASM, or JVM artifacts) that are deterministically low
 | **Intermediate Form**    | Backend-neutral program representation          |
 | **Backend** (JVM / WASM) | Execution abstraction                           |
 | **Runtime Environment**  | Machine behavior (JVM / Browser / Host ABI)     |
-
-*Note:* The ladder is bidirectional. Language layers are constructed upward from source text to semantic meaning, 
-while backend layers are lowered downward from semantic form into executable machine artifacts.
 
 ## Sections
 1. [Language Grammar (EBNF)](./01_syntax.md)

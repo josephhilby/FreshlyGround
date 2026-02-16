@@ -1,8 +1,11 @@
 # 01 — Language Syntax Specification
 
-This document specifies the **FreshlyGround language syntax layer**: the formal grammar and token model that define how raw source text is transformed into a structured **Abstract Syntax Tree (AST)**.
+This document specifies the **FreshlyGround language syntax layer**: the formal grammar and token model that define 
+how raw source text is transformed into a structured **Abstract Syntax Tree (AST)**.
 
-Syntax defines **form, not meaning**. This layer guarantees that programs are *well-formed* according to the grammar, but does not assign types, resolve symbols, or enforce semantic correctness. Those responsibilities belong to the **Semantic Model** and **Bindings** stages.
+Syntax defines **form, not meaning**. This layer guarantees that programs are *well-formed* according to the grammar, 
+but does not assign types, resolve symbols, or enforce semantic correctness. Those responsibilities belong to the 
+**Semantic Model** and **Bindings** stages.
 
 ---
 
@@ -21,18 +24,24 @@ Syntax defines **form, not meaning**. This layer guarantees that programs are *w
 * **Syntax** answers: *Is this program structurally valid?*
 * **Semantics** answers: *What does this program mean?*
 
-The parser is intentionally blind to:
+The lexer and parser are intentionally blind to:
 
 * type compatibility
 * symbol resolution
 * scope visibility
 * constant evaluation
 
-Its only responsibility is to ensure the token stream can be reduced to a valid **AST shape** under the grammar rules.
+They only generate a token stream and ensure it can be reduced to a valid **AST shape** under the grammar rules.
 
 ### Grammar-Driven AST Construction
 
-FreshlyGround uses **Extended Backus–Naur Form (EBNF)** to define a **context-free grammar (CFG)** that supports a top-down, recursive-descent parsing strategy.
+FreshlyGround uses **Extended Backus–Naur Form (EBNF)** to define a **context-free grammar (CFG)**  (i.e., the AST 
+shape) that supports a top-down, recursive-descent parsing strategy.
+
+The lexer:
+
+* Consumes individual characters of source code to produce tokens
+
 
 The parser:
 
@@ -66,9 +75,9 @@ escape     := ^\\ [bnrt'"\\]$
 
 ### Notes
 
-* Keywords (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and promoted to keyword tokens during parsing.
-* Whitespace and comments are not preserved in the AST.
-* All tokens retain **source position metadata** for error reporting.
+* Keywords (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and promoted to keyword tokens during parsing
+* Whitespace and comments are not preserved in the AST
+* All tokens retain **source position metadata** for error reporting
 
 ---
 
@@ -84,8 +93,8 @@ Where:
 
 * **Σ** — Terminal symbols (tokens)
 * **N** — Non-terminal symbols (syntactic categories)
-* **P** — Production rules
-* **S** — Start symbol (`source`)
+* **P** — Production rules (rule that defines a non-terminal)
+* **S** — Start symbol (`source`; the starting point for all programs)
 
 ---
 
@@ -114,7 +123,7 @@ method                    ::= "DEF" identifier
 ### Interpretation
 
 * A program consists of **zero or more fields** followed by **zero or more methods**
-* Fields declare global storage
+* Fields declare global variables
 * Methods define executable code blocks with optional return types
 
 ---
@@ -203,20 +212,17 @@ primary_expression ::=
 
 ---
 
-## Member Access and Invocation Model
+## Secondary Expressions (Dot Operator Syntax)
 
-The **secondary expression** rule defines **nominal member access**:
+The grammar permits chained member expressions using the dot (`.`) operator.
 
-* `object.field`
-  Evaluate `object` to type **T**, then resolve `field` in **T’s scope**
+### Forms
 
-* `object.method(a, b)`
-  Evaluate `object` to type **T**, then resolve `method` in **T’s scope** with:
+- `expression . identifier`
+- `expression . identifier ( argument_list? )`
 
-    * arity = `n + 1`
-    * the implicit receiver bound as the first argument (`this`)
-
-This syntax layer only defines **structure**. The validity of the member lookup is enforced during semantic analysis.
+This rule defines only the syntactic structure of member access and invocation.
+No validity checking or name resolution occurs at this stage.
 
 ---
 

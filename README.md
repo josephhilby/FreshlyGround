@@ -15,15 +15,15 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture 
-that separates syntax, semantics, and code generation into explicit, single-responsibility stages. 
+that separates syntax, semantics, and code generation into explicit, single-responsibility components. 
 
-The project originated as an academic transpiler for **COP 4020** at the **University of Florida**, and has since been 
-refactored into a production-style compiler toolchain. Its design is strongly influenced by the principles in 
-[*Crafting Interpreters*](https://www.craftinginterpreters.com/), with an emphasis on explicit intermediate representations, externalized semantic 
-bindings, and pluggable backends.
+The project originated as an academic transpiler for **COP 4020** at the **University of Florida**. It has since been 
+refactored into a full compiler toolchain, and web environment. Its design is strongly influenced by the `lox` 
+programming language in [*Crafting Interpreters*](https://www.craftinginterpreters.com/), with an emphasis on explicit intermediate representations, 
+externalized semantic bindings, and multiple pluggable backends.
 
-FreshlyGround currently targets the JVM and is being extended with a WebAssembly backend and a 
-browser-based execution environment.
+FreshlyGround currently targets the JVM and is being extended by means of a WebAssembly backend, with a 
+browser-based execution environment, and a Hack VM backend for compilation to the nand2tetris CPU.
 
 ### Requirements
 - Java 21+
@@ -38,7 +38,7 @@ browser-based execution environment.
 5. Transpile with the following:
 > ```bash
 > ./gradlew build
-> ./build/install/FreshlyGround/bin/fgc examples/src/<file_name>.fg examples/dist/Main.java
+> ./build/install/FreshlyGround/bin/fgc examples/src/<src_name>.fg examples/dist/Main.java
 > javac examples/dist/Main.java
 > ```
 
@@ -50,31 +50,31 @@ browser-based execution environment.
 
 ### Repository Structure
 ```text
-.
-├─ assets/            # Repo/docs Images
-├─ api/               # REST adapter (POST /compile → WAT)
-├─ docs/              # Technical reference and language specification
-├─ examples/          # Example programs
-├─ gradle/            # Gradle wrapper
-├─ src/
-│  ├─ main/           # Core compiler passes (cli (fgc), lexer, parser, analyzer, generator)
-│  └─ test/           # Generated outputs
-├─ tests/             # Unit, interaction, and end-to-end tests
-├─ web/               # Web UI
-└─ build.gradle
+./
+ ├─ assets/            # Repo/docs Images
+ ├─ api/               # REST adapter (POST /compile, file.fg → file.wat)
+ ├─ docs/              # Technical reference and language specifications
+ ├─ examples/          # Example programs
+ ├─ gradle/            # Gradle wrapper
+ ├─ src/
+ │  ├─ main/           # Core compiler passes (cli (fgc), lexer, parser, analyzer, generator(s))
+ │  └─ test/           # Generated outputs
+ ├─ tests/             # Unit, interaction, and end-to-end tests
+ ├─ web/               # Web UI
+ └─ build.gradle
 ```
 
 ### Roadmap
 - [x] Complete COP 4020 baseline implementation
 - [x] Redesign and Refactor
-    - [x] Remove semantic info from AST
-    - [x] Enforce syntactic correctness in AST constructors
-    - [x] Implement a dedicated `Bindings` class
-    - [x] Add `Builtins` for common use functions and variables
-    - [x] Centralize error handling with `CompilerException`
-    - [x] Remove all syntax error handling from Analyzer
-    - [x] Enforce Java 21 via Gradle toolchain
-    - [x] Update README
+  - [x] Centralize error handling with `CompilerException`
+  - [x] Enforce syntactic error handling in AST
+  - [x] Remove all syntax error handling from Analyzer
+  - [x] Implement semantic `Bindings`
+  - [x] Remove semantic info from AST
+  - [x] Add `Builtins` for common use functions and variables
+  - [x] Enforce Java 21 via Gradle toolchain
+  - [x] Update README
 - [x] Transpiler architecture
   - [x] Ensure single-responsibility in all passes
 - [x] Command Line Interface (CLI)
@@ -100,7 +100,7 @@ browser-based execution environment.
 
 ## Project Architecture
 FreshlyGround follows a linear, multi-pass compiler pipeline with explicit separation between syntax, semantics, 
-and execution format.
+and execution format. To do this it uses the following components:
 
 ### Compilation Pipeline (Passes)
 >```text
@@ -112,7 +112,7 @@ and execution format.
 >  ↓
 >Analyzer     → Bindings + Scoped Semantic Model
 >  ↓
->Generator    → Backend Output (Java | JVM Bytecode | WAT/WASM)
+>Generator    → Backend Output (Java | Hack Bytecode | WAT/WASM)
 >```
 
 ### Design Principles
@@ -121,14 +121,14 @@ and execution format.
 - Backends are pluggable — generators change representation, not language semantics
 - Passes are single-responsibility — each stage performs one transformation only
 
-This structure allows new targets (JVM bytecode, WASM) to be added without modifying the language front-end.
+This structure allows new targets (Hack bytecode, WASM) to be added without modifying the language front-end.
 
 ### Technical Reference
 The full language and compiler specification is maintained in /docs:
 - Language Grammar — EBNF, tokens, and syntactic forms
-- Abstract Syntax Tree (AST) — node taxonomy and structural model
-- Semantic Model — scope, bindings, type system, and resolution rules
-- Compiler Pipeline — pass structure and intermediate representations
+- Abstract Syntax Tree (AST) — node taxonomy and syntactic structural model
+- Semantic Model — scope, bindings, type system, and resolution of semantic rules
+- Compiler Pipeline — single pass structure and intermediate representations
 - Backends — WebAssembly (WAT/WASM) targets
 
 #### /docs
@@ -140,3 +140,11 @@ The full language and compiler specification is maintained in /docs:
 | Semantic Rules      | [docs/03_semantics.md](./docs/03_semantics.md)       |
 | Compiler Pipeline   | [docs/04_pipeline.md](./docs/04_pipeline.md)         |
 | WebAssembly Backend | [docs/06_wasm_backend.md](./docs/05_wasm_backend.md) |
+
+
+## Acknowledgments
+
+Based on the book **Crafting Interpreters** by Robert Nystrom.
+
+If you are interested in programming languages, I strongly recommend the book — it provided the scaffolding for 
+everything implemented here.

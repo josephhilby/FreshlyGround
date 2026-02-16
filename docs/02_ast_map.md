@@ -1,8 +1,11 @@
 # 02 — Abstract Syntax Tree (AST) Specification
 
-This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the structured, syntactic representation produced by the parser and consumed by the semantic analyzer and code generators.
+This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the structured, intermediate representation 
+produced by the parser and consumed by the semantic analyzer and code generators.
 
-The AST captures **program form without program meaning**. It encodes hierarchy, precedence, and grammatical structure, but does not resolve symbols, assign types, or enforce semantic rules. Those responsibilities are externalized into the **Bindings** and **Semantic Model** layers.
+The AST captures **program form without program meaning**. It encodes hierarchy, precedence, and grammatical structure, 
+but does not resolve symbols, assign types, or enforce semantic rules. Those responsibilities are externalized into 
+the **Bindings** and **Semantic Model** layers.
 
 ---
 
@@ -32,18 +35,33 @@ This ensures that:
 * Semantic passes can be rerun or replaced without rebuilding syntax
 * Code generation remains a mechanical lowering step
 
-### Nominal Member Model
+#### Resolution Model
 
-Although FreshlyGround is not object-oriented, it supports a **dot (`.`) access operator** to express type-associated operations in a readable, statically-dispatched form.
+Given:
 
-* `x.field` resolves `field` in the **type scope** of `x`
-* `x.method(y)` resolves `method` in the **type scope** of `x`
+    object.member
 
-This implies a canonical lowering rule:
+1. Evaluate `object` to type **T**
+2. Resolve `member` inside the **type scope of T**
 
-> `x.method(y)` → `method(x, y)`
+If resolution fails, this is a semantic error.
 
-As a result, function arity is **increased by one** to account for the implicit receiver (`this`).
+#### Invocation Semantics
+
+For method calls:
+
+    object.method(a, b)
+
+The expression is lowered to:
+
+    method(object, a, b)
+
+The implicit receiver (`object`) is inserted as the first argument.
+
+This implies:
+
+- Declared method arity = N
+- Call-site arity = N − 1 (receiver is implicit)
 
 ---
 

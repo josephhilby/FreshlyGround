@@ -359,6 +359,14 @@ Rules:
 
 ## Member Access and Function Calls
 
+### Nominal Member Resolution and Lowering
+
+FreshlyGround supports a statically-dispatched dot (`.`) operator
+for accessing type-associated fields and functions.
+
+Although the language is not object-oriented,
+dot expressions are resolved against the static type of the left operand.
+
 ### Access
 
 ```text
