@@ -1,16 +1,18 @@
 # 05 — WebAssembly (WASM) Backend Specification
 
-This document specifies the **FreshlyGround WebAssembly backend**: the lowering rules, runtime interface (host ABI), and representation strategy for compiling analyzed FreshlyGround programs into WebAssembly.
+This document specifies the **FreshlyGround WebAssembly backend**: the lowering rules, runtime interface 
+(host ABI), and representation strategy for compiling analyzed FreshlyGround programs into WebAssembly.
 
-The WASM backend targets a **browser-hosted execution environment** where programs are compiled to WebAssembly and executed client-side, with output routed to a web console via a minimal set of host-provided imports.
+The WASM backend targets a **browser-hosted execution environment** where programs are compiled to WebAssembly and 
+executed client-side, with output routed to a web console via a minimal set of host-provided imports.
 
 ---
 
-## Related
+## Navigation
 
-* [Compiler Pipeline](./04_pipeline.md)
-* [Semantic Model & Bindings](./03_semantics.md)
-* [AST Specification](./02_ast_map.md)
+* Index: [Overview & Index](00_index.md)
+* Previous: [Compiler Pipeline](04_pipeline.md)
+* Next: N/A
 
 ---
 
@@ -369,5 +371,5 @@ END
 
 ## Forward Links
 
-* For pass ordering and invariants: **[Compiler Pipeline](./04_pipeline.md)**
-* For the semantic rules that resolve builtins like `print`: **[Semantics](./03_semantics.md)**
+* For pass ordering and invariants: **[Compiler Pipeline](04_pipeline.md)**
+* For the semantic rules that resolve builtins like `print`: **[Semantics](03_semantics.md)**

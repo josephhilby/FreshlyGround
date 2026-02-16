@@ -9,11 +9,11 @@ the **Bindings** and **Semantic Model** layers.
 
 ---
 
-## Related
+## Navigation
 
-* [Language Syntax Specification](./01_syntax.md)
-* [Semantic Model & Bindings](./03_semantics.md)
-* [Compiler Pipeline](./04_pipeline.md)
+* Index: [Overview & Index](00_index.md)
+* Previous: [Language Grammar (EBNF)](01_syntax.md)
+* Next: [Semantic Model & Bindings](03_semantics.md)
 
 ---
 
@@ -378,6 +378,33 @@ These guarantees allow the semantic analyzer to operate as a **pure decoration p
 
 ## Forward Links
 
-* For symbol resolution, scope, and type attachment, see: **[Semantic Model & Bindings](./03_semantics.md)**
-* For how AST nodes flow through compiler passes, see: **[Compiler Pipeline](./04_pipeline.md)**
-* For execution lowering rules, see: **[JVM Backend](./05_jvm_backend.md)** and **[WebAssembly Backend](./06_wasm_backend.md)**
+* For symbol resolution, scope, and type attachment, see: **[Semantic Model & Bindings](03_semantics.md)**
+* For how AST nodes flow through compiler passes, see: **[Compiler Pipeline](04_pipeline.md)**
+* For execution lowering rules, see: **[WebAssembly Backend](05_wasm_backend.md)**
+
+
+#### Access Resolution Model
+Given:
+
+    object.member
+
+1. Evaluate `object` to type **T**
+2. Resolve `member` inside the **type scope of T**
+
+#### Function Resolution Model
+Given:
+
+    object.method(a, b)
+
+1. Evaluate `object` to type **T**
+2. Resolve `method(a, b)` inside the **type scope of T**
+
+The expression is then lowered to:
+
+    method(object, a, b)
+
+The implicit receiver (`object`) is inserted as the first argument.
+
+This implies:
+- Declared method arity = N
+- Call-site arity = N − 1 (receiver is implicit)

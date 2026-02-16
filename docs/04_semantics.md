@@ -1,71 +1,12 @@
-# 03 — Semantic Model & Bindings Specification
+# 04 — Semantic Model & Bindings Specification (draft)
 
-This document specifies the **FreshlyGround semantic layer**: the rules that assign *meaning* to syntactically valid programs by resolving names, enforcing types, and constructing a scoped binding environment over the Abstract Syntax Tree (AST).
+This document specifies the **FreshlyGround semantic layer**: the rules that assign *meaning* to
+syntactically valid programs by resolving names, enforcing types, and constructing a scoped binding environment
+over the Abstract Syntax Tree (AST).
 
-Semantics define **what programs mean and how they are interpreted**, not how they are written. This layer guarantees that all identifiers, expressions, and control structures are **well-typed, well-scoped, and resolvable** before any backend lowers the program into an executable form.
-
----
-
-## Related
-
-* [Language Syntax Specification](./01_syntax.md)
-* [AST Specification](./02_ast_map.md)
-* [Compiler Pipeline](./04_pipeline.md)
-
----
-
-## Design Notes
-
-### Syntax vs. Semantics
-
-* **Syntax** defines *structure* — which sequences of tokens form valid programs.
-* **Semantics** defines *meaning* — what identifiers refer to, what types expressions produce, and whether operations are valid.
-
-FreshlyGround enforces a strict separation:
-
-* The **AST is immutable and purely syntactic**
-* All meaning is attached externally through **Bindings**
-
-This allows:
-
-* Multiple semantic passes over the same AST
-* Deterministic lowering into different backends (JVM, WASM)
-* Independent evolution of syntax and execution targets
-
-### Early Binding Model
-
-FreshlyGround follows a **static, early-binding semantic model** similar to Java:
-
-* Names, types, and scopes are resolved at **compile time**
-* All expressions are assigned concrete static types
-* Runtime execution is delegated entirely to the target platform (JVM or host ABI)
-
-This guarantees that generated code is **portable, deterministic, and free of dynamic name resolution**.
-
----
-
-## Semantic Model
-
-### Core Definitions
-
-* **Name** — A symbolic identifier in the source program (e.g., `x`)
-* **Value** — The runtime data a name refers to (e.g., `10`)
-* **Binding** — The association between an AST node and a semantic descriptor
-* **Binding Time** — The phase at which a binding is created
-* **Lifetime** — The duration from binding creation to destruction
-* **Scope** — A region of the program in which a binding is visible
-* **Environment** — The global definition of types and symbols
-
-### Binding Times
-
-Bindings are established progressively:
-
-1. **Design Time** — Grammar rules and primitive types
-2. **Implementation Time** — Mapping language types to backend representations (`Environment.Type`)
-3. **Source Time** — Variable and function declarations in user code
-4. **Compile Time** — Scope construction, name resolution, and type checking
-
-Runtime value binding is owned entirely by the execution platform.
+Semantics define **what programs mean and how they are interpreted**. This layer
+guarantees that all identifiers, expressions, and control structures are **well-typed, well-scoped, and resolvable**
+before any backend lowers the program into an executable form.
 
 ---
 
@@ -84,29 +25,16 @@ FreshlyGround enforces **lexical (static) scoping**.
 
 ```text
 Scope
- ├─ parent   : Scope | null
- ├─ variables: Map<String, Environment.Variable>
- └─ functions: Map<String, Environment.Function>
+ ├─ parent     : Scope | null
+ ├─ variables  : Map<String, Environment.Variable>
+ └─ functions  : Map<String, Environment.Function>
 ```
+---
 
-Example:
+## Semantic Model
 
-```text
-Scope{ parent=null,
-       variables={
-           "x" -> Environment.Variable(
-               name="x",
-               jvmName="x",
-               constant=false,
-               type=Environment.Type(
-                   name="Integer",
-                   jvmName="int",
-                   scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
-           )
-       },
-       functions={}
-}
-```
+
+---
 
 ---
 
@@ -118,30 +46,14 @@ Bindings form a **global association** between AST nodes and their resolved sema
 
 ```text
 Bindings
- ├─ Ast.Node → Environment.Type
- ├─ Ast.Node → Environment.Variable
- └─ Ast.Node → Environment.Function
-```
-
-Example:
-
-```text
-Bindings{
-  Ast.Field("x") -> Environment.Variable(
-      name="x",
-      jvmName="x",
-      constant=false,
-      type=Environment.Type(
-          name="Integer",
-          jvmName="int",
-          scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
-  ),
-
-  Ast.Expression.Literal(10) -> Environment.Type(
-      name="Integer",
-      jvmName="int",
-      scope=Integer.scope ⊆ Comparable.scope ⊆ Any.scope)
-}
+ ├─ field       : Map<Ast.Field: Environment.Variable>
+ ├─ declaration : Map<Ast.Statement.Declaration: Environment.Variable>
+ ├─ access      : Map<Ast.Expression.Access: Environment.Variable>
+ │
+ ├─ method      : Map<Ast.Method → Environment.Function>
+ ├─ function    : Map<Ast.Expression.Function: Environment.Function>
+ │
+ └─ type        : Map<Ast.Expression: Environment.Type>
 ```
 
 ---
@@ -426,24 +338,3 @@ Rules:
 
 * **[Rule]** Grouped expression must be binary (as implemented)
 * **[Rule]** `group.type = inner.type`
-
----
-
-## Structural Guarantees
-
-The semantic layer enforces:
-
-* All names in the AST resolve to a **unique binding**
-* All expressions have a **concrete static type**
-* All assignments and returns satisfy **assignability rules**
-* All control-flow conditions are **Boolean-typed**
-
-Once these invariants hold, backend lowering becomes a **pure mechanical transformation**.
-
----
-
-## Forward Links
-
-* For AST structure and node taxonomy, see: **[AST Specification](./02_ast_map.md)**
-* For pass ordering and IR flow, see: **[Compiler Pipeline](./04_pipeline.md)**
-* For execution lowering rules, see: **[JVM Backend](./05_jvm_backend.md)** and **[WebAssembly Backend](./06_wasm_backend.md)**

@@ -1,6 +1,7 @@
 # 04 — Compiler Pipeline Specification
 
-This document specifies the **FreshlyGround compiler pipeline**: the ordered sequence of single-responsibility passes that transform source text into backend-ready output.
+This document specifies the **FreshlyGround compiler pipeline**: the ordered sequence of single-responsibility 
+passes that transform source text into backend-ready output.
 
 The pipeline is designed to be:
 
@@ -16,11 +17,11 @@ FreshlyGround intentionally separates:
 
 ---
 
-## Related
+## Navigation
 
-* [Language Syntax Specification](./01_syntax.md)
-* [AST Specification](./02_ast_map.md)
-* [Semantic Model & Bindings](./03_semantics.md)
+* Index: [Overview & Index](00_index.md)
+* Previous: [Semantic Model & Bindings](03_semantics.md)
+* Next: [WebAssembly Backend](05_wasm_backend.md)
 
 ---
 
@@ -263,15 +264,6 @@ Conceptual output:
 int x = 10;
 ```
 
-#### JVM Bytecode (planned backend)
-
-Conceptual lowering goal:
-
-```text
-iconst_10
-istore <slot(x)>
-```
-
 #### WebAssembly (planned backend)
 
 Conceptual lowering goal:
@@ -297,6 +289,6 @@ Errors are reported at the earliest responsible pass:
 
 ## Forward Links
 
-* For the formal grammar and precedence structure: **[Language Syntax](./01_syntax.md)**
-* For the node taxonomy used by all passes: **[AST Map](./02_ast_map.md)**
-* For semantic rules and binding invariants: **[Semantics](./03_semantics.md)**
+* For the formal grammar and precedence structure: **[Language Syntax](01_syntax.md)**
+* For the node taxonomy used by all passes: **[AST Map](02_ast_map.md)**
+* For semantic rules and binding invariants: **[Semantics](03_semantics.md)**
