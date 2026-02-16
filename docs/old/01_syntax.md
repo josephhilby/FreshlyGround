@@ -9,11 +9,11 @@ but does not assign types, resolve symbols, or enforce semantic correctness. Tho
 
 ---
 
-## Related
+## Navigation
 
-* [AST Specification](./02_ast_map.md)
-* [Semantic Model & Bindings](./03_semantics.md)
-* [Compiler Pipeline](./04_pipeline.md)
+* Index: [Overview & Index](00_index.md)
+* Previous: N/A
+* Next: [Abstract Syntax Tree (AST Map)](02_ast_map.md)
 
 ---
 
@@ -281,6 +281,6 @@ Those transformations occur in the **Semantic Model & Bindings** pass.
 
 ## Forward Links
 
-* For AST node taxonomy and structural guarantees, see: **[AST Specification](./02_ast_map.md)**
-* For symbol resolution, scope, and type rules, see: **[Semantic Model & Bindings](./03_semantics.md)**
-* For how syntax flows through compiler passes, see: **[Compiler Pipeline](./04_pipeline.md)**
+* For AST node taxonomy and structural guarantees, see: **[AST Specification](02_ast_map.md)**
+* For symbol resolution, scope, and type rules, see: **[Semantic Model & Bindings](03_semantics.md)**
+* For how syntax flows through compiler passes, see: **[Compiler Pipeline](04_pipeline.md)**

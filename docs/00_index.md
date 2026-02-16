@@ -1,35 +1,61 @@
-# FreshlyGround Language & Compiler Reference
+# 00 — FreshlyGround Language & Compiler Reference Index
 
-This section documents the complete FreshlyGround language and compiler stack, from raw source text to executable 
-targets (JVM, Hack, and WebAssembly). Each layer is built strictly from the layer below it, forming a clear abstraction 
-ladder from syntax to semantics to machine execution.
+This documentation set serves as a detailed reference for the FreshlyGround 
+language and compiler stack, from **source text → analyzed program model → backend emission**. 
+Each document below owns a single layer of that process, with some shared vocabulary and design between them.
 
-Language layers define surface structure and meaning (grammar, AST, scope, and types). Backend layers define execution 
-representation (bytecode, WASM, or JVM artifacts) that are deterministically lowered into runtime behavior.
+---
 
-## Abstraction Ladder (Construction vs. Conceptual Role)
-| Construction             | Conceptual Role                                 |
-| ------------------------ | ----------------------------------------------- |
-| **Source Text**          | Human-facing program representation             |
-| **Tokens** (`Lexer`)     | Lexical units (typed symbols)                   |
-| **Grammar / Parse Tree** | Formal syntax structure                         |
-| **AST**                  | Syntactic abstraction (tree model)              |
-| **Scope**                | Lexical visibility model                        |
-| **Bindings**             | Semantic attachment (types, variables, symbols) |
-| **Semantic Model**       | Meaning (type system, compatibility, rules)     |
-| **Intermediate Form**    | Backend-neutral program representation          |
-| **Backend** (JVM / WASM) | Execution abstraction                           |
-| **Runtime Environment**  | Machine behavior (JVM / Browser / Host ABI)     |
+## What to read when
+- **Compiler Ordering and Artifact Use:** see, *[Compiler Pipeline](./01_pipeline.md)*
+- **Token and Grammar Definitions:** see, *[Syntactic Definitions](./02_syntax.md)*
+- **AST Mapping and Layout:** see, *[Structural Representation](./03_struct_rep.md)*
+- **Semantic Rules and Node Bindings:** use *[Semantic Model & Bindings](./04_semantics.md)*
+- **WAT Emission:** use *[Modular Backends](./05_backend.md)*
 
-## Sections
-1. [Language Grammar (EBNF)](./01_syntax.md)
-2. [Abstract Syntax Tree (AST Map)](./02_ast_map.md)
-3. [Semantic Model & Bindings](./03_semantics.md)
-4. [Compiler Pipeline](./04_pipeline.md)
-5. [WebAssembly Backend](./05_wasm_backend.md)
+---
 
-## Reading Guide
-- Start at **Language Grammar → AST Map** to understand the formal structure of FreshlyGround programs
-- Move to **Semantic Model & Bindings** to see how meaning, scope, and types are assigned
-- Use **Compiler Pipeline** to understand how representations flow between passes
-- Refer to **WebAssembly Backend** to see how high-level semantics are lowered into concrete execution environments
+## Vocabulary
+- **Token Stream:** lexer output; ordered sequence of atomic lexical units
+- **AST:** parser output; structural tree that matches grammar production rules
+- **Environment:** global catalog of known types, variables, and functions
+- **Bindings:** analyzer output; semantic mappings of AST nodes to environment types, variables, or functions
+- **Scope:** visibility chain for resolving unqualified identifier names to environment variables or functions
+- **Lowering:** generator output; deterministic emission from AST + Bindings to a backend format
+
+---
+
+## Design Notes
+### Pass Discipline
+
+Each pass must...
+* accept exactly one well-defined input representation (i.e., artifact)
+* produce exactly one well-defined output representation
+* avoid "leaking" responsibilities across stages (e.g., no type checking during parsing)
+
+This makes the pipeline easy to test and easy to extend.
+
+### Syntax vs. Semantics
+
+* **Syntax** defines *structure* — which sequences of tokens form valid programs
+* **Semantics** defines *meaning* — what identifiers refer to, what types expressions produce, and whether operations are valid
+
+FreshlyGround enforces a strict separation between the two, such that:
+
+* The AST is immutable and encodes only structural (**syntactic**) information
+* The External Bindings and mutable and store the **semantic** information needed for lowering
+
+This allows:
+
+* The same AST can be reused across multiple backends
+* Code generation to remain a simple mechanical lowering step
+
+### Binding Model
+
+FreshlyGround follows a static, early-binding model similar to Java, where bindings are established progressively:
+
+1. **Design Time** — Grammar rules and primitive types
+2. **Implementation Time** — Mapping language types to backend representations
+3. **Source Time** — Variable and function declarations in user code
+4. **Compile Time** — Scope construction, name resolution, and type checking
+5. **Run Time** — Delegated to the target platform
