@@ -229,9 +229,15 @@ This node is used for:
 ---
 
 ## Member Access and Function Calls
-These constructs unify under a **receiver-based model**.
+Please note that in the CFG these were split among primary- and secondary-expressions. However, 
+both are unified here under a **receiver-based model**, where:
 
-### Access
+* `receiver = null` represents an unqualified name
+* `receiver != null` represents member access
+
+Semantic resolution of this construct is defined in the next section.
+
+### Member Access
 Grammar fragment:
 
 ```ebnf
@@ -245,11 +251,6 @@ Ast.Expression.Access
  ├─ receiver : Ast.Expression | null
  └─ name     : String
 ```
-
-* `receiver = null` represents an unqualified name
-* `receiver != null` represents member access
-
-Semantic resolution of this construct is defined in the next section.
 
 ### Function Call
 
@@ -268,11 +269,6 @@ Ast.Expression.Function
  └─ arguments : Ast.Expression[]
 ```
 
-* `receiver = null` represents an unqualified invocation
-* `receiver != null` represents a qualified invocation
-
-Semantic resolution of this construct is defined in the next section.
-
 ---
 
 ## Primary Expressions
@@ -280,7 +276,7 @@ Semantic resolution of this construct is defined in the next section.
 ### Literals
 
 ```ebnf
-expression_literal ::= "NIL" | "TRUE" | "FALSE" | integer | decimal | character | string
+expression_literal ::= literal
 ```
 
 AST mapping:
@@ -290,7 +286,7 @@ Ast.Expression.Literal
  └─ literal : Object
 ```
 
-Type Map:
+Type Map (literal → object):
 
 * `"NIL"` → `null`
 * `"TRUE"` / `"FALSE"` → `Boolean`
@@ -304,7 +300,7 @@ Type Map:
 Grammar:
 
 ```ebnf
-"(" expression ")"
+expression_group ::= "(" expression ")"
 ```
 
 AST mapping:
