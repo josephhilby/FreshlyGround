@@ -75,6 +75,11 @@ non-terminal symbol ::= production rule
 ---                           ---
 source              ::= { field } { method }
 ```
+>**Legend:**
+>- `{ … }` = zero or more
+>- `[ … ]` = optional (zero or one)
+>- `|` = alternative
+>- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
 ### Top-Level Forms
 
