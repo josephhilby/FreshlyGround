@@ -78,6 +78,23 @@ Ast.Method
 ---
 
 ## Statements
+### Declaration
+
+Grammar:
+
+```ebnf
+statement_declaration ::= "LET" name [ ":" type ] [ "=" value ] ";"
+```
+
+AST mapping:
+
+```text
+Ast.Statement.Declaration
+ ├─ name     : String
+ ├─ typeName : String | null
+ └─ value    : Ast.Expression | null
+```
+
 ### Assignment
 
 Grammar:
@@ -107,23 +124,6 @@ AST mapping:
 ```text
 Ast.Statement.Expression
  └─ expression : Ast.Expression
-```
-
-### Declaration
-
-Grammar:
-
-```ebnf
-statement_declaration ::= "LET" name [ ":" type ] [ "=" value ] ";"
-```
-
-AST mapping:
-
-```text
-Ast.Statement.Declaration
- ├─ name     : String
- ├─ typeName : String | null
- └─ value    : Ast.Expression | null
 ```
 
 ### Conditional
@@ -231,8 +231,6 @@ This node is used for:
 * Comparison operators: `<`, `<=`, `>`, `>=`, `==`, `!=`
 * Arithmetic operators: `+`, `-`, `*`, `/`
 
----
-
 ### Member Access and Function Calls
 Please note that in the CFG these were split among primary- and secondary-expressions. However, 
 both are unified here under a **receiver-based model**, where:
@@ -273,8 +271,6 @@ Ast.Expression.Function
  ├─ name      : String
  └─ arguments : Ast.Expression[]
 ```
-
----
 
 ### Primary Expressions
 
