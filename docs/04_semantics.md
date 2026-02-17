@@ -32,9 +32,25 @@ Scope
 
 ---
 
-## Semantic Model
+## Environment Model
 ### Conceptual Structure
-### Semantic Rules
+
+```yaml
+Environment
+ ├─ types    : Map<String, Type>
+ ├─ type     : Class<name, jvmName, scope>
+ ├─ function : Class<name, jvmName, parameterTypes[], returnType>
+ └─ variable : Map<name, jvmName, type, constant>
+```
+
+### Environment Type Scope Chain
+* ANY
+    * BOOLEAN ⊆ ANY
+    * COMPARABLE ⊆ ANY
+        * STRING ⊆ COMPARABLE
+        * CHARACTER ⊆ COMPARABLE
+        * DECIMAL ⊆ COMPARABLE
+        * INTEGER ⊆ COMPARABLE
 
 ---
 
@@ -50,10 +66,8 @@ Bindings
  ├─ field       : Map<Ast.Field: Environment.Variable>
  ├─ declaration : Map<Ast.Statement.Declaration: Environment.Variable>
  ├─ access      : Map<Ast.Expression.Access: Environment.Variable>
- │
- ├─ method      : Map<Ast.Method → Environment.Function>
+ ├─ method      : Map<Ast.Method: Environment.Function>
  ├─ function    : Map<Ast.Expression.Function: Environment.Function>
- │
  └─ type        : Map<Ast.Expression: Environment.Type>
 ```
 
@@ -80,7 +94,6 @@ Rules:
 >**Legend:**
 >- **[Rule]** — semantic restriction
 >- **(T: …)** — type constraint
->- **(Node: …)** — AST shape constraint
 
 ---
 
@@ -153,13 +166,12 @@ AST mapping:
 
 ```yaml
 Ast.Statement.Assignment
- ├─ receiver : Ast.Expression
+ ├─ receiver : Ast.Expression.Access
  └─ value    : Ast.Expression
 ```
 
 Rules:
 
-* **[Rule]** **(Node: receiver must be `Ast.Expression.Access`)**
 * **[Rule]** Receiver must not be constant
 * **[Rule]** **(T: value.type assignable to receiver.type)**
 
@@ -169,12 +181,12 @@ AST mapping:
 
 ```yaml
 Ast.Statement.Expression
- └─ expression : Ast.Expression
+ └─ expression : Ast.Expression.Function
 ```
 
 Rules:
 
-* **[Rule]** **(Node: expression must be `Ast.Expression.Function`)**
+
 
 ### Conditional
 
@@ -209,8 +221,6 @@ Rules:
 
 * **[Rule]** `statements` must be non-empty
 * **[Rule]** **(T: condition.type must be `Boolean`)**
-* **[Rule]** If `initialization` present, **(Node: must be `Ast.Statement.Assignment`)**
-* **[Rule]** If `increment` present, **(Node: must be `Ast.Statement.Assignment`)**
 * **[Rule]** Loop body analyzed in a **new nested scope**
 
 ### While Loop
@@ -388,10 +398,11 @@ Ast.Expression.Literal
  └─ literal : Object
 ```
 
-Rules:
+Type Map (java object → Environment.Type):
 
-* `NIL` → `result.type = Nil`
-* `TRUE` / `FALSE` → `result.type = Boolean`
-* Numeric literals → `Integer` or `Decimal` (bounds-checked)
-* `character` → `Character`
-* `string` → `String`
+* `null`       → `Environment.Type.NIL`
+* `Boolean`    → `Environment.Type.BOOLEAN`
+* `BigInteger` → `Environment.Type.INTEGER`
+* `BigDecimal` → `Environment.Type.DECIMAL`
+* `Character`  → `Environment.Type.CHARACTER`
+* `String`     → `Environment.Type.STRING`

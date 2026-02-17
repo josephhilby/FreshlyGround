@@ -73,6 +73,7 @@ browser-based execution environment, and a Hack VM backend for compilation to th
   - [x] Implement semantic `Bindings`
   - [x] Remove semantic info from AST
   - [x] Add `Builtins` for common use functions and variables
+  - [ ] Remove JVM specific information from Environment class
   - [x] Enforce Java 21 via Gradle toolchain
   - [x] Update README
 - [x] Transpiler architecture

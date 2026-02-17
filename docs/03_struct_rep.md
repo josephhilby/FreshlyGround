@@ -109,7 +109,7 @@ AST mapping:
 
 ```yaml
 Ast.Statement.Assignment
- ├─ receiver : Ast.Expression
+ ├─ receiver : Ast.Expression.Access
  └─ value    : Ast.Expression
 ```
 
@@ -125,7 +125,7 @@ AST mapping:
 
 ```yaml
 Ast.Statement.Expression
- └─ expression : Ast.Expression
+ └─ expression : Ast.Expression.Function
 ```
 
 ### Conditional
@@ -227,11 +227,11 @@ Ast.Expression.Binary
  └─ right    : Ast.Expression
 ```
 
-This node is used for:
+Operators:
 
-* Logical operators: `AND`, `OR`
-* Comparison operators: `<`, `<=`, `>`, `>=`, `==`, `!=`
-* Arithmetic operators: `+`, `-`, `*`, `/`
+* Logical operators: { `AND`, `OR` }
+* Comparison operators: { `<`, `<=`, `>`, `>=`, `==`, `!=` }
+* Arithmetic operators: { `+`, `-`, `*`, `/` }
 
 ### Member Access and Function Calls
 Please note that in the CFG these were split among primary- and secondary-expressions. However, 
@@ -303,14 +303,14 @@ Ast.Expression.Literal
  └─ literal : Object
 ```
 
-Type Map (literal → object):
+Type Map (literal → java object):
 
-* `"NIL"` → `null`
-* `"TRUE"` / `"FALSE"` → `Boolean`
-* `integer` → `Integer`
-* `decimal` → `Double`
-* `character` → `Character`
-* `string` → `String`
+* `"NIL"`                → `null`
+* (`"TRUE"` | `"FALSE"`) → `Boolean`
+* `integer`              → `BigInteger`
+* `decimal`              → `BigDecimal`
+* `character`            → `Character`
+* `string`               → `String`
 
 ---
 
