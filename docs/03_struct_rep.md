@@ -15,6 +15,11 @@ Grammar:
 ```ebnf
 source ::= { fields } { methods }
 ```
+>**Legend:**
+>- `{ … }` = zero or more
+>- `[ … ]` = optional (zero or one)
+>- `|` = alternative
+>- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
 AST mapping:
 ```text
@@ -89,7 +94,7 @@ Ast.Statement.Assignment
  └─ value    : Ast.Expression
 ```
 
-### Expression Statement
+### Expression
 
 Grammar:
 
@@ -228,7 +233,7 @@ This node is used for:
 
 ---
 
-## Member Access and Function Calls
+### Member Access and Function Calls
 Please note that in the CFG these were split among primary- and secondary-expressions. However, 
 both are unified here under a **receiver-based model**, where:
 
@@ -237,7 +242,7 @@ both are unified here under a **receiver-based model**, where:
 
 Semantic resolution of this construct is defined in the next section.
 
-### Member Access
+#### Member Access
 Grammar fragment:
 
 ```ebnf
@@ -252,7 +257,7 @@ Ast.Expression.Access
  └─ name     : String
 ```
 
-### Function Call
+#### Function Call
 
 Grammar fragment:
 
@@ -271,9 +276,9 @@ Ast.Expression.Function
 
 ---
 
-## Primary Expressions
+### Primary Expressions
 
-### Literals
+#### Literals
 
 ```ebnf
 expression_literal ::= literal
@@ -295,7 +300,7 @@ Type Map (literal → object):
 * `character` → `Character`
 * `string` → `String`
 
-### Grouping
+#### Grouping
 
 Grammar:
 
