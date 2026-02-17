@@ -250,7 +250,10 @@ Rules:
 AST mapping:
 
 ```yaml
-Ast.Expression.Binary(operator = AND | OR)
+Ast.Expression.Binary
+├─ operator : AND | OR
+├─ left     : Ast.Expression
+└─ right    : Ast.Expression
 ```
 
 Rules:
@@ -263,7 +266,10 @@ Rules:
 AST mapping:
 
 ```yaml
-Ast.Expression.Binary(operator = < | <= | > | >= | == | !=)
+Ast.Expression.Binary
+├─ operator : < | <= | > | >= | == | !=
+├─ left     : Ast.Expression
+└─ right    : Ast.Expression
 ```
 
 Rules:
@@ -277,7 +283,10 @@ Rules:
 AST mapping:
 
 ```yaml
-Ast.Expression.Binary(operator = + | - | * | /)
+Ast.Expression.Binary
+├─ operator : + | - | * | /
+├─ left     : Ast.Expression
+└─ right    : Ast.Expression
 ```
 
 Rules:
