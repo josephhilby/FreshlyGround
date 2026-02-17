@@ -12,6 +12,7 @@ AST class.
 All programs are parsed from a single root node: `Ast.Source`.
 
 Grammar:
+
 ```ebnf
 source ::= { fields } { methods }
 ```
@@ -22,6 +23,7 @@ source ::= { fields } { methods }
 >- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
 AST mapping:
+
 ```text
 Ast.Source
  ├─ fields  : Ast.Field[]
@@ -59,7 +61,7 @@ Grammar:
 
 ```ebnf
 method ::= 
-"DEF" name "(" [ param ":" paramType { "," param ":" paramType } ] ")" [ ":" returnType ] "DO"
+"DEF" name "(" [ param ":" paramType ] ")" [ ":" returnType ] "DO"
     { statements }
 "END"
 ```
