@@ -16,14 +16,14 @@ FreshlyGround enforces **lexical (static) scoping**.
 
 ### Conceptual Structure
 
-```text
+```yaml
 Scope
  ├─ parent     : Scope | null
  ├─ variables  : Map<String, Environment.Variable>
  └─ functions  : Map<String, Environment.Function>
 ```
 
-### Semantic Rules
+### Scope Rules
 
 1. Declarations bind names in the **current scope**
 2. References resolve by walking outward through **parent scopes**
@@ -45,7 +45,7 @@ meaning.
 
 ### Conceptual Model
 
-```text
+```yaml
 Bindings
  ├─ field       : Map<Ast.Field: Environment.Variable>
  ├─ declaration : Map<Ast.Statement.Declaration: Environment.Variable>
@@ -56,7 +56,8 @@ Bindings
  │
  └─ type        : Map<Ast.Expression: Environment.Type>
 ```
-### Semantic Rules
+
+### Binding Rules
 
 ---
 
@@ -65,7 +66,7 @@ Bindings
 
 AST mapping:
 
-```text
+```yaml
 Ast.Source
  ├─ fields  : Ast.Field[]
  └─ methods : Ast.Method[]
@@ -88,7 +89,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Field
  ├─ name     : String
  ├─ typeName : String
@@ -107,7 +108,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Method
  ├─ name           : String
  ├─ parameters     : String[]
@@ -131,7 +132,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Declaration
  ├─ name     : String
  ├─ typeName : String | null
@@ -150,7 +151,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Assignment
  ├─ receiver : Ast.Expression
  └─ value    : Ast.Expression
@@ -166,7 +167,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Expression
  └─ expression : Ast.Expression
 ```
@@ -179,7 +180,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.If
  ├─ condition      : Ast.Expression
  ├─ thenStatements : Ast.Statement[]
@@ -196,7 +197,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.For
  ├─ initialization : Ast.Statement.Assignment | null
  ├─ condition      : Ast.Expression
@@ -216,7 +217,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.While
  ├─ condition  : Ast.Expression
  └─ statements : Ast.Statement[]
@@ -231,7 +232,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Return
  └─ value : Ast.Expression
 ```
@@ -248,7 +249,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Binary(operator = AND | OR)
 ```
 
@@ -261,7 +262,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Binary(operator = < | <= | > | >= | == | !=)
 ```
 
@@ -275,7 +276,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Binary(operator = + | - | * | /)
 ```
 
@@ -298,7 +299,7 @@ the left operand.
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Access
  ├─ receiver : Ast.Expression | null
  └─ name     : String
@@ -321,7 +322,7 @@ Given:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Function
  ├─ receiver  : Ast.Expression | null
  ├─ name      : String
@@ -359,7 +360,7 @@ This implies:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Group
  └─ expression : Ast.Expression
 ```
@@ -373,7 +374,7 @@ Rules:
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Literal
  └─ literal : Object
 ```

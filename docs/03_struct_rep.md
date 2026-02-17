@@ -24,7 +24,7 @@ source ::= { fields } { methods }
 
 AST mapping:
 
-```text
+```yaml
 Ast.Source
  ├─ fields  : Ast.Field[]
  └─ methods : Ast.Method[]
@@ -47,7 +47,7 @@ field ::= "LET" [ "CONST" ] name ":" type [ "=" value ] ";"
 
 AST mapping:
 
-```text
+```yaml
 Ast.Field
  ├─ name     : String
  ├─ typeName : String
@@ -68,7 +68,7 @@ method ::=
 
 AST mapping:
 
-```text
+```yaml
 Ast.Method
  ├─ name           : String
  ├─ parameters     : String[]
@@ -90,7 +90,7 @@ statement_declaration ::= "LET" name [ ":" type ] [ "=" value ] ";"
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Declaration
  ├─ name     : String
  ├─ typeName : String | null
@@ -107,7 +107,7 @@ statement_assignment ::= receiver "=" value ";"
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Assignment
  ├─ receiver : Ast.Expression
  └─ value    : Ast.Expression
@@ -123,7 +123,7 @@ statement_expression ::= expression ";"
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Expression
  └─ expression : Ast.Expression
 ```
@@ -143,7 +143,7 @@ statement_if ::=
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.If
  ├─ condition      : Ast.Expression
  ├─ thenStatements : Ast.Statement[]
@@ -163,7 +163,7 @@ statement_for ::=
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.For
  ├─ initialization : Ast.Statement.Assignment | null
  ├─ condition      : Ast.Expression
@@ -184,7 +184,7 @@ statement_while ::=
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.While
  ├─ condition  : Ast.Expression
  └─ statements : Ast.Statement[]
@@ -201,7 +201,7 @@ statement_return ::=
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Return
  └─ value : Ast.Expression
 ```
@@ -220,7 +220,7 @@ expression_binary ::= left operator right
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Binary
  ├─ operator : Operator
  ├─ left     : Ast.Expression
@@ -251,7 +251,7 @@ expression_access ::= [ receiver "." ] name
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Access
  ├─ receiver : Ast.Expression | null
  └─ name     : String
@@ -267,7 +267,7 @@ expression_function ::= [ receiver "." ] name "(" [ arguments ] ")"
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Function
  ├─ receiver  : Ast.Expression | null
  ├─ name      : String
@@ -285,7 +285,7 @@ expression_group ::= "(" expression ")"
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Group
  └─ expression : Ast.Expression
 ```
@@ -298,7 +298,7 @@ expression_literal ::= literal
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Literal
  └─ literal : Object
 ```
