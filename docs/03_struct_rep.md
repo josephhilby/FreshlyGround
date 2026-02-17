@@ -273,6 +273,20 @@ Ast.Expression.Function
 ```
 
 ### Primary Expressions
+#### Grouping
+
+Grammar:
+
+```ebnf
+expression_group ::= "(" expression ")"
+```
+
+AST mapping:
+
+```text
+Ast.Expression.Group
+ └─ expression : Ast.Expression
+```
 
 #### Literals
 
@@ -295,21 +309,6 @@ Type Map (literal → object):
 * `decimal` → `Double`
 * `character` → `Character`
 * `string` → `String`
-
-#### Grouping
-
-Grammar:
-
-```ebnf
-expression_group ::= "(" expression ")"
-```
-
-AST mapping:
-
-```text
-Ast.Expression.Group
- └─ expression : Ast.Expression
-```
 
 ---
 
