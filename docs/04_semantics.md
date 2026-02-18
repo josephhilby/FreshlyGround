@@ -14,50 +14,71 @@ before any backend lowers the program into an executable form.
 
 FreshlyGround enforces **lexical (static) scoping**.
 
+A Scope represents a lexical region of name visibility. Scopes form a parent-linked 
+chain corresponding to nested program structure.
+
 ### Conceptual Structure
 
 ```yaml
 Scope
- ├─ parent     : Scope | null
- ├─ variables  : Map<String, Environment.Variable>
- └─ functions  : Map<String, Environment.Function>
+ ├─ parent    : Scope | null
+ ├─ variables : Map<String, Environment.Variable>
+ └─ functions : Map<String, Environment.Function>
 ```
 
 ### Scope Rules
+1. Declarations 
+   * Bind a `Environment.Variable` or `Environment.Function` in the **current scope**
+   * **Shadowing is allowed** across nested scopes
+   * **Redeclaration in the same scope is forbidden**
 
-1. Declarations bind names in the **current scope**
-2. References resolve by walking outward through **parent scopes**
-3. **Shadowing is allowed** across nested scopes
-4. **Redeclaration in the same scope is forbidden**
+2. Resolutions
+   * Lookup `Environment.Variable` or `Environment.Function` in the **current scope**
+   * If not found, resolution proceeds recursively through **parent scopes**
+   * Failure to resolve results in a compile-time error
 
+3. Nesting Scopes
+   * Occurs within: method bodies, conditional blocks, loop blocks 
 ---
 
 ## Environment Model
+The `Environment` defines the semantic entities used during analysis.
+
 ### Conceptual Structure
 
 ```yaml
 Environment
  ├─ types    : Map<String, Type>
- ├─ type     : Class<name, jvmName, scope>
- ├─ function : Class<name, jvmName, parameterTypes[], returnType>
- └─ variable : Map<name, jvmName, type, constant>
+ ├─ type     : Class<name, scope>
+ ├─ function : Class<name, parameterTypes[], returnType>
+ └─ variable : Map<name, type, constant>
 ```
 
+### Environment Rules
+1. Types and subtypes are fixed at initialization
+2. Types are singletons
+3. Each type owns a `scope`
+   * That scope stores type-associated functions and variables
+   * Member resolution occurs via this scope chain
+
 ### Environment Type Scope Chain
-* ANY
-    * BOOLEAN ⊆ ANY
-    * COMPARABLE ⊆ ANY
-        * STRING ⊆ COMPARABLE
-        * CHARACTER ⊆ COMPARABLE
-        * DECIMAL ⊆ COMPARABLE
-        * INTEGER ⊆ COMPARABLE
+```yaml
+ANY
+ ├─ BOOLEAN
+ ├─ COMPARABLE
+ │   ├─ STRING
+ │   ├─ CHARACTER
+ │   ├─ DECIMAL
+ │   └─ INTEGER
+ └─ NIL
+
+```
 
 ---
 
 ## Bindings Model
 
-Bindings form a **global association** between AST nodes and their resolved semantic 
-meaning.
+Bindings store the results of semantic analysis. They associate specific AST nodes with the semantic entities produced during resolution
 
 ### Conceptual Model
 
@@ -71,7 +92,19 @@ Bindings
  └─ type        : Map<Ast.Expression: Environment.Type>
 ```
 
-### Binding Rules
+### Binding Resolution
+```text
+AST node
+  ↓ 
+Extract identifier
+  ↓ 
+Scope lookup
+  ↓
+Environment entity
+  ↓
+Binding recorded
+
+```
 
 ---
 
@@ -88,7 +121,7 @@ Ast.Source
 
 Rules:
 
-* **[Rule]** `main/0` must exist in the global scope
+* **[Rule]** `main/0` (`method/arity`) must exist in the methods
 * **[Rule]** `main/0` must return `Integer`
 
 >**Legend:**
@@ -113,9 +146,8 @@ Ast.Field
 Rules:
 
 * **[Rule]** If `constant=true`, `value` must be present
-* **[Rule]** If `value` is present, **(T: `value.type` assignable to declared typeName)**
+* **[Rule]** If `value` is present, **(T: `value.type` assignable to declared `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
-* **[Rule]** Attaches the variable binding to this AST node
 
 ### Method
 
@@ -132,11 +164,11 @@ Ast.Method
 
 Rules:
 
+* **[Rule]** Method body is analyzed in a **new nested scope**
 * **[Rule]** `parameterTypes` must resolve to `Environment.Type`
 * **[Rule]** `returnTypeName` defaults to `Nil` if omitted
+* **[Rule]** Each `RETURN` must satisfy **(T: `value.type` assignable to method `returnType`)**
 * **[Rule]** Declares an `Environment.Function` in the current scope
-* **[Rule]** Method body is analyzed in a **new nested scope**
-* **[Rule]** Each `RETURN` must satisfy **(T: returnExpr.type assignable to method returnType)**
 
 ---
 
@@ -155,9 +187,10 @@ Ast.Statement.Declaration
 Rules:
 
 * **[Rule]** Must specify a type or a value (cannot omit both)
-* **[Rule]** If `value` present, inferred type = `value.type`
+* **[Rule]** If `value` present, must resolve to `Environment.Type` 
+* **[Rule]** If `value` present and valid, set `typeName` to `value.type`
 * **[Rule]** If `typeName` present, it must resolve to `Environment.Type`
-* **[Rule]** If both present, **(T: value.type assignable to declared typeName)**
+* **[Rule]** If both present, **(T: `value.type` assignable to declared `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
 
 ### Assignment
@@ -173,7 +206,7 @@ Ast.Statement.Assignment
 Rules:
 
 * **[Rule]** Receiver must not be constant
-* **[Rule]** **(T: value.type assignable to receiver.type)**
+* **[Rule]** **(T: `value.type` assignable to `receiver.type`)**
 
 ### Expression
 
@@ -184,9 +217,7 @@ Ast.Statement.Expression
  └─ expression : Ast.Expression.Function
 ```
 
-Rules:
-
-
+Rules: See, `Ast.Expression.Function`
 
 ### Conditional
 
@@ -201,7 +232,7 @@ Ast.Statement.If
 
 Rules:
 
-* **[Rule]** **(T: condition.type must be `Boolean`)**
+* **[Rule]** **(T: `condition.type` must be `Boolean`)**
 * **[Rule]** `thenStatements` must be non-empty
 * **[Rule]** Then/Else bodies analyzed in **new nested scopes**
 
@@ -219,9 +250,9 @@ Ast.Statement.For
 
 Rules:
 
+* **[Rule]** **(T: `condition.type` must be `Boolean`)**
 * **[Rule]** `statements` must be non-empty
-* **[Rule]** **(T: condition.type must be `Boolean`)**
-* **[Rule]** Loop body analyzed in a **new nested scope**
+* **[Rule]** Statements body analyzed in a **new nested scope**
 
 ### While Loop
 
@@ -235,8 +266,8 @@ Ast.Statement.While
 
 Rules:
 
-* **[Rule]** **(T: condition.type must be `Boolean`)**
-* **[Rule]** Body analyzed in a **new nested scope**
+* **[Rule]** **(T: `condition.type` must be `Boolean`)**
+* **[Rule]** Statements body analyzed in a **new nested scope**
 
 ### Return
 
@@ -249,7 +280,7 @@ Ast.Statement.Return
 
 Rules:
 
-* **[Rule]** **(T: value.type assignable to current method returnType)**
+* **[Rule]** **(T: `value.type` assignable to current method `returnType`)**
 
 ---
 
@@ -268,8 +299,8 @@ Ast.Expression.Binary
 
 Rules:
 
-* **[Rule]** **(T: left.type == Boolean and right.type == Boolean)**
-* **[Rule]** `result.type = Boolean`
+* **[Rule]** **(T: `left.type` and `right.type` must resolve to `Boolean`)**
+* **[Rule]** `result.type` must resolve to `Boolean`
 
 #### Comparison
 
@@ -284,9 +315,9 @@ Ast.Expression.Binary
 
 Rules:
 
-* **[Rule]** **(T: left.type and right.type assignable to `Comparable`)**
-* **[Rule]** **(T: left.type == right.type)**
-* **[Rule]** `result.type = Boolean`
+* **[Rule]** **(T: `left.type` and `right.type` assignable to `Comparable`)**
+* **[Rule]** **(T: `left.type` must be the same as `right.type`)**
+* **[Rule]** `result.type` must resolve to `Boolean`
 
 #### Arithmetic
 
@@ -301,9 +332,9 @@ Ast.Expression.Binary
 
 Rules:
 
-* **[Rule]** If operator is `+` and either operand is `String`, `result.type = String`
+* **[Rule]** If operator is `+` and either operand is `String`, `result.type` will be `String`
 * **[Rule]** Otherwise, **(T: both operands must be `Integer` or both `Decimal`)**
-* **[Rule]** `result.type` is the numeric operand type
+* **[Rule]** `result.type` must resolve to the numeric operand type (`Integer` or `Decimal`)
 
 ### Member Access and Function Calls
 #### Nominal Member Resolution and Lowering
@@ -326,8 +357,8 @@ Ast.Expression.Access
 
 Rules:
 
-* **[Rule]** If `receiver = null`, resolve name in the **current lexical scope**
-* **[Rule]** If `receiver != null`, resolve name in the **receiver’s type scope**
+* **[Rule]** If `receiver` = `null`, resolve name in the **current lexical scope**
+* **[Rule]** If `receiver` != `null`, resolve name in the **receiver’s type scope**
 
 ##### Access Resolution Model
 Given:
@@ -353,7 +384,7 @@ Rules:
 * **[Rule]** Resolve function via scope (lexical or type scope)
 * **[Rule]** Arguments analyzed **left-to-right**
 * **[Rule]** Each argument must be **assignable to the corresponding parameter type**
-* **[Rule]** If `receiver != null`, implicit receiver is prepended to argument list
+* **[Rule]** If `receiver` != `null`, implicit receiver is prepended to argument list
 
 ##### Function Resolution Model
 Given:
@@ -387,7 +418,7 @@ Ast.Expression.Group
 Rules:
 
 * **[Rule]** Grouped expression must be binary (as implemented)
-* **[Rule]** `group.type = inner.type`
+* **[Rule]** `group.type` must be the same as `expression.type`
 
 #### Literals
 
