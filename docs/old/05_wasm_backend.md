@@ -373,3 +373,50 @@ END
 
 * For pass ordering and invariants: **[Compiler Pipeline](04_pipeline.md)**
 * For the semantic rules that resolve builtins like `print`: **[Semantics](03_semantics.md)**
+
+# 05 — WebAssembly Backend Specification
+
+This document specifies the FreshlyGround WebAssembly (WAT) backend: the lowering rules, runtime interface
+(host ABI), and representation strategy for compiling semantically-analyzed FreshlyGround programs into
+WebAssembly Text Format (WAT).
+
+The WAT backend is one concrete implementation of the modular backend interface defined in the compiler pipeline, that:
+
+* consumes AST + Bindings
+* assumes semantic correctness has already been proven
+* performs mechanical lowering only
+* emits WAT source
+* does not perform name resolution or type checking
+
+---
+
+## Backend Overview
+
+
+
+## Type Mapping
+
+FreshlyGround   WASM
+  --------------- -----------
+Integer         i32
+Boolean         i32
+Decimal         f64
+String          (ptr,len)
+
+## Imports
+
+``` wat
+(import "env" "print_i32" (func $print_i32 (param i32)))
+(import "env" "print_str" (func $print_str (param i32 i32)))
+```
+
+## Example Module Skeleton
+
+``` wat
+(module
+  (memory (export "memory") 1)
+  (func (export "main") (result i32)
+    (i32.const 0))
+)
+```
+

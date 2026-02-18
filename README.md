@@ -73,6 +73,7 @@ browser-based execution environment, and a Hack VM backend for compilation to th
   - [x] Implement semantic `Bindings`
   - [x] Remove semantic info from AST
   - [x] Add `Builtins` for common use functions and variables
+  - [ ] Remove JVM specific information from Environment class
   - [x] Enforce Java 21 via Gradle toolchain
   - [x] Update README
 - [x] Transpiler architecture
@@ -133,14 +134,14 @@ The full language and compiler specification is maintained in /docs:
 - Backends — WebAssembly (WAT/WASM) targets
 
 #### /docs
-| Topic               | Document                                             |
-| ------------------- |------------------------------------------------------|
-| Overview & Index    | [docs/00_index.md](./docs/00_index.md)               |
-| Language Grammar    | [docs/01_syntax.md](./docs/01_syntax.md)             |
-| AST Specification   | [docs/02_ast_map.md](./docs/02_ast_map.md)           |
-| Semantic Rules      | [docs/03_semantics.md](./docs/03_semantics.md)       |
-| Compiler Pipeline   | [docs/04_pipeline.md](./docs/04_pipeline.md)         |
-| WebAssembly Backend | [docs/06_wasm_backend.md](./docs/05_wasm_backend.md) |
+| Topic               | Document                                         |
+| ------------------- |--------------------------------------------------|
+| Overview & Index    | [docs/00_index.md](./docs/00_index.md)           |
+| Compiler Pipeline   | [docs/01_pipeline.md](./docs/01_pipeline.md)     |
+| Language Grammar    | [docs/02_syntax.md](./docs/02_syntax.md)         |
+| AST Specification   | [docs/03_struct_rep.md](./docs/03_struct_rep.md) |
+| Semantic Rules      | [docs/04_semantics.md](./docs/04_semantics.md)   |
+| WebAssembly Backend | [docs/05_backend.md](./docs/05_backend.md)       |
 
 
 ## Acknowledgments

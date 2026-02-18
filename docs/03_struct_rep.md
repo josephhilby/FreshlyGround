@@ -4,21 +4,30 @@ This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the st
 produced by the parser according to the previously discussed context-free grammar. The AST captures 
 **program form without semantic meaning**. It encodes hierarchy, precedence, and grammatical structure.
 
+* Note: Some of the EBNF definitions have been modified to better show how the map to their respective
+AST class.
 ---
 
 ## AST Root
 All programs are parsed from a single root node: `Ast.Source`.
 
 Grammar:
+
 ```ebnf
-source ::= { field } { method }
+source ::= { fields } { methods }
 ```
+>**Legend:**
+>- `{ … }` = zero or more
+>- `[ … ]` = optional (zero or one)
+>- `|` = alternative
+>- Keywords (`"LET"`, `"DEF"`, etc.) are case-sensitive
 
 AST mapping:
-```text
+
+```yaml
 Ast.Source
- ├─ fields   : Ast.Field[]
- └─ methods  : Ast.Method[]
+ ├─ fields  : Ast.Field[]
+ └─ methods : Ast.Method[]
 ```
 
 * **Fields** define global storage
@@ -33,17 +42,17 @@ Ast.Source
 Grammar:
 
 ```ebnf
-field ::= "LET" [ "CONST" ] identifier ":" identifier [ "=" expression ] ";"
+field ::= "LET" [ "CONST" ] name ":" type [ "=" value ] ";"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Field
- ├─ name       : String
- ├─ typeName   : String
- ├─ constant   : boolean
- └─ value      : Ast.Expression | null
+ ├─ name     : String
+ ├─ typeName : String
+ ├─ constant : boolean
+ └─ value    : Ast.Expression | null
 ```
 
 ### Methods
@@ -52,71 +61,71 @@ Grammar:
 
 ```ebnf
 method ::= 
-"DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO"
-    { statement }
+"DEF" name "(" [ param ":" paramType ] ")" [ ":" returnType ] "DO"
+    { statements }
 "END"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Method
- ├─ name              : String
- ├─ parameters        : String[]
- ├─ parameterTypes    : String[]
- ├─ returnTypeName    : String | null
- └─ statements        : Ast.Statement[]
+ ├─ name           : String
+ ├─ parameters     : String[]
+ ├─ parameterTypes : String[]
+ ├─ returnTypeName : String | null
+ └─ statements     : Ast.Statement[]
 ```
 
 ---
 
 ## Statements
-### Assignment
-
-Grammar:
-
-```ebnf
-expression "=" expression ";"
-```
-
-AST mapping:
-
-```text
-Ast.Statement.Assignment
- ├─ receiver : Ast.Expression
- └─ value    : Ast.Expression
-```
-
-### Expression Statement
-
-Grammar:
-
-```ebnf
-expression ";"
-```
-
-AST mapping:
-
-```text
-Ast.Statement.Expression
- └─ expression : Ast.Expression
-```
-
 ### Declaration
 
 Grammar:
 
 ```ebnf
-"LET" identifier [ ":" identifier ] [ "=" expression ] ";"
+statement_declaration ::= "LET" name [ ":" type ] [ "=" value ] ";"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Declaration
- ├─ name      : String
- ├─ typeName  : String | null
- └─ value     : Ast.Expression | null
+ ├─ name     : String
+ ├─ typeName : String | null
+ └─ value    : Ast.Expression | null
+```
+
+### Assignment
+
+Grammar:
+
+```ebnf
+statement_assignment ::= receiver "=" value ";"
+```
+
+AST mapping:
+
+```yaml
+Ast.Statement.Assignment
+ ├─ receiver : Ast.Expression.Access
+ └─ value    : Ast.Expression
+```
+
+### Expression
+
+Grammar:
+
+```ebnf
+statement_expression ::= expression ";"
+```
+
+AST mapping:
+
+```yaml
+Ast.Statement.Expression
+ └─ expression : Ast.Expression.Function
 ```
 
 ### Conditional
@@ -124,20 +133,21 @@ Ast.Statement.Declaration
 Grammar:
 
 ```ebnf
-"IF" expression "DO"
-    { statement }
+statement_if ::=
+"IF" condition "DO"
+    { thenStatements }
 [ "ELSE"
-    { statement } ]
+    { elseStatements } ]
 "END"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.If
- ├─ condition       : Ast.Expression
- ├─ thenStatements  : Ast.Statement[]
- └─ elseStatements  : Ast.Statement[]
+ ├─ condition      : Ast.Expression
+ ├─ thenStatements : Ast.Statement[]
+ └─ elseStatements : Ast.Statement[]
 ```
 
 ### For Loop
@@ -145,14 +155,15 @@ Ast.Statement.If
 Grammar:
 
 ```ebnf
-"FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")"
-    { statement }
+statement_for ::=
+"FOR" "(" [ initialization ] ";" condition ";" [ increment ] ")"
+    { statements }
 "END"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.For
  ├─ initialization : Ast.Statement.Assignment | null
  ├─ condition      : Ast.Expression
@@ -165,14 +176,15 @@ Ast.Statement.For
 Grammar:
 
 ```ebnf
-"WHILE" expression "DO"
-  { statement }
+statement_while ::=
+"WHILE" condition "DO"
+  { statements }
 "END"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.While
  ├─ condition  : Ast.Expression
  └─ statements : Ast.Statement[]
@@ -183,12 +195,13 @@ Ast.Statement.While
 Grammar:
 
 ```ebnf
-"RETURN" expression ";"
+statement_return ::=
+"RETURN" value ";"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Statement.Return
  └─ value : Ast.Expression
 ```
@@ -199,110 +212,105 @@ Ast.Statement.Return
 ### Binary Operations
 All infix operators are normalized into a single binary node type.
 
+Grammar:
+
+```ebnf
+expression_binary ::= left operator right
+```
+
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Binary
  ├─ operator : Operator
  ├─ left     : Ast.Expression
  └─ right    : Ast.Expression
 ```
 
-This node is used for:
+Operators:
 
-* Logical operators: `AND`, `OR`
-* Comparison operators: `<`, `<=`, `>`, `>=`, `==`, `!=`
-* Arithmetic operators: `+`, `-`, `*`, `/`
+* Logical operators: { `AND`, `OR` }
+* Comparison operators: { `<`, `<=`, `>`, `>=`, `==`, `!=` }
+* Arithmetic operators: { `+`, `-`, `*`, `/` }
 
----
-
-## Member Access and Function Calls
-These constructs unify under a **receiver-based model**.
-
-### Access
-Grammar fragment:
-
-```ebnf
-identifier
-```
-or
-```ebnf
-primary "." identifier
-```
-
-AST mapping:
-
-```text
-Ast.Expression.Access
- ├─ receiver : Ast.Expression | null
- └─ name     : String
-```
+### Member Access and Function Calls
+Please note that in the CFG these were split among primary- and secondary-expressions. However, 
+both are unified here under a **receiver-based model**, where:
 
 * `receiver = null` represents an unqualified name
 * `receiver != null` represents member access
 
 Semantic resolution of this construct is defined in the next section.
 
-### Function Call
-
+#### Member Access
 Grammar fragment:
 
 ```ebnf
-identifier "(" [ expression { "," expression } ] ")"
-```
-or
-```ebnf
-primary "." identifier "(" [ expression { "," expression } ] ")"
+expression_access ::= [ receiver "." ] name
 ```
 
 AST mapping:
 
-```text
+```yaml
+Ast.Expression.Access
+ ├─ receiver : Ast.Expression | null
+ └─ name     : String
+```
+
+#### Function Call
+
+Grammar fragment:
+
+```ebnf
+expression_function ::= [ receiver "." ] name "(" [ arguments ] ")"
+```
+
+AST mapping:
+
+```yaml
 Ast.Expression.Function
  ├─ receiver  : Ast.Expression | null
  ├─ name      : String
  └─ arguments : Ast.Expression[]
 ```
 
-* `receiver = null` represents an unqualified invocation
-* `receiver != null` represents a qualified invocation
-
-Semantic resolution of this construct is defined in the next section.
-
----
-
-## Primary Expressions
-
-### Literals
-
-```text
-Ast.Expression.Literal
- └─ literal : Object
-```
-
-Represents:
-
-* `NIL` → `null`
-* `TRUE` / `FALSE` → `Boolean`
-* `integer` → `Integer`
-* `decimal` → `Double`
-* `character` → `Character`
-* `string` → `String`
-
-### Grouping
+### Primary Expressions
+#### Grouping
 
 Grammar:
 
 ```ebnf
-"(" expression ")"
+expression_group ::= "(" expression ")"
 ```
 
 AST mapping:
 
-```text
+```yaml
 Ast.Expression.Group
  └─ expression : Ast.Expression
 ```
+
+#### Literals
+
+```ebnf
+expression_literal ::= literal
+```
+
+AST mapping:
+
+```yaml
+Ast.Expression.Literal
+ └─ literal : Object
+```
+
+Type Map (literal → java object):
+
+* `"NIL"`                → `null`
+* (`"TRUE"` | `"FALSE"`) → `Boolean`
+* `integer`              → `BigInteger`
+* `decimal`              → `BigDecimal`
+* `character`            → `Character`
+* `string`               → `String`
 
 ---
 
