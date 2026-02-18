@@ -152,7 +152,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         } else {
             visit(ast.getValue().get());
             type = bindings.getType(ast.getValue().get());
-
         }
 
         // throws a CompilerException if: value exists AND not assignable to variable

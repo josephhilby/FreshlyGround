@@ -22,8 +22,8 @@ chain corresponding to nested program structure.
 ```yaml
 Scope
  ├─ parent    : Scope | null
- ├─ variables : Map<String, Environment.Variable>
- └─ functions : Map<String, Environment.Function>
+ ├─ variables : Map<name, Environment.Variable>
+ └─ functions : Map<name + "/" + arity, Environment.Function>
 ```
 
 ### Scope Rules
@@ -42,35 +42,36 @@ Scope
 ---
 
 ## Environment Model
-The `Environment` defines the semantic entities used during analysis.
+The `Environment` defines the semantic entities used during analysis. At its core the model enforces one 
+key guarantee, that after analysis every `Ast.Expression` node will resolve to exactly one `Environment.Type`.
 
 ### Conceptual Structure
 
 ```yaml
 Environment
- ├─ types    : Map<String, Type>
- ├─ type     : Class<name, scope>
- ├─ function : Class<name, parameterTypes[], returnType>
- └─ variable : Map<name, type, constant>
+ ├─ types    : Map<name, Type>
+ ├─ type     : Class<name : String, scope : Scope>
+ ├─ function : Class<name : String, parameterTypes : Type[], returnType : Type>
+ └─ variable : Class<name : String, type : Type, constant : boolean>
 ```
 
 ### Environment Rules
-1. Types and subtypes are fixed at initialization
+1. Types and subtype sets are closed and fixed at initialization
 2. Types are singletons
 3. Each type owns a `scope`
    * That scope stores type-associated functions and variables
    * Member resolution occurs via this scope chain
 
-### Environment Type Scope Chain
+### Type Scope Chain
 ```yaml
-ANY
- ├─ BOOLEAN
- ├─ COMPARABLE
- │   ├─ STRING
- │   ├─ CHARACTER
- │   ├─ DECIMAL
- │   └─ INTEGER
- └─ NIL
+Any
+├─ Boolean
+├─ Comparable
+│   ├─ Integer
+│   ├─ Decimal
+│   ├─ Character
+│   └─ String
+└─ Nil
 
 ```
 
@@ -78,7 +79,8 @@ ANY
 
 ## Bindings Model
 
-Bindings store the results of semantic analysis. They associate specific AST nodes with the semantic entities produced during resolution
+Bindings store the results of semantic analysis. They associate specific AST nodes with the 
+semantic entities produced during resolution.
 
 ### Conceptual Model
 
@@ -95,15 +97,14 @@ Bindings
 ### Binding Resolution
 ```text
 AST node
-  ↓ 
-Extract identifier
-  ↓ 
-Scope lookup
   ↓
-Environment entity
+Name / construct extracted
+  ↓
+Scope or type-based lookup
+  ↓
+Environment entity resolved
   ↓
 Binding recorded
-
 ```
 
 ---
@@ -186,9 +187,7 @@ Ast.Statement.Declaration
 
 Rules:
 
-* **[Rule]** Must specify a type or a value (cannot omit both)
-* **[Rule]** If `value` present, must resolve to `Environment.Type` 
-* **[Rule]** If `value` present and valid, set `typeName` to `value.type`
+* **[Rule]** If `value` present and valid, `typeName` is inferred from `value.type`
 * **[Rule]** If `typeName` present, it must resolve to `Environment.Type`
 * **[Rule]** If both present, **(T: `value.type` assignable to declared `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
@@ -232,7 +231,7 @@ Ast.Statement.If
 
 Rules:
 
-* **[Rule]** **(T: `condition.type` must be `Boolean`)**
+* **[Rule]** **(T: `condition.type` assignable to `Boolean`)**
 * **[Rule]** `thenStatements` must be non-empty
 * **[Rule]** Then/Else bodies analyzed in **new nested scopes**
 
@@ -250,8 +249,9 @@ Ast.Statement.For
 
 Rules:
 
-* **[Rule]** **(T: `condition.type` must be `Boolean`)**
-* **[Rule]** `statements` must be non-empty
+* **[Rule]** **(T: `condition.type` assignable to `Boolean`)**
+* **[Rule]** If `initialization` exists, **(T: `init.receiver` assignable to `Comparable`)**
+* **[Rule]** If `increment` and `initialization` exist, **(T: `init.receiver` assignable to `inc.receiver`)**
 * **[Rule]** Statements body analyzed in a **new nested scope**
 
 ### While Loop
@@ -266,7 +266,7 @@ Ast.Statement.While
 
 Rules:
 
-* **[Rule]** **(T: `condition.type` must be `Boolean`)**
+* **[Rule]** **(T: `condition.type` assignable to `Boolean`)**
 * **[Rule]** Statements body analyzed in a **new nested scope**
 
 ### Return
@@ -299,7 +299,7 @@ Ast.Expression.Binary
 
 Rules:
 
-* **[Rule]** **(T: `left.type` and `right.type` must resolve to `Boolean`)**
+* **[Rule]** **(T: `left.type` and `right.type` assignable to `Boolean`)**
 * **[Rule]** `result.type` must resolve to `Boolean`
 
 #### Comparison
@@ -363,9 +363,9 @@ Rules:
 ##### Access Resolution Model
 Given:
 
-    object.member
+    receiver.member
 
-1. Evaluate `object` to type **T**
+1. Evaluate `receiver` to type **T**
 2. Resolve `member` inside the **type scope of T**
 
 #### Function Call
@@ -389,20 +389,20 @@ Rules:
 ##### Function Resolution Model
 Given:
 
-    object.method(a, b)
+    receiver.function(a, b)
 
-1. Evaluate `object` to type **T**
-2. Resolve `method(a, b)` inside the **type scope of T**
+1. Evaluate `receiver` to type **T**
+2. Resolve `function(a, b)` inside the **type scope of T**
 
 The expression is then lowered to:
 
-    method(object, a, b)
+    function(receiver, a, b)
 
-The implicit receiver (`object`) is inserted as the first argument.
+The receiver is inserted as the first argument.
 
 This implies:
-- Declared method arity = N
-- Call-site arity = N − 1 (receiver is implicit)
+- Declared function has an arity = N
+- Call-site arity = N - 1 (receiver is implicit)
 
 
 ### Primary Expressions
@@ -417,7 +417,6 @@ Ast.Expression.Group
 
 Rules:
 
-* **[Rule]** Grouped expression must be binary (as implemented)
 * **[Rule]** `group.type` must be the same as `expression.type`
 
 #### Literals
@@ -437,3 +436,5 @@ Type Map (java object → Environment.Type):
 * `BigDecimal` → `Environment.Type.DECIMAL`
 * `Character`  → `Environment.Type.CHARACTER`
 * `String`     → `Environment.Type.STRING`
+
+Note: Integer and Decimal are bounded within a 32-bit int and 64-bit double
