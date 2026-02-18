@@ -1,4 +1,4 @@
-# 04 — Semantic Model & Bindings Specification (draft)
+# 04 — Semantic Model & Bindings Specification
 
 This document specifies the **FreshlyGround semantic layer**: the rules that assign *meaning* to
 syntactically valid programs by resolving names, enforcing types, and constructing a scoped binding environment
@@ -438,3 +438,11 @@ Type Map (java object → Environment.Type):
 * `String`     → `Environment.Type.STRING`
 
 Note: Integer and Decimal are bounded within a 32-bit int and 64-bit double
+
+---
+
+## Navigation
+
+* Index: [Overview & Index](./00_index.md)
+* Previous: [Structural Representation](./03_struct_rep.md)
+* Next: [Modular Backends](./05_backend.md)
