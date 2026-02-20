@@ -141,7 +141,6 @@ public final class Environment {
         public String toString() {
             return "Function{" +
                 "name='" + name + '\'' +
-                ", jvmName='" + jvmName + '\'' +
                 ", arity=" + parameterTypes.size() +
                 ", parameterTypes=" + parameterTypes +
                 ", returnType=" + returnType +
@@ -182,7 +181,6 @@ public final class Environment {
         public String toString() {
             return "Variable{" +
                 "name='" + name + '\'' +
-                ", jvmName'" + jvmName + '\'' +
                 ", type=" + type +
                 ", constant=" + constant +
                 '}';

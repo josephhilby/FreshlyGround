@@ -1,5 +1,7 @@
 package freshlyground.common;
 
+import java.util.Optional;
+
 /**
  * A {@code CompilerException} represents an unrecoverable error encountered during
  *  * compilation. It may originate from any compiler phase, including lexing,
@@ -27,7 +29,7 @@ public final class CompilerException extends RuntimeException {
         this.index = index;
     }
 
-    public int getIndex() {
-        return index;
+    public Optional<Integer> getIndex() {
+        return Optional.ofNullable(index);
     }
 }

@@ -30,14 +30,18 @@ import java.util.Optional;
  */
 public abstract class Ast {
 
-    // { fields } { methods }
+    private static <T> T require(T value, String message) {
+        if (value == null) throw new CompilerException(message);
+        return value;
+    }
+
     public static final class Source extends Ast {
         private final List<Field> fields;
         private final List<Method> methods;
 
         public Source(List<Field> fields, List<Method> methods) {
-            this.fields = List.copyOf(Objects.requireNonNull(fields, "fields are required, may be ArrayList<>()"));
-            this.methods = List.copyOf(Objects.requireNonNull(methods, "methods are required, may be ArrayList<>()"));
+            this.fields = List.copyOf(require(fields, "fields are required, may be ArrayList<>()"));
+            this.methods = List.copyOf(require(methods, "methods are required, may be ArrayList<>()"));
         }
 
         public List<Ast.Field> getFields() { return fields; }
@@ -59,21 +63,24 @@ public abstract class Ast {
                     ", methods=" + methods +
                     '}';
         }
-
     }
 
-    // LET [ constant ] name : typeName [ = value ] ;
     public static final class Field extends Ast {
         private final String name;
         private final String typeName;
         private final boolean constant;
         private final Optional<Ast.Expression> value;
 
-        public Field(String name, String typeName, boolean constant, Optional<Ast.Expression> value) {
-            this.name = Objects.requireNonNull(name, "name is required");
-            this.typeName = Objects.requireNonNull(typeName, "typeName is required");
+        public Field(
+            String name,
+            String typeName,
+            boolean constant,
+            Optional<Ast.Expression> value
+        ) {
+            this.name = require(name, "name is required");
+            this.typeName = require(typeName, "typeName is required");
             this.constant = constant;
-            this.value = Objects.requireNonNull(value, "value is required, may be Optional.empty()");
+            this.value = require(value, "value is required, may be Optional.empty()");
         }
 
         public String getName() { return name; }
@@ -103,7 +110,6 @@ public abstract class Ast {
         }
     }
 
-    // DEF name ( { parameters : parameterTypeNames } ) [ : returnTypeName ] DO { statements } END
     public static final class Method extends Ast {
         private final String name;
         private final List<String> parameters;
@@ -111,12 +117,18 @@ public abstract class Ast {
         private final Optional<String> returnTypeName;
         private final List<Statement> statements;
 
-        public Method(String name, List<String> parameters, List<String> parameterTypeNames, Optional<String> returnTypeName, List<Statement> statements) {
-            this.name = Objects.requireNonNull(name, "name is required");
-            this.parameters = List.copyOf(Objects.requireNonNull(parameters, "parameters are required, may be ArrayList<>()"));
-            this.parameterTypeNames = List.copyOf(Objects.requireNonNull(parameterTypeNames, "parameterTypeNames is required, may be ArrayList<>()"));
-            this.returnTypeName = Objects.requireNonNull(returnTypeName, "returnTypeName is required, may be Optional.empty()");
-            this.statements = List.copyOf(Objects.requireNonNull(statements, "statements are required, may be ArrayList<>()"));
+        public Method(
+            String name,
+            List<String> parameters,
+            List<String> parameterTypeNames,
+            Optional<String> returnTypeName,
+            List<Statement> statements
+        ) {
+            this.name = require(name, "name is required");
+            this.parameters = List.copyOf(require(parameters, "parameters are required, may be ArrayList<>()"));
+            this.parameterTypeNames = List.copyOf(require(parameterTypeNames, "parameterTypeNames is required, may be ArrayList<>()"));
+            this.returnTypeName = require(returnTypeName, "returnTypeName is required, may be Optional.empty()");
+            this.statements = List.copyOf(require(statements, "statements are required, may be ArrayList<>()"));
         }
 
         public String getName() { return name; }
@@ -151,12 +163,11 @@ public abstract class Ast {
 
     public static abstract class Statement extends Ast {
 
-        // expression ;
         public static final class Expression extends Statement {
             private final Ast.Expression.Function expression;
 
             public Expression(Ast.Expression.Function expression) {
-                this.expression = Objects.requireNonNull(expression, "expression is required");
+                this.expression = require(expression, "expression is required");
             }
 
             public Ast.Expression.Function getExpression() { return expression; }
@@ -177,16 +188,19 @@ public abstract class Ast {
             }
         }
 
-        // LET name [ : typeName ] [ = value ] ;
         public static final class Declaration extends Statement {
             private final String name;
             private final Optional<String> typeName;
             private final Optional<Ast.Expression> value;
 
-            public Declaration(String name, Optional<String> typeName, Optional<Ast.Expression> value) {
-                this.name = Objects.requireNonNull(name, "name is required");
-                this.typeName = Objects.requireNonNull(typeName, "typeName is required, may be Optional.empty()");
-                this.value = Objects.requireNonNull(value, "value is required, may be Optional.empty()");
+            public Declaration(
+                String name,
+                Optional<String> typeName,
+                Optional<Ast.Expression> value
+            ) {
+                this.name = require(name, "name is required");
+                this.typeName = require(typeName, "typeName is required, may be Optional.empty()");
+                this.value = require(value, "value is required, may be Optional.empty()");
 
                 if (typeName.isEmpty() && value.isEmpty()) {
                     throw new CompilerException("Must have declared type or value");
@@ -217,14 +231,13 @@ public abstract class Ast {
             }
         }
 
-        // expression = expression ;
         public static final class Assignment extends Statement {
             private final Ast.Expression.Access receiver;
             private final Ast.Expression value;
 
             public Assignment(Ast.Expression.Access receiver, Ast.Expression value) {
-                this.receiver = Objects.requireNonNull(receiver, "receiver is required");
-                this.value = Objects.requireNonNull(value, "value is required");
+                this.receiver = require(receiver, "receiver is required");
+                this.value = require(value, "value is required");
             }
 
             public Ast.Expression.Access getReceiver() { return receiver; }
@@ -248,16 +261,19 @@ public abstract class Ast {
             }
         }
 
-        // IF condition DO { thenStatements } [ ELSE { elseStatements } ] END
         public static final class If extends Statement {
             private final Ast.Expression condition;
             private final List<Statement> thenStatements;
             private final List<Statement> elseStatements;
 
-            public If(Ast.Expression condition, List<Statement> thenStatements, List<Statement> elseStatements) {
-                this.condition = Objects.requireNonNull(condition, "condition is required");
-                this.thenStatements = List.copyOf(Objects.requireNonNull(thenStatements, "thenStatements is required, may be ArrayList<>()"));
-                this.elseStatements = List.copyOf(Objects.requireNonNull(elseStatements, "elseStatements is required, may be ArrayList<>()"));
+            public If(
+                Ast.Expression condition,
+                List<Statement> thenStatements,
+                List<Statement> elseStatements
+            ) {
+                this.condition = require(condition, "condition is required");
+                this.thenStatements = List.copyOf(require(thenStatements, "thenStatements is required, may be ArrayList<>()"));
+                this.elseStatements = List.copyOf(require(elseStatements, "elseStatements is required, may be ArrayList<>()"));
             }
 
             public Ast.Expression getCondition() { return condition; }
@@ -284,18 +300,22 @@ public abstract class Ast {
             }
         }
 
-        // FOR ( [ initialization ] ; condition ; [ increment ] ) { statements } END
         public static final class For extends Statement {
             private final Ast.Statement.Assignment initialization;
             private final Ast.Expression condition;
             private final Ast.Statement.Assignment increment;
             private final List<Statement> statements;
 
-            public For(Statement.Assignment initialization, Ast.Expression condition, Statement.Assignment increment, List<Statement> statements) {
+            public For(
+                Statement.Assignment initialization,
+                Ast.Expression condition,
+                Statement.Assignment increment,
+                List<Statement> statements
+            ) {
                 this.initialization = initialization;
-                this.condition = Objects.requireNonNull(condition, "condition is required");
+                this.condition = require(condition, "condition is required");
                 this.increment = increment;
-                this.statements = List.copyOf(Objects.requireNonNull(statements, "statements is required, may be ArrayList<>()"));
+                this.statements = List.copyOf(require(statements, "statements is required, may be ArrayList<>()"));
             }
 
             public Ast.Statement.Assignment getInitialization() { return initialization; }
@@ -325,14 +345,13 @@ public abstract class Ast {
             }
         }
 
-        // WHILE condition DO { statements } END
         public static final class While extends Statement {
             private final Ast.Expression condition;
             private final List<Statement> statements;
 
             public While(Ast.Expression condition, List<Statement> statements) {
-                this.condition = Objects.requireNonNull(condition, "condition is required");
-                this.statements = List.copyOf(Objects.requireNonNull(statements, "statements is required, may be ArrayList<>()"));
+                this.condition = require(condition, "condition is required");
+                this.statements = List.copyOf(require(statements, "statements is required, may be ArrayList<>()"));
             }
 
             public Ast.Expression getCondition() { return condition; }
@@ -356,12 +375,11 @@ public abstract class Ast {
             }
         }
 
-        // RETURN value ;
         public static final class Return extends Statement {
             private final Ast.Expression value;
 
             public Return(Ast.Expression value) {
-                this.value = Objects.requireNonNull(value, "value is required");
+                this.value = require(value, "value is required");
             }
 
             public Ast.Expression getValue() { return value; }
@@ -385,7 +403,6 @@ public abstract class Ast {
 
     public static abstract class Expression extends Ast {
 
-        // NIL | TRUE | FALSE | integer | decimal | character | string
         public static final class Literal extends Ast.Expression {
             private final Object literal;
             
@@ -411,12 +428,11 @@ public abstract class Ast {
             }
         }
 
-        // ( expression )
         public static final class Group extends Ast.Expression {
             private final Ast.Expression expression;
 
             public Group(Ast.Expression expression) {
-                this.expression = Objects.requireNonNull(expression, "expression is required");
+                this.expression = require(expression, "expression is required");
             }
 
             public Ast.Expression getExpression() { return expression; }
@@ -437,16 +453,15 @@ public abstract class Ast {
             }
         }
 
-        // expression AND | OR | < | <= | > | >= | == | != | + | - | * | / expression
         public static final class Binary extends Ast.Expression {
             private final String operator;
             private final Ast.Expression left;
             private final Ast.Expression right;
 
             public Binary(String operator, Ast.Expression left, Ast.Expression right) {
-                this.operator = Objects.requireNonNull(operator, "operator is required");
-                this.left = Objects.requireNonNull(left, "left is required");
-                this.right = Objects.requireNonNull(right, "right is required");
+                this.operator = require(operator, "operator is required");
+                this.left = require(left, "left is required");
+                this.right = require(right, "right is required");
             }
 
             public String getOperator() { return operator; }
@@ -473,14 +488,13 @@ public abstract class Ast {
             }
         }
 
-        // receiver.name
         public static final class Access extends Ast.Expression {
             private final Optional<Ast.Expression> receiver;
             private final String name;
 
             public Access(Optional<Ast.Expression> receiver, String name) {
-                this.receiver = Objects.requireNonNull(receiver, "receiver is required, may be Optional.empty()");
-                this.name = Objects.requireNonNull(name , "name is required");
+                this.receiver = require(receiver, "receiver is required, may be Optional.empty()");
+                this.name = require(name , "name is required");
             }
 
             public Optional<Ast.Expression> getReceiver() { return receiver; }
@@ -504,16 +518,15 @@ public abstract class Ast {
             }
         }
 
-        // receiver.name( { arguments } )
         public static final class Function extends Ast.Expression {
             private final Optional<Ast.Expression> receiver;
             private final String name;
             private final List<Ast.Expression> arguments;
 
             public Function(Optional<Ast.Expression> receiver, String name, List<Ast.Expression> arguments) {
-                this.receiver = Objects.requireNonNull(receiver, "receiver is required, may be Optional.empty()");
-                this.name = Objects.requireNonNull(name, "name is required");
-                this.arguments = List.copyOf(Objects.requireNonNull(arguments, "arguments is required, may be ArrayList<>()"));
+                this.receiver = require(receiver, "receiver is required, may be Optional.empty()");
+                this.name = require(name, "name is required");
+                this.arguments = List.copyOf(require(arguments, "arguments is required, may be ArrayList<>()"));
             }
 
             public Optional<Ast.Expression> getReceiver() { return receiver; }
@@ -544,54 +557,27 @@ public abstract class Ast {
     public interface Visitor<T> {
 
         default T visit(Ast ast) {
-            if (ast instanceof Ast.Source) {
-                return visit((Ast.Source) ast);
+            return switch (ast) {
+                case Ast.Source node -> visit(node);
+                case Ast.Field node -> visit(node);
+                case Ast.Method node -> visit(node);
 
-            } else if (ast instanceof Ast.Field) {
-                return visit((Ast.Field) ast);
+                case Ast.Statement.Expression node -> visit(node);
+                case Ast.Statement.Declaration node -> visit(node);
+                case Ast.Statement.Assignment node -> visit(node);
+                case Ast.Statement.If node -> visit(node);
+                case Ast.Statement.For node -> visit(node);
+                case Ast.Statement.While node -> visit(node);
+                case Ast.Statement.Return node -> visit(node);
 
-            } else if (ast instanceof Ast.Method) {
-                return visit((Ast.Method) ast);
+                case Ast.Expression.Literal node -> visit(node);
+                case Ast.Expression.Group node -> visit(node);
+                case Ast.Expression.Binary node -> visit(node);
+                case Ast.Expression.Access node -> visit(node);
+                case Ast.Expression.Function node -> visit(node);
 
-            } else if (ast instanceof Ast.Statement.Expression) {
-                return visit((Ast.Statement.Expression) ast);
-
-            } else if (ast instanceof Ast.Statement.Declaration) {
-                return visit((Ast.Statement.Declaration) ast);
-
-            } else if (ast instanceof Ast.Statement.Assignment) {
-                return visit((Ast.Statement.Assignment) ast);
-
-            } else if (ast instanceof Ast.Statement.If) {
-                return visit((Ast.Statement.If) ast);
-
-            } else if (ast instanceof Ast.Statement.For) {
-                return visit((Ast.Statement.For) ast);
-
-            } else if (ast instanceof Ast.Statement.While) {
-                return visit((Ast.Statement.While) ast);
-
-            } else if (ast instanceof Ast.Statement.Return) {
-                return visit((Ast.Statement.Return) ast);
-
-            } else if (ast instanceof Ast.Expression.Literal) {
-                return visit((Ast.Expression.Literal) ast);
-
-            } else if (ast instanceof Ast.Expression.Group) {
-                return visit((Ast.Expression.Group) ast);
-
-            } else if (ast instanceof Ast.Expression.Binary) {
-                return visit((Ast.Expression.Binary) ast);
-
-            } else if (ast instanceof Ast.Expression.Access) {
-                return visit((Ast.Expression.Access) ast);
-
-            } else if (ast instanceof Ast.Expression.Function) {
-                return visit((Ast.Expression.Function) ast);
-
-            } else {
-                throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
-            }
+                default -> throw new CompilerException("Unimplemented AST type: " + ast.getClass().getName());
+            };
         }
 
         T visit(Ast.Source ast);

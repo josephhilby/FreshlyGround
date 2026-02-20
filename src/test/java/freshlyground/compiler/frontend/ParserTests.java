@@ -1479,7 +1479,7 @@ final class ParserTests {
 
         Assertions.assertEquals(expectedType, ex.getClass());
         Assertions.assertEquals(expectedMessage, ex.getMessage());
-        Assertions.assertEquals(expectedIndex, ex.getIndex());
+        Assertions.assertEquals(expectedIndex, ex.getIndex().get());
     }
 
 }
