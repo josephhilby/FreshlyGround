@@ -1,10 +1,12 @@
 package freshlyground.compiler.semantic;
 
+import freshlyground.common.CompilerException;
 import freshlyground.compiler.frontend.Ast;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 public abstract class BindingMap<K, V> {
     private final Map<K, V> map = new HashMap<>();
@@ -21,95 +23,100 @@ public abstract class BindingMap<K, V> {
     protected final V getBinding(K node) {
         V env = map.get(node);
         if (env == null) {
-            throw new RuntimeException("No " + nodeType + " binding for node: " + node);
+            throw new CompilerException("No " + nodeType + " binding for node: " + node);
         }
         return env;
     }
 
-    public static final class VariableBindings<K> extends BindingMap<K, Environment.Variable> {
-        public VariableBindings(String nodeType) { super(nodeType); }
-        public void setVariable(K node, Environment.Variable variable) { setBinding(node, variable); }
-        public Environment.Variable getVariable(K node) { return getBinding(node); }
-    }
-
-    public static final class FunctionBindings<K> extends BindingMap<K, Environment.Function> {
-        public FunctionBindings(String nodeType) { super(nodeType); }
-        public void setFunction(K node, Environment.Function function) { setBinding(node, function); }
-        public Environment.Function getFunction(K node) { return getBinding(node); }
-    }
-
-    public static final class TypeBindings<K> extends BindingMap<K, Environment.Type> {
-        public TypeBindings(String nodeType) { super(nodeType); }
-        public void setType(K node, Environment.Type type) { setBinding(node, type); }
-        public Environment.Type getType(K node) { return getBinding(node); }
-    }
-
     public static final class Bindings {
-        private final VariableBindings<Ast.Field> fieldBindings =
-            new VariableBindings<>("Ast.Field");
-
-        private final VariableBindings<Ast.Statement.Declaration> declarationBindings =
-            new VariableBindings<>("Ast.Statement.Declaration");
-
-        private final VariableBindings<Ast.Expression.Access> accessBindings =
-            new VariableBindings<>("Ast.Expression.Access");
-
-        private final FunctionBindings<Ast.Method> methodBindings =
-            new FunctionBindings<>("Ast.Method");
-
-        private final FunctionBindings<Ast.Expression.Function> functionBindings =
-            new FunctionBindings<>("Ast.Expression.Function");
-
-        private final TypeBindings<Ast.Expression> typeBindings =
-            new TypeBindings<>("Ast.Expression");
-
-        private BindingMap.VariableBindings<?> variableDispatch(Ast node) {
-            if (node instanceof Ast.Field) return fieldBindings;
-            if (node instanceof Ast.Statement.Declaration) return declarationBindings;
-            if (node instanceof Ast.Expression.Access) return accessBindings;
-            throw new RuntimeException("Unhandled node type: " + node.getClass().getName());
-        }
-
-        private BindingMap.FunctionBindings<?> functionDispatch(Ast node) {
-            if (node instanceof Ast.Method) return methodBindings;
-            if (node instanceof Ast.Expression.Function) return functionBindings;
-            throw new RuntimeException("Unhandled node type: " + node.getClass().getName());
-        }
-
         public Bindings() {}
 
-        public void setVariable(Ast node, Environment.Variable variable) {
-            BindingMap.VariableBindings<Ast> binding = (BindingMap.VariableBindings<Ast>) variableDispatch(node);
-            binding.setVariable(node, variable);
+        private final BindingMap<Ast.Field, Environment.Variable> fieldBindings =
+            new BindingMap<>("Ast.Field") {};
+
+        private final BindingMap<Ast.Statement.Declaration, Environment.Variable> declarationBindings =
+            new BindingMap<>("Ast.Statement.Declaration") {};
+
+        private final BindingMap<Ast.Expression.Access, Environment.Variable> accessBindings =
+            new BindingMap<>("Ast.Expression.Access") {};
+
+        private final BindingMap<Ast.Method, Environment.Function> methodBindings =
+            new BindingMap<>("Ast.Method") {};
+
+        private final BindingMap<Ast.Expression.Function, Environment.Function> functionBindings =
+            new BindingMap<>("Ast.Expression.Function") {};
+
+        private final BindingMap<Ast.Expression, Environment.Type> typeBindings =
+            new BindingMap<>("Ast.Expression") {};
+
+        private <R> R variableDispatch(
+            Ast node,
+            Function<Ast.Field, R> onField,
+            Function<Ast.Statement.Declaration, R> onDeclaration,
+            Function<Ast.Expression.Access, R> onAccess
+        ) {
+            if (node instanceof Ast.Field f) return onField.apply(f);
+            if (node instanceof Ast.Statement.Declaration d) return onDeclaration.apply(d);
+            if (node instanceof Ast.Expression.Access a) return onAccess.apply(a);
+            throw new CompilerException("Unhandled node type: " + node.getClass().getName());
+        }
+
+        private <R> R functionDispatch(
+            Ast node,
+            Function<Ast.Method, R> onMethod,
+            Function<Ast.Expression.Function, R> onFunction
+        ) {
+            if (node instanceof Ast.Method method) return onMethod.apply(method);
+            if (node instanceof Ast.Expression.Function function) return onFunction.apply(function);
+            throw new CompilerException("Unhandled node type: " + node.getClass().getName());
+        }
+
+        public void setVariable(Ast node, Environment.Variable environment) {
+            variableDispatch(
+                node,
+                field -> { fieldBindings.setBinding(field, environment); return null; },
+                declaration -> { declarationBindings.setBinding(declaration, environment); return null; },
+                access -> { accessBindings.setBinding(access, environment); return null; }
+            );
         }
 
         public Environment.Variable getVariable(Ast node) {
-            BindingMap.VariableBindings<Ast> binding = (BindingMap.VariableBindings<Ast>) variableDispatch(node);
-            return binding.getVariable(node);
+            return variableDispatch(
+                node,
+                fieldBindings::getBinding,
+                declarationBindings::getBinding,
+                accessBindings::getBinding
+            );
         }
 
-        public void setFunction(Ast node, Environment.Function function) {
-            BindingMap.FunctionBindings<Ast> binding = (BindingMap.FunctionBindings<Ast>) functionDispatch(node);
-            binding.setFunction(node, function);
+        public void setFunction(Ast node, Environment.Function environment) {
+            functionDispatch(
+                node,
+                method -> { methodBindings.setBinding(method, environment); return null; },
+                function -> { functionBindings.setBinding(function, environment); return null; }
+            );
         }
 
         public Environment.Function getFunction(Ast node) {
-            BindingMap.FunctionBindings<Ast> binding = (BindingMap.FunctionBindings<Ast>) functionDispatch(node);
-            return binding.getFunction(node);
+            return functionDispatch(
+                node,
+                methodBindings::getBinding,
+                functionBindings::getBinding
+            );
         }
 
         public void setType(Ast.Expression node, Environment.Type type) {
-            typeBindings.setType(node, type);
+            typeBindings.setBinding(node, type);
         }
 
         public Environment.Type getType(Ast.Expression node) {
             if (node instanceof Ast.Expression.Function function) {
-                return functionBindings.getFunction(function).getType();
+                return functionBindings.getBinding(function).getType();
             }
             if (node instanceof Ast.Expression.Access access) {
-                return accessBindings.getVariable(access).getType();
+                return accessBindings.getBinding(access).getType();
             }
-            return typeBindings.getType(node);
+            return typeBindings.getBinding(node);
         }
     }
 }
