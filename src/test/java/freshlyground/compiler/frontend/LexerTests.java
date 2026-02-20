@@ -297,7 +297,7 @@ public class LexerTests {
     void testException() {
         CompilerException exception = Assertions.assertThrows(CompilerException.class,
                 () -> new Lexer("\"unterminated").lex());
-        Assertions.assertEquals(13, exception.getIndex());
+        Assertions.assertEquals(13, exception.getIndex().get());
     }
 
     /**

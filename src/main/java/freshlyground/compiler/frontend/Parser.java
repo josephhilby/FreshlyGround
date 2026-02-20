@@ -99,7 +99,7 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     // method ::= "DEF" identifier "(" [ identifier ":" identifier { "," identifier ":" identifier } ] ")" [ ":" identifier ] "DO" { statement } "END"
-    //             DEF name(parameter : parameterType) : returnType DO statement(s) END
+    //             DEF name(parameter(s) : parameterType(s)) : returnType DO statement(s) END
     public Ast.Method parseMethod() throws CompilerException {
         // TODO: Clean up
         keywordCheck("DEF");

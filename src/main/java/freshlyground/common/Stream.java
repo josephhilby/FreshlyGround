@@ -34,11 +34,8 @@ public abstract class Stream<E, P> {
     }
 
     public int getIndex() { return index; }
-
     public void advance() { index++; }
-
     public abstract boolean has(int offset);
-
     public abstract E get(int offset);
 
     @SafeVarargs
