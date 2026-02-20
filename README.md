@@ -76,40 +76,65 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 ```
 
 ### Roadmap
-- [x] Complete COP 4020 baseline implementation
-- [x] Redesign and Refactor
-  - [x] Centralize error handling with `CompilerException`
-  - [x] Enforce syntactic error handling in AST
-  - [x] Remove all syntax error handling from Analyzer
-  - [x] Implement semantic `Bindings`
-  - [x] Remove semantic info from AST
-  - [x] Add `Builtins` for common use functions and variables
-  - [ ] Remove JVM specific information from Environment class
-  - [x] Enforce Java 21 via Gradle toolchain
-  - [x] Update README
-- [x] Transpiler architecture
-  - [x] Ensure single-responsibility in all passes
-- [x] Command Line Interface (CLI)
-  - [x] Create `CompilerMain` class for single CLI
-  - [x] Set Gradle to install CLI as `fgc` (FreshlyGround Compiler)
-- [ ] Clean up and Expand Testing
-  - [ ] Reduce overlap between test layers
-  - [ ] Ensure unit tests only cover class responsibilities
-  - [ ] Reclassify current End-to-End testing to Interaction Tests
-  - [ ] Add CLI-driven End-to-End tests
-- [ ] Compiler Backends
-  - [ ] Add WebAssembly backend
-    - [ ] Generate WAT (WebAssembly Text) from AST + Bindings 
-    - [ ] Define minimal host ABI for output (e.g., `print_i32`)
-  - [ ] Lower from Java source generation to direct Java Bytecode with ASM
-- [ ] Web Execution Environment
-  - [ ] Add `/compile` API (POST source → return WAT string)
-  - [ ] Refactor `CompilerMain` into a reusable compiler entrypoint (shared by CLI + API)
-    - [ ] CLI becomes a thin wrapper over the shared entrypoint
-    - [ ] API becomes a thin wrapper over the shared entrypoint
-- [ ] Expand Documentation
-    - [ ] Finalize and link `/docs` files
+#### Core Implementation
 
+- [x] Complete COP 4020 baseline implementation
+- [x] Redesign and refactor compiler architecture
+    - [x] Centralize error handling via `CompilerException`
+    - [x] Enforce syntactic validation within AST construction
+    - [x] Remove syntactic validation logic from `Analyzer`
+    - [x] Implement semantic `Bindings` layer
+    - [x] Eliminate semantic state from AST nodes
+    - [x] Introduce `Builtins` for standard functions and variables
+    - [ ] Remove JVM-specific concerns from `Environment`
+        - [ ] Map builtin symbols to `jvmName` in backend generator
+    - [x] Enforce Java 21 via Gradle toolchain
+    - [x] Update README documentation
+
+#### Compiler Architecture
+
+- [x] Establish compiler-oriented architecture
+    - [x] Enforce single-responsibility across all compiler layers
+
+#### Command-Line Interface
+
+- [x] Implement unified CLI entrypoint (`CompilerMain`)
+- [x] Configure Gradle installation target as `fgc` (FreshlyGround Compiler)
+
+#### Testing Improvements
+
+- [ ] Refactor and expand test suite
+    - [ ] Eliminate overlap between test layers
+    - [ ] Ensure unit tests validate only class-level responsibilities
+    - [ ] Reclassify current end-to-end tests as interaction tests
+    - [ ] Introduce CLI-driven end-to-end tests
+
+#### Compiler Backends
+
+- [ ] Add WebAssembly backend
+    - [ ] Generate WAT (WebAssembly Text) from AST + Bindings
+    - [ ] Define minimal host ABI for runtime interaction (e.g., `print_i32`)
+- [ ] Remove Java transpiler backend
+
+#### Web Execution Environment
+
+- [ ] Build containerized web execution platform
+    - [ ] Develop lightweight web IDE frontend
+    - [ ] Implement minimal API service
+- [ ] Refactor `CompilerMain` into reusable compiler entrypoint
+    - [ ] CLI becomes thin wrapper over shared entrypoint
+    - [ ] API becomes thin wrapper over shared entrypoint
+- [ ] Implement `/compile` API endpoint
+    - POST source code → return WAT output
+
+#### Documentation
+
+- [ ] Expand and finalize `/docs` documentation set
+    - [x] Cross-link all documentation sections
+    - [x] Layout documents by compiler layer
+    - [ ] Write generator to be WebAssembly specific
+
+---
 
 ## Project Architecture
 FreshlyGround follows a linear, multi-pass compiler pipeline with explicit separation between syntax, semantics, 
@@ -154,6 +179,7 @@ The full language and compiler specification is maintained in /docs:
 | Semantic Rules      | [docs/04_semantics.md](./docs/04_semantics.md)   |
 | WebAssembly Backend | [docs/05_backend.md](./docs/05_backend.md)       |
 
+---
 
 ## Acknowledgments
 
