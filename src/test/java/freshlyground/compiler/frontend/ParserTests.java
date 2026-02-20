@@ -394,15 +394,6 @@ final class ParserTests {
         return Stream.of(
             Arguments.of("Definition",
                 Arrays.asList(
-                    //LET name;
-                    new Token(Token.Type.IDENTIFIER, "LET", 0),
-                    new Token(Token.Type.IDENTIFIER, "name", 4),
-                    new Token(Token.Type.OPERATOR, ";", 8)
-                ),
-                new Ast.Statement.Declaration("name", Optional.empty(), Optional.empty())
-            ),
-            Arguments.of("Definition",
-                Arrays.asList(
                     //LET name: Type;
                     new Token(Token.Type.IDENTIFIER, "LET", 0),
                     new Token(Token.Type.IDENTIFIER, "name", 4),
@@ -440,6 +431,16 @@ final class ParserTests {
     }
 
     // TODO declaration error
+    // Must have value or type
+    // Arguments.of("Definition",
+    //                Arrays.asList(
+    //                    //LET name;
+    //                    new Token(Token.Type.IDENTIFIER, "LET", 0),
+    //                    new Token(Token.Type.IDENTIFIER, "name", 4),
+    //                    new Token(Token.Type.OPERATOR, ";", 8)
+    //                ),
+    //                new Ast.Statement.Declaration("name", Optional.empty(), Optional.empty())
+    //            ),
 
     @ParameterizedTest
     @MethodSource

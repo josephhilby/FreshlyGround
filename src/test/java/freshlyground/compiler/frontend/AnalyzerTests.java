@@ -79,7 +79,7 @@ public final class AnalyzerTests {
     public void testMethodHappyPath(String test, Ast.Method ast, Environment.Function expected) {
         Analyzer analyzer = new Analyzer();
         analyzer.visit(ast);
-        Assertions.assertEquals(expected, analyzer.getBindings().getMethod(ast));
+        Assertions.assertEquals(expected, analyzer.getBindings().getFunction(ast));
         Assertions.assertEquals(expected, analyzer.getScope().lookupFunction(expected.getName(), expected.getParameterTypes().size()));
     }
 

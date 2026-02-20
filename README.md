@@ -48,6 +48,17 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 > java Main
 > ```
 
+### Run Tests
+1. Finish the 'Quick Start' steps
+2. Run the tests:
+> ```bash
+> ./gradlew test
+> ```
+3. Open report:
+>```bash
+> open build/reports/tests/test/index.html
+>```
+
 ### Repository Structure
 ```text
 ./
