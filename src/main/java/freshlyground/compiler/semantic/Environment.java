@@ -62,14 +62,14 @@ public final class Environment {
      * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
      */
     public static final class Type {
-        public static final Type ANY = new Type("Any", "Object", new Scope(null));
-        public static final Type NIL = new Type("Nil", "Void", new Scope(ANY.scope));
+        public static final Type ANY        = new Type("Any", "Object", new Scope(null));
+        public static final Type NIL        = new Type("Nil", "Void", new Scope(ANY.scope));
         public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY.scope));
-        public static final Type BOOLEAN = new Type("Boolean", "boolean", new Scope(ANY.scope));
-        public static final Type INTEGER = new Type("Integer", "int", new Scope(COMPARABLE.scope));
-        public static final Type DECIMAL = new Type("Decimal", "double", new Scope(COMPARABLE.scope));
-        public static final Type CHARACTER = new Type("Character", "char", new Scope(COMPARABLE.scope));
-        public static final Type STRING = new Type("String", "String", new Scope(COMPARABLE.scope));
+        public static final Type BOOLEAN    = new Type("Boolean", "boolean", new Scope(ANY.scope));
+        public static final Type INTEGER    = new Type("Integer", "int", new Scope(COMPARABLE.scope));
+        public static final Type DECIMAL    = new Type("Decimal", "double", new Scope(COMPARABLE.scope));
+        public static final Type CHARACTER  = new Type("Character", "char", new Scope(COMPARABLE.scope));
+        public static final Type STRING     = new Type("String", "String", new Scope(COMPARABLE.scope));
 
         private final String name;
         private final String jvmName;

@@ -7,7 +7,7 @@ import freshlyground.compiler.frontend.Analyzer;
 import freshlyground.compiler.frontend.Ast;
 import freshlyground.compiler.frontend.Lexer;
 import freshlyground.compiler.frontend.Parser;
-import freshlyground.compiler.semantic.Bindings;
+import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
 

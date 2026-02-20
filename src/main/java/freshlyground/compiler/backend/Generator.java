@@ -1,7 +1,7 @@
 package freshlyground.compiler.backend;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.Bindings;
+import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.Ast;
 
@@ -97,7 +97,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        print(bindings.getMethod(ast).getType().getJvmName(), " ", bindings.getMethod(ast).getName());
+        print(bindings.getFunction(ast).getType().getJvmName(), " ", bindings.getFunction(ast).getName());
 
         if (ast.getParameters().isEmpty()) {
             print("() {");

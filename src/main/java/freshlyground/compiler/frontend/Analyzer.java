@@ -1,7 +1,7 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.Bindings;
+import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Builtins;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
@@ -105,7 +105,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // define and set function in current scope
         Environment.Function function = scope.defineFunction(name, name, paramTypes, currentReturnType);
-        bindings.setMethod(ast, function);
+        bindings.setFunction(ast, function);
 
         // visit statements (including parameters) in new scope
         visitAllStatements(parameters, paramTypes, statements);
