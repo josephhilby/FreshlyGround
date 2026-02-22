@@ -345,20 +345,37 @@ Rules:
 * **[Rule]** **(T: `left.type` and `right.type` assignable to `Boolean`)**
 * **[Rule]** `result.type` must resolve to `Boolean`
 
-#### Comparison
+#### Comparison Equality
 
 AST mapping:
 
 ```yaml
 Ast.Expression.Binary
-├─ operator : "<" | "<=" | ">" | ">=" | "==" | "!="
+├─ operator : "==" | "!="
 ├─ left     : Ast.Expression
 └─ right    : Ast.Expression
 ```
 
 Rules:
 
-* **[Rule]** **(T: `left.type` and `right.type` assignable to `Comparable`)**
+* **[Rule]** **(T: `left.type` must be the same as `right.type`)**
+* **[Rule]** `result.type` must resolve to `Boolean`
+
+#### Comparison Inequality
+
+AST mapping:
+
+```yaml
+Ast.Expression.Binary
+├─ operator : "<" | "<=" | ">" | ">="
+├─ left     : Ast.Expression
+└─ right    : Ast.Expression
+```
+
+Rules:
+
+* **[Rule]** **(T: `left.type` and `right.type` assignable to `Primitive`)**
+* **[Rule]** **(T: `left.type` and `right.type` must not be `Boolean`)**
 * **[Rule]** **(T: `left.type` must be the same as `right.type`)**
 * **[Rule]** `result.type` must resolve to `Boolean`
 

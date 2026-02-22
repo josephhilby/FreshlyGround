@@ -31,6 +31,14 @@ public final class Environment {
         return TYPES.get(name);
     }
 
+    public static Type sourceLookupType(String name) {
+        Type type = lookupType(name);
+        if (type.internalType) {
+            throw new CompilerException("Type: " + name + "is an internal classification for semantic resolution.");
+        }
+        return type;
+    }
+
     private static void registerType(Type type) {
         if (TYPES.containsKey(type.getName())) {
             throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
@@ -42,7 +50,7 @@ public final class Environment {
     static {
         registerType(Type.ANY);
         registerType(Type.NIL);
-        registerType(Type.COMPARABLE);
+        registerType(Type.PRIMITIVE);
         registerType(Type.BOOLEAN);
         registerType(Type.INTEGER);
         registerType(Type.DECIMAL);
@@ -54,7 +62,7 @@ public final class Environment {
      * Represents a nominal type in the language's type system.
      *
      * <p>Each {@code Type} owns a {@link Scope} that is parented to the scope of its
-     * supertype, forming a simple type hierarchy (e.g., {@code Decimal → Comparable → Any}).
+     * supertype, forming a simple type hierarchy (e.g., {@code Decimal → Primitive → Any}).
      * This scope chain is used to model inherited type-level operations and built-in
      * functions via lexical lookup.</p>
      *
@@ -62,22 +70,24 @@ public final class Environment {
      * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
      */
     public static final class Type {
-        public static final Type ANY        = new Type("Any", "Object", new Scope(null));
-        public static final Type NIL        = new Type("Nil", "Void", new Scope(ANY.scope));
-        public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY.scope));
-        public static final Type BOOLEAN    = new Type("Boolean", "boolean", new Scope(ANY.scope));
-        public static final Type INTEGER    = new Type("Integer", "int", new Scope(COMPARABLE.scope));
-        public static final Type DECIMAL    = new Type("Decimal", "double", new Scope(COMPARABLE.scope));
-        public static final Type CHARACTER  = new Type("Character", "char", new Scope(COMPARABLE.scope));
-        public static final Type STRING     = new Type("String", "String", new Scope(COMPARABLE.scope));
+        public static final Type ANY       = new Type("Any", "Object", false, new Scope(null));
+        public static final Type NIL       = new Type("Nil", "Void", false, new Scope(ANY.scope));
+        public static final Type STRING    = new Type("String", "String", false, new Scope(ANY.scope));
+        public static final Type PRIMITIVE = new Type("Primitive", "", true, new Scope(ANY.scope));
+        public static final Type BOOLEAN   = new Type("Boolean", "boolean", false, new Scope(PRIMITIVE.scope));
+        public static final Type INTEGER   = new Type("Integer", "int", false, new Scope(PRIMITIVE.scope));
+        public static final Type DECIMAL   = new Type("Decimal", "double", false, new Scope(PRIMITIVE.scope));
+        public static final Type CHARACTER = new Type("Character", "char", false, new Scope(PRIMITIVE.scope));
 
         private final String name;
         private final String jvmName;
+        private final boolean internalType;
         private final Scope scope;
 
-        public Type(String name, String jvmName, Scope scope) {
+        public Type(String name, String jvmName, boolean internalType, Scope scope) {
             this.name = name;
             this.jvmName = jvmName;
+            this.internalType = internalType;
             this.scope = scope;
         }
 

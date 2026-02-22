@@ -24,7 +24,7 @@ public class GeneratorTests {
         objectScope.defineVariable("field", "fld", Environment.Type.INTEGER, false);
         // as this is a nested function that Type.ANY is added to allow for the invoking object to be passed as a param
         objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "obj", objectScope);
+        OBJECT_TYPE = new Environment.Type("object", "obj", false, objectScope);
     }
 
     @ParameterizedTest(name = "{0}")
@@ -312,13 +312,6 @@ public class GeneratorTests {
                         new Ast.Expression.Literal(false)))
                 ),
                 "final boolean y = true && false;"
-            ),
-            // LET str: Comparable = string;
-            Arguments.of("Supertype Supertype",
-                new Ast.Field("str", "Comparable", false, Optional.of(
-                    new Ast.Expression.Literal("string"))
-                ),
-                "Comparable str = \"string\";"
             )
         );
     }
@@ -589,12 +582,6 @@ public class GeneratorTests {
                 new Ast.Statement.Declaration("str", Optional.of("String"), Optional.of(
                     new Ast.Expression.Literal("string"))),
                 "String str = \"string\";"
-            ),
-            // LET str: Comparable = string; (maybe redo this in assignment)
-            Arguments.of("Supertype",
-                new Ast.Statement.Declaration("str", Optional.of("Comparable"), Optional.of(
-                    new Ast.Expression.Literal("string"))),
-                "Comparable str = \"string\";"
             )
         );
     }

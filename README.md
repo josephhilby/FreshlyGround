@@ -87,14 +87,17 @@ browser-based execution environment, and a Hack VM backend for compilation to th
         - [x] Implement semantic `Bindings` layer
         - [x] Eliminate semantic state from AST nodes
         - [x] Remove semantic validation logic from `Parser`
-    - [ ] Remap Scope chain
-        - [ ] Move `String` under `Any`
-        - [ ] Change `Compariable` to `Primitive`
+    - [x] Remap Scope chain
+        - [x] Move `String` under `Any`
+        - [x] Change `Compariable` to `Primitive`
+        - [x] Update comparable expression semantic rules
+        - [x] Update `Analyzer`
     - [ ] Introduce `Builtins` for member functions and variables
         - [x] Move current member functions and variables into `Builtins`
         - [ ] Use generator or host ABI to implement
     - [ ] Remove JVM-specific concerns from `Environment` and member functions and variables
-        - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in backend generator
+        - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
+        - [ ] Remove all references to `jvmName` in `Environment` and `Builtins`
     - [ ] Ensure consistency with `nullable` values
         - [ ] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
         - [ ] Update Scope `parent` to `Optional<Scope>`

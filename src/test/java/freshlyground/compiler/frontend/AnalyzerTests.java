@@ -28,7 +28,7 @@ public final class AnalyzerTests {
         objectScope.defineVariable("field", "field", Environment.Type.INTEGER, false);
         // as this is a nested function that Type.ANY is added to allow for the invoking object to be passed as a param
         objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "object", objectScope);
+        OBJECT_TYPE = new Environment.Type("object", "object", false, objectScope);
     }
 
 
@@ -701,7 +701,7 @@ public final class AnalyzerTests {
         return Stream.of(
             Arguments.of("Integer to Integer", Environment.Type.INTEGER, Environment.Type.INTEGER, true),
             Arguments.of("Integer to Decimal", Environment.Type.DECIMAL, Environment.Type.INTEGER, false),
-            Arguments.of("Integer to Comparable", Environment.Type.COMPARABLE, Environment.Type.INTEGER,  true),
+            Arguments.of("Integer to Primitive", Environment.Type.PRIMITIVE, Environment.Type.INTEGER,  true),
             Arguments.of("Integer to Any", Environment.Type.ANY, Environment.Type.INTEGER, true),
             Arguments.of("Any to Integer", Environment.Type.INTEGER, Environment.Type.ANY, false)
         );
