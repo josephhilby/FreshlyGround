@@ -8,19 +8,19 @@ public final class Builtins {
     private static boolean INSTALLED = false;
 
     public static void install(Scope scope) {
-        installGlobalFunctions(scope);
+        installGlobals(scope);
 
         if (!INSTALLED) {
-            installTypeMemberFunctions();
+            installTypeMembers();
             INSTALLED = true;
         }
     }
 
-    private static void installGlobalFunctions(Scope scope) {
+    private static void installGlobals(Scope scope) {
         scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL);
     }
 
-    private static void installTypeMemberFunctions() {
+    private static void installTypeMembers() {
         // TODO: change from type Any to type Primitive (changing Comparable to Primitive)
         Scope any = Environment.lookupType("Any").getScope();
         any.defineFunction("stringify", "toString", Arrays.asList(), Environment.Type.STRING);

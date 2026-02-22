@@ -67,15 +67,16 @@ Environment
 3. Each `Type` owns a `Scope`
    * This scope stores type-associated member functions and variables
    * Member access is performed using the dot (`.`) operator
-   * Member resolution proceeds through the owning type’s scope chain
+   * Member resolution proceeds through the owning type’s scope, then iteratively through its scope chain
 
-#### Member Access (Dot Operator)
+#### Member Access / Resolution (Dot Operator)
 Each `Environment.Variable` associated with an `Environment.Type`. That type contains a `Scope` populated
 at Design Time, and set with builtin member variables and functions. To access these member builtins, FreshlyGround 
 uses a dot operator to shift the resolution context from the current lexical scope to the scope owned by the expression’s 
 resolved type.
 
-Example:
+Member resolution is purely static. The dot operator performs compile-time lookup within the owning type’s
+scope and resolves to the `Environment.Type` found.
 
 Assume there exists a variable:
 ```text
@@ -83,16 +84,14 @@ Message : String = "Hello World"
 ```
 
 The `Environment.Type.STRING` contains:
-- variable `length`
-- function `slice(start, end)`
+- variable `length` with type `Integer`
+- function `slice(start, end)` with return type `String`
 
 So calling... 
 - `Message.length` resolves to type `Integer`
 - `Message.slice(0,5)` resolves to type `String`
 
-The dot operator performs static member resolution; no dynamic lookup occurs during analysis.
-
-#### Member Resolution (Scope Chain)
+#### Scope Chain
 ```yaml
 Any
 ├─ Primitive
@@ -103,6 +102,16 @@ Any
 ├─ String
 └─ Nil
 ```
+Assume there exists a variable:
+```text
+Number : Integer = 1234
+```
+
+The `Environment.Type.PRIMITIVE` contains:
+- function `stringify` with return type `String`
+
+So calling...
+- `Number.stringify` resolves to type `String`
 
 ---
 

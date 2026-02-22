@@ -79,29 +79,28 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 #### Core Implementation
 
 - [x] Complete COP 4020 baseline implementation
-- [x] Redesign and refactor compiler architecture
+- [ ] Redesign and refactor compiler architecture
     - [x] Centralize error handling via `CompilerException`
-    - [x] Enforce syntactic validation within AST construction
-    - [x] Remove syntactic validation logic from `Analyzer`
-    - [x] Implement semantic `Bindings` layer
-    - [x] Eliminate semantic state from AST nodes
+    - [x] Enforce semantic / syntactic seporation of concerns
+        - [x] Enforce syntactic validation within AST construction
+        - [x] Remove syntactic validation logic from `Analyzer`
+        - [x] Implement semantic `Bindings` layer
+        - [x] Eliminate semantic state from AST nodes
+        - [x] Remove semantic validation logic from `Parser`
     - [ ] Remap Scope chain
-        - [ ] Match to document four (semantics)
+        - [ ] Move `String` under `Any`
+        - [ ] Change `Compariable` to `Primitive`
     - [ ] Introduce `Builtins` for member functions and variables
-        - [ ] Implement member functions and variables inside language, stop relying on Java syntax
-            - [ ] `print()` must be handled by generator target platform
-            - [ ] `stringify()` should change any `Ast.Expression.Literal` of type primitive to type string
-            - [ ] `length` should return the string length in number of characters
-                - Need to add length to token
-            - [ ] `slice(a,b)` should return a substring starting at `a` and ending at (inclusive) `b`
+        - [x] Move current member functions and variables into `Builtins`
+        - [ ] Use generator or host ABI to implement
     - [ ] Remove JVM-specific concerns from `Environment` and member functions and variables
         - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in backend generator
     - [ ] Ensure consistency with `nullable` values
         - [ ] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
         - [ ] Update Scope `parent` to `Optional<Scope>`
         - [ ] Update parsing, generating, and testing to match
-    - [x] Enforce Java 21 via Gradle toolchain
-    - [x] Update README and documentation
+- [x] Enforce Java 21 via Gradle toolchain
+- [x] Update README and documentation
 
 #### Compiler Architecture
 
