@@ -16,7 +16,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testIdentifier(String test, String input, boolean success) {
+    void testIdentifier(String input, boolean success) {
         test(input, Token.Type.IDENTIFIER, success);
     }
 
@@ -42,7 +42,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testInteger(String test, String input, boolean success) {
+    void testInteger(String input, boolean success) {
         test(input, Token.Type.INTEGER, success);
     }
 
@@ -87,7 +87,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testDecimal(String test, String input, boolean success) {
+    void testDecimal(String input, boolean success) {
         test(input, Token.Type.DECIMAL, success);
     }
 
@@ -122,7 +122,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testCharacter(String test, String input, boolean success) {
+    void testCharacter(String input, boolean success) {
         test(input, Token.Type.CHARACTER, success);
     }
 
@@ -159,7 +159,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testString(String test, String input, boolean success) {
+    void testString(String input, boolean success) {
         test(input, Token.Type.STRING, success);
     }
 
@@ -193,7 +193,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testOperator(String test, String input, boolean success) {
+    void testOperator(String input, boolean success) {
         //this test requires our lex() method, since that's where whitespace is handled.
         test(input, Arrays.asList(new Token(Token.Type.OPERATOR, input, 0)), success);
     }
@@ -221,7 +221,7 @@ public class LexerTests {
 
     @ParameterizedTest
     @MethodSource
-    void testExamples(String test, String input, List<Token> expected) {
+    void testExamples(String input, List<Token> expected) {
         test(input, expected, true);
     }
 

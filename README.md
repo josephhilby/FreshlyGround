@@ -85,11 +85,23 @@ browser-based execution environment, and a Hack VM backend for compilation to th
     - [x] Remove syntactic validation logic from `Analyzer`
     - [x] Implement semantic `Bindings` layer
     - [x] Eliminate semantic state from AST nodes
-    - [x] Introduce `Builtins` for standard functions and variables
-    - [ ] Remove JVM-specific concerns from `Environment`
-        - [ ] Map builtin symbols to `jvmName` in backend generator
+    - [ ] Remap Scope chain
+        - [ ] Match to document four (semantics)
+    - [ ] Introduce `Builtins` for member functions and variables
+        - [ ] Implement member functions and variables inside language, stop relying on Java syntax
+            - [ ] `print()` must be handled by generator target platform
+            - [ ] `stringify()` should change any `Ast.Expression.Literal` of type primitive to type string
+            - [ ] `length` should return the string length in number of characters
+                - Need to add length to token
+            - [ ] `slice(a,b)` should return a substring starting at `a` and ending at (inclusive) `b`
+    - [ ] Remove JVM-specific concerns from `Environment` and member functions and variables
+        - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in backend generator
+    - [ ] Ensure consistency with `nullable` values
+        - [ ] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
+        - [ ] Update Scope `parent` to `Optional<Scope>`
+        - [ ] Update parsing, generating, and testing to match
     - [x] Enforce Java 21 via Gradle toolchain
-    - [x] Update README documentation
+    - [x] Update README and documentation
 
 #### Compiler Architecture
 

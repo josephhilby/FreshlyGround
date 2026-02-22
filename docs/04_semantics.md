@@ -22,9 +22,11 @@ chain corresponding to nested program structure.
 ```yaml
 Scope
  ├─ parent    : Scope | null
- ├─ variables : Map<name, Environment.Variable>
- └─ functions : Map<name + "/" + arity, Environment.Function>
+ ├─ variables : Map<String, Environment.Variable>
+ └─ functions : Map<String, Environment.Function>
 ```
+
+**Note:** The function must be searched by both identifier and arity, "name + '/' + arity".
 
 ### Scope Rules
 1. Declarations 
@@ -43,36 +45,63 @@ Scope
 
 ## Environment Model
 The `Environment` defines the semantic entities used during analysis. At its core the model enforces one 
-key guarantee, that after analysis every `Ast.Expression` node will resolve to exactly one `Environment.Type`.
+key guarantee: 
+
+> After analysis every `Ast.Expression` node will resolve to exactly one `Environment.Type`
+
+This invariant ensures that all expressions are well-typed and fully bound prior to lowering.
 
 ### Conceptual Structure
 
 ```yaml
 Environment
- ├─ types    : Map<name, Type>
- ├─ type     : Class<name : String, scope : Scope>
- ├─ function : Class<name : String, parameterTypes : Type[], returnType : Type>
- └─ variable : Class<name : String, type : Type, constant : boolean>
+ ├─ types    : Map<String, Type>
+ ├─ type     : Class { name : String, scope : Scope }
+ ├─ function : Class { name : String, parameterTypes : List<Type>, returnType : Type }
+ └─ variable : Class { name : String, constant : boolean, type : Type }
 ```
 
 ### Environment Rules
-1. Types and subtype sets are closed and fixed at initialization
-2. Types are singletons
-3. Each type owns a `scope`
-   * That scope stores type-associated functions and variables
-   * Member resolution occurs via this scope chain
+1. All types are singletons
+2. Types and subtype sets are closed, and fixed at initialization
+3. Each `Type` owns a `Scope`
+   * This scope stores type-associated member functions and variables
+   * Member access is performed using the dot (`.`) operator
+   * Member resolution proceeds through the owning type’s scope chain
 
-### Type Scope Chain
+#### Member Access (Dot Operator)
+Each `Environment.Variable` associated with an `Environment.Type`. That type contains a `Scope` populated
+at Design Time, and set with builtin member variables and functions. To access these member builtins, FreshlyGround 
+uses a dot operator to shift the resolution context from the current lexical scope to the scope owned by the expression’s 
+resolved type.
+
+Example:
+
+Assume there exists a variable:
+```text
+Message : String = "Hello World"
+```
+
+The `Environment.Type.STRING` contains:
+- variable `length`
+- function `slice(start, end)`
+
+So calling... 
+- `Message.length` resolves to type `Integer`
+- `Message.slice(0,5)` resolves to type `String`
+
+The dot operator performs static member resolution; no dynamic lookup occurs during analysis.
+
+#### Member Resolution (Scope Chain)
 ```yaml
 Any
-├─ Boolean
-├─ Comparable
+├─ Primitive
 │   ├─ Integer
 │   ├─ Decimal
 │   ├─ Character
-│   └─ String
+│   └─ Boolean
+├─ String
 └─ Nil
-
 ```
 
 ---
@@ -86,12 +115,12 @@ semantic entities produced during resolution.
 
 ```yaml
 Bindings
- ├─ field       : Map<Ast.Field: Environment.Variable>
- ├─ declaration : Map<Ast.Statement.Declaration: Environment.Variable>
- ├─ access      : Map<Ast.Expression.Access: Environment.Variable>
- ├─ method      : Map<Ast.Method: Environment.Function>
- ├─ function    : Map<Ast.Expression.Function: Environment.Function>
- └─ type        : Map<Ast.Expression: Environment.Type>
+ ├─ fieldBindings       : Map<Ast.Field, Environment.Variable>
+ ├─ declarationBindings : Map<Ast.Statement.Declaration, Environment.Variable>
+ ├─ accessBindings      : Map<Ast.Expression.Access, Environment.Variable>
+ ├─ methodBindings      : Map<Ast.Method, Environment.Function>
+ ├─ functionBindings    : Map<Ast.Expression.Function, Environment.Function>
+ └─ typeBindings        : Map<Ast.Expression, Environment.Type>
 ```
 
 ### Binding Resolution
@@ -100,7 +129,7 @@ AST node
   ↓
 Name / construct extracted
   ↓
-Scope or type-based lookup
+Lexical or type-based scope lookup
   ↓
 Environment entity resolved
   ↓
@@ -116,8 +145,8 @@ AST mapping:
 
 ```yaml
 Ast.Source
- ├─ fields  : Ast.Field[]
- └─ methods : Ast.Method[]
+ ├─ fields  : List<Ast.Field>
+ └─ methods : List<Ast.Method>
 ```
 
 Rules:
@@ -141,7 +170,7 @@ Ast.Field
  ├─ name     : String
  ├─ typeName : String
  ├─ constant : boolean
- └─ value    : Ast.Expression | null
+ └─ value    : Optional<Ast.Expression>
 ```
 
 Rules:
@@ -157,10 +186,10 @@ AST mapping:
 ```yaml
 Ast.Method
  ├─ name           : String
- ├─ parameters     : String[]
- ├─ parameterTypes : String[]
- ├─ returnTypeName : String | null
- └─ statements     : Ast.Statement[]
+ ├─ parameters     : List<String>
+ ├─ parameterTypes : List<String>
+ ├─ returnTypeName : Optional<String>
+ └─ statements     : List<Ast.Statement>
 ```
 
 Rules:
@@ -181,8 +210,8 @@ AST mapping:
 ```yaml
 Ast.Statement.Declaration
  ├─ name     : String
- ├─ typeName : String | null
- └─ value    : Ast.Expression | null
+ ├─ typeName : Optional<String>
+ └─ value    : Optional<Ast.Expression>
 ```
 
 Rules:
@@ -216,6 +245,11 @@ Ast.Statement.Expression
  └─ expression : Ast.Expression.Function
 ```
 
+**Note:** Function calls are modeled as expressions because they evaluate to a value. `Ast.Statement.Expression`
+exists to permit an expression — specifically a function call — to appear in statement position when its resulting 
+value is not used. This allows calls that exist purely for their side effects (e.g., `print(String)`) to stand 
+alone as complete statements.
+
 Rules: See, `Ast.Expression.Function`
 
 ### Conditional
@@ -225,8 +259,8 @@ AST mapping:
 ```yaml
 Ast.Statement.If
  ├─ condition      : Ast.Expression
- ├─ thenStatements : Ast.Statement[]
- └─ elseStatements : Ast.Statement[]
+ ├─ thenStatements : List<Ast.Statement>
+ └─ elseStatements : List<Ast.Statement>
 ```
 
 Rules:
@@ -244,7 +278,7 @@ Ast.Statement.For
  ├─ initialization : Ast.Statement.Assignment | null
  ├─ condition      : Ast.Expression
  ├─ increment      : Ast.Statement.Assignment | null
- └─ statements     : Ast.Statement[]
+ └─ statements     : List<Ast.Statement>
 ```
 
 Rules:
@@ -261,7 +295,7 @@ AST mapping:
 ```yaml
 Ast.Statement.While
  ├─ condition  : Ast.Expression
- └─ statements : Ast.Statement[]
+ └─ statements : List<Ast.Statement>
 ```
 
 Rules:
@@ -292,7 +326,7 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Binary
-├─ operator : AND | OR
+├─ operator : "AND" | "OR"
 ├─ left     : Ast.Expression
 └─ right    : Ast.Expression
 ```
@@ -308,7 +342,7 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Binary
-├─ operator : < | <= | > | >= | == | !=
+├─ operator : "<" | "<=" | ">" | ">=" | "==" | "!="
 ├─ left     : Ast.Expression
 └─ right    : Ast.Expression
 ```
@@ -325,7 +359,7 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Binary
-├─ operator : + | - | * | /
+├─ operator : "+" | "-" | "*" | "/"
 ├─ left     : Ast.Expression
 └─ right    : Ast.Expression
 ```
@@ -337,13 +371,14 @@ Rules:
 * **[Rule]** `result.type` must resolve to the numeric operand type (`Integer` or `Decimal`)
 
 ### Member Access and Function Calls
-#### Nominal Member Resolution and Lowering
+#### Resolution and Lowering
 
-FreshlyGround supports a statically-dispatched dot (`.`) operator for accessing 
-type-associated fields and functions.
+FreshlyGround defaults to resolving fields and functions within the current lexical scope, however
+it also supports a statically-dispatched dot (`.`) operator for accessing type-associated fields 
+and functions.
 
 Although the language is not object-oriented, dot expressions are resolved against the static type of 
-the left operand.
+the left operand (i.e., receiver).
 
 #### Member Access
 
@@ -351,7 +386,7 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Access
- ├─ receiver : Ast.Expression | null
+ ├─ receiver : Optional<Ast.Expression>
  └─ name     : String
 ```
 
@@ -374,9 +409,9 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Function
- ├─ receiver  : Ast.Expression | null
+ ├─ receiver  : Optional<Ast.Expression>
  ├─ name      : String
- └─ arguments : Ast.Expression[]
+ └─ arguments : List<Ast.Expression>
 ```
 
 Rules:
@@ -392,18 +427,14 @@ Given:
     receiver.function(a, b)
 
 1. Evaluate `receiver` to type **T**
-2. Resolve `function(a, b)` inside the **type scope of T**
+2. Increment arity for lookup
+2. Resolve `function/3` inside the **type scope of T**
 
 The expression is then lowered to:
 
     function(receiver, a, b)
 
-The receiver is inserted as the first argument.
-
-This implies:
-- Declared function has an arity = N
-- Call-site arity = N - 1 (receiver is implicit)
-
+As the receiver is inserted as the first argument.
 
 ### Primary Expressions
 #### Grouping

@@ -36,16 +36,16 @@ public abstract class Ast {
     }
 
     public static final class Source extends Ast {
-        private final List<Field> fields;
-        private final List<Method> methods;
+        private final List<Ast.Field> fields;
+        private final List<Ast.Method> methods;
 
-        public Source(List<Field> fields, List<Method> methods) {
+        public Source(List<Ast.Field> fields, List<Ast.Method> methods) {
             this.fields = List.copyOf(require(fields, "fields are required, may be ArrayList<>()"));
             this.methods = List.copyOf(require(methods, "methods are required, may be ArrayList<>()"));
         }
 
         public List<Ast.Field> getFields() { return fields; }
-        public List<Method> getMethods() { return methods; }
+        public List<Ast.Method> getMethods() { return methods; }
 
         @Override
         public boolean equals(Object obj) {
@@ -115,14 +115,14 @@ public abstract class Ast {
         private final List<String> parameters;
         private final List<String> parameterTypeNames;
         private final Optional<String> returnTypeName;
-        private final List<Statement> statements;
+        private final List<Ast.Statement> statements;
 
         public Method(
             String name,
             List<String> parameters,
             List<String> parameterTypeNames,
             Optional<String> returnTypeName,
-            List<Statement> statements
+            List<Ast.Statement> statements
         ) {
             this.name = require(name, "name is required");
             this.parameters = List.copyOf(require(parameters, "parameters are required, may be ArrayList<>()"));
@@ -135,7 +135,7 @@ public abstract class Ast {
         public List<String> getParameters() { return parameters; }
         public List<String> getParameterTypeNames() { return parameterTypeNames; }
         public Optional<String> getReturnTypeName() { return returnTypeName; }
-        public List<Statement> getStatements() { return statements; }
+        public List<Ast.Statement> getStatements() { return statements; }
 
         @Override
         public boolean equals(Object obj) {
@@ -263,13 +263,13 @@ public abstract class Ast {
 
         public static final class If extends Statement {
             private final Ast.Expression condition;
-            private final List<Statement> thenStatements;
-            private final List<Statement> elseStatements;
+            private final List<Ast.Statement> thenStatements;
+            private final List<Ast.Statement> elseStatements;
 
             public If(
                 Ast.Expression condition,
-                List<Statement> thenStatements,
-                List<Statement> elseStatements
+                List<Ast.Statement> thenStatements,
+                List<Ast.Statement> elseStatements
             ) {
                 this.condition = require(condition, "condition is required");
                 this.thenStatements = List.copyOf(require(thenStatements, "thenStatements is required, may be ArrayList<>()"));
@@ -277,8 +277,8 @@ public abstract class Ast {
             }
 
             public Ast.Expression getCondition() { return condition; }
-            public List<Statement> getThenStatements() { return thenStatements; }
-            public List<Statement> getElseStatements() { return elseStatements; }
+            public List<Ast.Statement> getThenStatements() { return thenStatements; }
+            public List<Ast.Statement> getElseStatements() { return elseStatements; }
 
             @Override
             public boolean equals(Object obj) {
@@ -304,13 +304,13 @@ public abstract class Ast {
             private final Ast.Statement.Assignment initialization;
             private final Ast.Expression condition;
             private final Ast.Statement.Assignment increment;
-            private final List<Statement> statements;
+            private final List<Ast.Statement> statements;
 
             public For(
-                Statement.Assignment initialization,
+                Ast.Statement.Assignment initialization,
                 Ast.Expression condition,
-                Statement.Assignment increment,
-                List<Statement> statements
+                Ast.Statement.Assignment increment,
+                List<Ast.Statement> statements
             ) {
                 this.initialization = initialization;
                 this.condition = require(condition, "condition is required");
@@ -347,7 +347,7 @@ public abstract class Ast {
 
         public static final class While extends Statement {
             private final Ast.Expression condition;
-            private final List<Statement> statements;
+            private final List<Ast.Statement> statements;
 
             public While(Ast.Expression condition, List<Statement> statements) {
                 this.condition = require(condition, "condition is required");
@@ -355,7 +355,7 @@ public abstract class Ast {
             }
 
             public Ast.Expression getCondition() { return condition; }
-            public List<Statement> getStatements() { return statements; }
+            public List<Ast.Statement> getStatements() { return statements; }
 
             @Override
             public boolean equals(Object obj) {

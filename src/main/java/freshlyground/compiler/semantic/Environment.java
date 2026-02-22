@@ -102,7 +102,6 @@ public final class Environment {
         public String toString() {
             return "Type{" +
                     "name='" + name + '\'' +
-                    ", jvmName='" + jvmName + '\'' +
                     ", scope='" + scope + '\'' +
                     '}';
         }

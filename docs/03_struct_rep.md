@@ -4,8 +4,7 @@ This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the st
 produced by the parser according to the previously discussed context-free grammar. The AST captures 
 **program form without semantic meaning**. It encodes hierarchy, precedence, and grammatical structure.
 
-* Note: Some of the EBNF definitions have been modified to better show how the map to their respective
-AST class.
+* Note: Some of the EBNF definitions have been modified to better show how the map to their respective AST class.
 ---
 
 ## AST Root
@@ -26,8 +25,8 @@ AST mapping:
 
 ```yaml
 Ast.Source
- ├─ fields  : Ast.Field[]
- └─ methods : Ast.Method[]
+ ├─ fields  : List<Ast.Field>
+ └─ methods : List<Ast.Method>
 ```
 
 * **Fields** define global storage
@@ -52,7 +51,7 @@ Ast.Field
  ├─ name     : String
  ├─ typeName : String
  ├─ constant : boolean
- └─ value    : Ast.Expression | null
+ └─ value    : Optional<Ast.Expression>
 ```
 
 ### Methods
@@ -71,10 +70,10 @@ AST mapping:
 ```yaml
 Ast.Method
  ├─ name           : String
- ├─ parameters     : String[]
- ├─ parameterTypes : String[]
- ├─ returnTypeName : String | null
- └─ statements     : Ast.Statement[]
+ ├─ parameters     : List<String>
+ ├─ parameterTypes : List<String>
+ ├─ returnTypeName : Optional<String>
+ └─ statements     : List<Ast.Statement>
 ```
 
 ---
@@ -93,8 +92,8 @@ AST mapping:
 ```yaml
 Ast.Statement.Declaration
  ├─ name     : String
- ├─ typeName : String | null
- └─ value    : Ast.Expression | null
+ ├─ typeName : Optional<String>
+ └─ value    : Optional<Ast.Expression>
 ```
 
 ### Assignment
@@ -146,8 +145,8 @@ AST mapping:
 ```yaml
 Ast.Statement.If
  ├─ condition      : Ast.Expression
- ├─ thenStatements : Ast.Statement[]
- └─ elseStatements : Ast.Statement[]
+ ├─ thenStatements : List<Ast.Statement>
+ └─ elseStatements : List<Ast.Statement>
 ```
 
 ### For Loop
@@ -168,7 +167,7 @@ Ast.Statement.For
  ├─ initialization : Ast.Statement.Assignment | null
  ├─ condition      : Ast.Expression
  ├─ increment      : Ast.Statement.Assignment | null
- └─ statements     : Ast.Statement[]
+ └─ statements     : List<Ast.Statement>
 ```
 
 ### While Loop
@@ -187,7 +186,7 @@ AST mapping:
 ```yaml
 Ast.Statement.While
  ├─ condition  : Ast.Expression
- └─ statements : Ast.Statement[]
+ └─ statements : List<Ast.Statement>
 ```
 
 ### Return
@@ -222,7 +221,7 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Binary
- ├─ operator : Operator
+ ├─ operator : String
  ├─ left     : Ast.Expression
  └─ right    : Ast.Expression
 ```
@@ -253,7 +252,7 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Access
- ├─ receiver : Ast.Expression | null
+ ├─ receiver : Optional<Ast.Expression>
  └─ name     : String
 ```
 
@@ -269,9 +268,9 @@ AST mapping:
 
 ```yaml
 Ast.Expression.Function
- ├─ receiver  : Ast.Expression | null
+ ├─ receiver  : Optional<Ast.Expression>
  ├─ name      : String
- └─ arguments : Ast.Expression[]
+ └─ arguments : List<Ast.Expression>
 ```
 
 ### Primary Expressions

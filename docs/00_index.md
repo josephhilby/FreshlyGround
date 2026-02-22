@@ -43,7 +43,7 @@ This makes the pipeline easy to test and easy to extend.
 FreshlyGround enforces a strict separation between the two, such that:
 
 * The AST is immutable and encodes only structural (**syntactic**) information
-* The External Bindings and mutable and store the **semantic** information needed for lowering
+* The External Bindings are mutable and store the **semantic** information needed for lowering
 
 This allows:
 
@@ -54,8 +54,8 @@ This allows:
 
 FreshlyGround follows a static, early-binding model similar to Java, where bindings are established progressively:
 
-1. **Design Time** — Grammar rules and primitive types
-2. **Implementation Time** — Mapping language types to backend representations
+1. **Design Time** — Grammar rules, builtins, and primitive types
+2. **Implementation Time** — Mapping language primitive types, and builtins to backend representations
 3. **Source Time** — Variable and function declarations in user code
 4. **Compile Time** — Scope construction, name resolution, and type checking
-5. **Run Time** — Delegated to the target platform
+5. **Run Time** — Storage allocation, and stack activation record are delegated to the target platform
