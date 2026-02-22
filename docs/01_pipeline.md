@@ -1,13 +1,15 @@
 # 01 — Compiler Pipeline Specification
 
-This document defines the structural architecture of the FreshlyGround compiler. The detailed 
-rules for each stage live in separate documents. This file exists to provide a general roadmap.
+This document defines the overall structural architecture of the FreshlyGround compiler. More detailed 
+rules for each stage live in separate documents; this file exists to provide only a general roadmap. As
+a quick note, the language 'stage' and 'pass' are used to talk about the physical implementation, the use of 
+'layer' refers to the more theoretical level that stage or pass belongs to.
 
-It describes the following:
+This roadmap will cover the following:
 
 - System Overview of stages and their artifact production
 - Responsibilities of each stage
-- Guarantees each stage has to the next
+- Guarantees each stage has with the next
 
 ---
 
@@ -70,6 +72,7 @@ Each stage transforms one artifact into another and enforces only the rules it o
 **Guarantees:**
 
 * the AST is structurally valid and internally consistent
+* all syntactic rules are satisfied
 * invalid syntax produces compiler errors
 
 ### 3) Analyzing (Semantic Analysis)
@@ -86,9 +89,9 @@ Each stage transforms one artifact into another and enforces only the rules it o
 
 **Guarantees:**
 
-* all semantic rules are satisfied
 * every identifier resolves to a valid binding
 * every expression has a concrete static type
+* all semantic rules are satisfied
 * invalid semantics produce compiler errors
 
 ### 4) Generating (Lowering / Emitting)
