@@ -14,6 +14,7 @@ import java.util.Optional;
 
 
 public final class Analyzer implements Ast.Visitor<Void> {
+    // TODO: move type matching helpers to environment
     public Scope scope;
     public Bindings bindings;
     private Environment.Type currentReturnType;
@@ -68,7 +69,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(value.get());
 
             Environment.Type actual = bindings.getType(value.get());
-            Environment.Type target = Environment.lookupType(typeName);
+            Environment.Type target = Environment.sourceLookupType(typeName);
             requireAssignable(target, actual);
         }
 
@@ -78,7 +79,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define variable in current scope, then set
-        Environment.Variable variable = scope.defineVariable(name, name, Environment.lookupType(typeName), constant);
+        Environment.Variable variable = scope.defineVariable(name, name, Environment.sourceLookupType(typeName), constant);
         bindings.setVariable(ast, variable);
         return null;
     }
@@ -94,13 +95,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // check and set parameter types
         for (String type : ast.getParameterTypeNames()) {
-            paramTypes.add(Environment.lookupType(type));
+            paramTypes.add(Environment.sourceLookupType(type));
         }
 
         // check and save return type
         currentReturnType = Environment.Type.NIL;
         if (ast.getReturnTypeName().isPresent()) {
-            currentReturnType = Environment.lookupType(ast.getReturnTypeName().get());
+            currentReturnType = Environment.sourceLookupType(ast.getReturnTypeName().get());
         }
 
         // define and set function in current scope
@@ -146,9 +147,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         if (ast.getTypeName().isPresent() && ast.getValue().isPresent()) {
             visit(ast.getValue().get());
-            type = Environment.lookupType(ast.getTypeName().get());
+            type = Environment.sourceLookupType(ast.getTypeName().get());
         } else if (ast.getTypeName().isPresent()) {
-            type = Environment.lookupType(ast.getTypeName().get());
+            type = Environment.sourceLookupType(ast.getTypeName().get());
         } else {
             visit(ast.getValue().get());
             type = bindings.getType(ast.getValue().get());
@@ -156,7 +157,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // throws a CompilerException if: value exists AND not assignable to variable
         if (ast.getValue().isPresent() && ast.getTypeName().isPresent()) {
-            Environment.Type target = Environment.lookupType(ast.getTypeName().get());
+            Environment.Type target = Environment.sourceLookupType(ast.getTypeName().get());
             requireAssignable(target, type);
         }
 
@@ -220,7 +221,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             initialization = ast.getInitialization();
 
             // throws a CompilerException if: initialization exists AND not Comparable
-            requireAssignable(Environment.Type.COMPARABLE, bindings.getType(initialization.getReceiver()));
+            requireAssignable(Environment.Type.PRIMITIVE, bindings.getType(initialization.getReceiver()));
         }
 
         if (ast.getIncrement() != null) {
@@ -349,9 +350,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignables(Environment.Type.BOOLEAN, leftType, rightType);
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
-        } else if (check(operator, "==", "!=", "<=", ">=", "<", ">")) {
-            requireAssignables(Environment.Type.COMPARABLE, leftType, rightType);
+        } else if (check(operator, "==", "!=")) {
             compareTypes(leftType, rightType);
+            bindings.setType(ast, Environment.Type.BOOLEAN);
+
+        } else if (check(operator, "<=", ">=", "<", ">")) {
+            requireAssignables(Environment.Type.PRIMITIVE, leftType, rightType);
+            compareTypes(leftType, rightType);
+            excludeTypes(Environment.Type.BOOLEAN, leftType);
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
@@ -472,6 +478,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     // helper
+    private void excludeTypes(Environment.Type type1, Environment.Type type2) {
+        if (type1.equals(type2)) {
+            throw new CompilerException("Type must not be: " + type1);
+        }
+    }
+
+    // helper
     public static void requireAssignables(Environment.Type target, Environment.Type... actuals) {
         for (Environment.Type actual : actuals) {
             requireAssignable(target, actual);
@@ -489,8 +502,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
      * <ol>
      *   <li>The target and actual types are identical</li>
      *   <li>The target type is {@code Any}</li>
-     *   <li>The target type is {@code Comparable} and the actual type is one of
-     *       {@code Integer}, {@code Decimal}, {@code Character}, or {@code String}</li>
+     *   <li>The target type is {@code Primitive} and the actual type is one of
+     *       {@code Integer}, {@code Decimal}, {@code Character}, or {@code Boolean}</li>
      * </ol>
      *
      * <p>This method enforces the same type lattice implied by the scoped type hierarchy,
@@ -501,10 +514,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public static void requireAssignable(Environment.Type target, Environment.Type actual) {
         if (target == actual ||
             target == Environment.Type.ANY ||
-           (target == Environment.Type.COMPARABLE && actual == Environment.Type.INTEGER) ||
-           (target == Environment.Type.COMPARABLE && actual == Environment.Type.DECIMAL) ||
-           (target == Environment.Type.COMPARABLE && actual == Environment.Type.CHARACTER) ||
-           (target == Environment.Type.COMPARABLE && actual == Environment.Type.STRING)) {
+           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.INTEGER) ||
+           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.DECIMAL) ||
+           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.CHARACTER) ||
+           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.BOOLEAN)) {
             return;
         }
 

@@ -11,7 +11,6 @@ import freshlyground.common.Token;
 public final class CharStream extends Stream<Character, String> {
     private final String source;
     private int length = 0;
-    private Token.Type previous = null;
 
     public CharStream(String source) {
         super((character, regex) -> String.valueOf(character).matches(regex));
@@ -38,16 +37,7 @@ public final class CharStream extends Stream<Character, String> {
         length = 0;
     }
 
-    public int getLength() {
-        return length;
-    }
-
-    public Token.Type getPrevious() {
-        return previous;
-    }
-
     public Token emit(Token.Type type) {
-        previous = type;
         int start = index - length;
         String literal = source.substring(start, index);
         skip();

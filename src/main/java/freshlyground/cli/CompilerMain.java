@@ -37,9 +37,8 @@ public final class CompilerMain {
         // Parse
         Ast ast = new Parser(tokens).parse();
 
-        // Analyze (decorate)
-        Analyzer analyzer = new Analyzer();
-        Bindings bindings = analyzer.decorate(ast);
+        // Analyze
+        Bindings bindings = new Analyzer().decorate(ast);
 
         // Generate
         String result = new Generator(bindings).emit(ast);

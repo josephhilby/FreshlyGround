@@ -194,8 +194,7 @@ Ast.Statement.While
 Grammar:
 
 ```ebnf
-statement_return ::=
-"RETURN" value ";"
+statement_return ::= "RETURN" value ";"
 ```
 
 AST mapping:

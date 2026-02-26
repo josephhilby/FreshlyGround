@@ -27,7 +27,7 @@ public class EndToEndTests {
         objectScope.defineVariable("field", "fld", Environment.Type.INTEGER, false);
         // as this is a nested function that Type.ANY is added to allow for the invoking object to be passed as a param
         objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "obj", objectScope);
+        OBJECT_TYPE = new Environment.Type("object", "obj", false, objectScope);
     }
 
     @ParameterizedTest(name = "{0}")
