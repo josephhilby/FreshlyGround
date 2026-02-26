@@ -42,23 +42,26 @@ of the grammar. The construction of those tokens follows the below regular expre
 ### Token Classes
 
 ```regexp
-identifier := [A-Za-z_] [A-Za-z0-9_-]*
+identifier := [A-Za-z_] [A-Za-z0-9_]* ( - [A-Za-z0-9_]+ )*
 
-operator   := [<>!=] =? | 'any character'
+operator   := "<=" | ">=" | "==" | "!="
+            | "<"  | ">"  | "+"  | "-"  | "*" | "/"
+            | "."  | "("  | ")"  | ","  | ":" | "=" | ";"
 
-integer    := 0 | [+-]? [1-9] [0-9]*
-decimal    := [+-]? [0-9]+ \. [0-9]+
+integer    := 0 | [1-9] [0-9]*
+decimal    := 0 \. [0-9]+ | [1-9] [0-9]* \. [0-9]+
 
-character  := ^' ([^'\n\r\\] | 'escape') '$
-string     := ^" ([^"\n\r\\] | 'escape')* "$
+character  := ' ( [^'\n\r\\] | escape ) '
+string     := " ( [^"\n\r\\] | escape )* "
 
-escape     := ^\\ [bnrt'"\\]$
+escape     := \\ [bnrt'"\\]
 ```
 
 ### Notes
 
 * Keywords (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and promoted to keyword tokens during parsing
 * Whitespace and comments are not preserved in the AST
+* Spaces in the productions are for readability only; they do not represent literal space characters
 * All tokens retain **source position metadata** for error reporting
 
 ---

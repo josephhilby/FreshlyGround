@@ -79,6 +79,7 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 #### Core Implementation
 
 - [x] Complete COP 4020 baseline implementation
+- [x] Enforce Java 21 via Gradle toolchain
 - [ ] Redesign and refactor compiler architecture
     - [x] Centralize error handling via `CompilerException`
     - [x] Enforce semantic / syntactic seporation of concerns
@@ -94,7 +95,8 @@ browser-based execution environment, and a Hack VM backend for compilation to th
         - [x] Update `Analyzer`
     - [ ] Introduce `Builtins` for member functions and variables
         - [x] Move current member functions and variables into `Builtins`
-        - [ ] Use generator or host ABI to implement
+        - [x] Restrict `Builtins` file to in scope declarations only
+        - [ ] Use generator or host ABI to implement functionality
     - [ ] Remove JVM-specific concerns from `Environment` and member functions and variables
         - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
         - [ ] Remove all references to `jvmName` in `Environment` and `Builtins`
@@ -102,8 +104,6 @@ browser-based execution environment, and a Hack VM backend for compilation to th
         - [ ] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
         - [ ] Update Scope `parent` to `Optional<Scope>`
         - [ ] Update parsing, generating, and testing to match
-- [x] Enforce Java 21 via Gradle toolchain
-- [x] Update README and documentation
 
 #### Compiler Architecture
 
@@ -143,6 +143,7 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 
 #### Documentation
 
+- [ ] Update README
 - [ ] Expand and finalize `/docs` documentation set
     - [x] Cross-link all documentation sections
     - [x] Layout documents by compiler layer

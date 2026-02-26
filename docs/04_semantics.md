@@ -56,7 +56,7 @@ This invariant ensures that all expressions are well-typed and fully bound prior
 ```yaml
 Environment
  ├─ types    : Map<String, Type>
- ├─ type     : Class { name : String, scope : Scope }
+ ├─ type     : Class { name : String, internalType: boolean, scope : Scope }
  ├─ function : Class { name : String, parameterTypes : List<Type>, returnType : Type }
  └─ variable : Class { name : String, constant : boolean, type : Type }
 ```
@@ -68,6 +68,7 @@ Environment
    * This scope stores type-associated member functions and variables
    * Member access is performed using the dot (`.`) operator
    * Member resolution proceeds through the owning type’s scope, then iteratively through its scope chain
+4. Internal types are only for managing shared member functions/variables, and restricted from use in source code
 
 #### Member Access / Resolution (Dot Operator)
 Each `Environment.Variable` associated with an `Environment.Type`. That type contains a `Scope` populated
@@ -94,7 +95,7 @@ So calling...
 #### Scope Chain
 ```yaml
 Any
-├─ Primitive
+├─ Primitive (internal type)
 │   ├─ Integer
 │   ├─ Decimal
 │   ├─ Character
@@ -185,7 +186,7 @@ Ast.Field
 Rules:
 
 * **[Rule]** If `constant=true`, `value` must be present
-* **[Rule]** If `value` is present, **(T: `value.type` assignable to declared `typeName`)**
+* **[Rule]** If `value` is present, **(T: `value.type` assignable to `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
 
 ### Method
@@ -206,7 +207,7 @@ Rules:
 * **[Rule]** Method body is analyzed in a **new nested scope**
 * **[Rule]** `parameterTypes` must resolve to `Environment.Type`
 * **[Rule]** `returnTypeName` defaults to `Nil` if omitted
-* **[Rule]** Each `RETURN` must satisfy **(T: `value.type` assignable to method `returnType`)**
+* **[Rule]** Each `RETURN` must satisfy **(T: `value.type` assignable to `returnType`)**
 * **[Rule]** Declares an `Environment.Function` in the current scope
 
 ---
@@ -227,7 +228,7 @@ Rules:
 
 * **[Rule]** If `value` present and valid, `typeName` is inferred from `value.type`
 * **[Rule]** If `typeName` present, it must resolve to `Environment.Type`
-* **[Rule]** If both present, **(T: `value.type` assignable to declared `typeName`)**
+* **[Rule]** If both present, **(T: `value.type` assignable to `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
 
 ### Assignment
@@ -274,7 +275,7 @@ Ast.Statement.If
 
 Rules:
 
-* **[Rule]** **(T: `condition.type` assignable to `Boolean`)**
+* **[Rule]** **(T: `condition.type` must resolve to `Boolean`)**
 * **[Rule]** `thenStatements` must be non-empty
 * **[Rule]** Then/Else bodies analyzed in **new nested scopes**
 
@@ -292,9 +293,10 @@ Ast.Statement.For
 
 Rules:
 
-* **[Rule]** **(T: `condition.type` assignable to `Boolean`)**
-* **[Rule]** If `initialization` exists, **(T: `init.receiver` assignable to `Comparable`)**
-* **[Rule]** If `increment` and `initialization` exist, **(T: `init.receiver` assignable to `inc.receiver`)**
+* **[Rule]** **(T: `condition.type` must resolve to `Boolean`)**
+* **[Rule]** If `initialization` exists, **(T: `init.receiver` must resolve to `Integer`)**
+* **[Rule]** If `increment` exists, **(T: `inc.receiver` must resolve to `Integer`)**
+* **[Rule]** If `increment` and `initialization` exist, **(T: `init.receiver` must be the same variable as `inc.receiver`)**
 * **[Rule]** Statements body analyzed in a **new nested scope**
 
 ### While Loop

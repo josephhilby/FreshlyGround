@@ -32,6 +32,7 @@ public final class Lexer {
     private final CharStream chars;
     private boolean peek(String... patterns) { return chars.peek(patterns); }
     private boolean match(String... patterns) { return chars.match(patterns); }
+    private Token emit(Token.Type type) { return chars.emit(type); }
 
     public Lexer(String source) {
         chars = new CharStream(source);
@@ -75,28 +76,11 @@ public final class Lexer {
      *
      * @return the next {@link Token} identified in the source stream.
      */
-    public Token lexToken() {
-        if (peek("[A-Za-z_]")) {
-            return lexIdentifier();
-        }
-
-        if (peek("[0-9]")
-                || (
-                    peek("[+-]", "[0-9]")
-                    && chars.getPrevious() != Token.Type.INTEGER
-                    && chars.getPrevious() != Token.Type.DECIMAL
-                    )) {
-            return lexNumber(match("[+-]"));
-        }
-
-        if (match("'")) {
-            return lexCharacter();
-        }
-
-        if (match("\"")) {
-            return lexString();
-        }
-
+    private Token lexToken() {
+        if (peek("[A-Za-z_]")) { return lexIdentifier(); }
+        if (peek("'"))         { return lexCharacter(); }
+        if (peek("\""))        { return lexString(); }
+        if (peek("[0-9]"))     { return lexNumber(); }
         return lexOperator();
     }
 
@@ -109,14 +93,21 @@ public final class Lexer {
      * </p>
      *
      * <pre>
-     * identifier  := [A-Za-z_] [A-Za-z0-9_-]*
+     * identifier  := [A-Za-z_] [A-Za-z0-9_]* ( - [A-Za-z0-9_]+ )*
      * </pre>
      *
      * @return a {@link Token} representing an identifier literal.
      */
     public Token lexIdentifier() {
-        while (match("[A-Za-z0-9_-]"));
-        return chars.emit(Token.Type.IDENTIFIER);
+        while (match("[A-Za-z0-9_]"));
+
+        while (peek("-", "[A-Za-z0-9_]")) {
+            match("-");
+            match("[A-Za-z0-9_]");
+            while (match("[A-Za-z0-9_]"));
+        }
+
+        return emit(Token.Type.IDENTIFIER);
     }
 
     /**
@@ -129,27 +120,34 @@ public final class Lexer {
      * </p>
      *
      * <pre>
-     * integer    := 0 | [+-]? [1-9] [0-9]*
-     * decimal    := [+-]? [0-9]+ \. [0-9]+
+     * integer    := 0 | [1-9] [0-9]*
+     * decimal    := [0-9]+ \. [0-9]+
      * </pre>
-     *
-     * @param signed {@code true} if the number includes a leading sign ({@code [+-]?}),
-     *               {@code false} otherwise.
      *
      * @return a {@link Token} representing either an integer or decimal literal.
      */
-    public Token lexNumber(boolean signed) {
-        checkLeadingZeros();
-        checkSignedZero(signed);
+    public Token lexNumber() {
+        if (match("0")) {
+            if (match("\\.", "[0-9]")) {
+                while (match("[0-9]"));
+                return emit(Token.Type.DECIMAL);
+            }
 
-        while (match("[0-9]"));
+            if (peek("[0-9]")) {
+                lexError("No leading zeros");
+            }
 
-        if (match("\\.", "[0-9]")) {
-            while (match("[0-9]"));
-            return chars.emit(Token.Type.DECIMAL);
+            return emit(Token.Type.INTEGER);
         }
 
-        return chars.emit(Token.Type.INTEGER);
+        match("[1-9]");
+        while (match("[0-9]"));
+        if (match("\\.", "[0-9]")) {
+            while (match("[0-9]"));
+            return emit(Token.Type.DECIMAL);
+        }
+
+        return emit(Token.Type.INTEGER);
     }
 
     /**
@@ -161,22 +159,20 @@ public final class Lexer {
      * </p>
      *
      * <pre>
-     * character  := ^' ([^'\n\r\\] | 'escape') '$
+     * character  := ' ( [^'\n\r\\] | escape ) '
      * </pre>
      *
      * @return a {@link Token} representing a character literal.
      */
     public Token lexCharacter() {
-        matchCharacter();
-        match("[^']");
+        match("'");
+        matchCharacter(false);
 
-        if (match("'") && chars.getLength() > 2) {
-            return chars.emit(Token.Type.CHARACTER);
+        if (!match("'")) {
+            lexError("Unterminated character literal or oversized character");
         }
 
-        lexError("Missing char literal or empty/invalid character");
-
-        return null;
+        return emit(Token.Type.CHARACTER);
     }
 
     /**
@@ -188,23 +184,23 @@ public final class Lexer {
      * </p>
      *
      * <pre>
-     * string     := ^" ([^"\n\r\\] | 'escape')* "$
+     * string     := " ( [^"\n\r\\] | escape )* "
      * </pre>
      *
      * @return a {@link Token} representing a string literal.
      */
     public Token lexString() {
-        do {
-            matchCharacter();
-        } while (match("[^\"]"));
+        match("\"");
 
-        if (match("\"")) {
-            return chars.emit(Token.Type.STRING);
+        while (chars.has(0) && !peek("\"")) {
+            matchCharacter(true);
         }
 
-        lexError("Missing str literal");
+        if (!match("\"")) {
+            lexError("Unterminated string literal");
+        }
 
-        return null;
+        return emit(Token.Type.STRING);
     }
 
     /**
@@ -216,7 +212,7 @@ public final class Lexer {
      * </p>
      *
      * <pre>
-     * escape     := ^\\ [bnrt'"\\]$
+     * escape     := \\ [bnrt'"\\]
      * </pre>
      */
     public void lexEscape() {
@@ -236,38 +232,24 @@ public final class Lexer {
      * </p>
      *
      * <pre>
-     * operator   := [<>!=] =? | 'any character'
+     * operator   := "<=" | ">=" | "==" | "!="
+     *             | "<"  | ">"  | "+"  | "-"  | "*" | "/"
+     *             | "."  | "("  | ")"  | ","  | ":" | "=" | ";"
      * </pre>
      *
      * @return a {@link Token} representing an operator literal.
      */
     public Token lexOperator() {
         if (match("[<>!=]", "=")) {
-        } else {
-            chars.advance();
+            return emit(Token.Type.OPERATOR);
         }
-        return chars.emit(Token.Type.OPERATOR);
-    }
 
-    /**
-     * A helper function that detects and rejects integer literals with
-     * leading zeros (e.g., {@code 0123}), which are not permitted.
-     */
-    private void checkLeadingZeros() {
-        if (peek("0", "[0-9]")) {
-            lexError("No leading zeros");
+        if (match("[<>+\\-*/\\.,:();=]")) {
+            return emit(Token.Type.OPERATOR);
         }
-    }
 
-    /**
-     * A helper function that detects and rejects signed zero integer
-     * literals (e.g., {@code +0} or {@code -0}), unless the literal
-     * represents a decimal value.
-     */
-    private void checkSignedZero(boolean signed) {
-        if (signed && match("0") && !peek("\\.", "[0-9]")) {
-            lexError("No signed zero integers");
-        }
+        lexError("Unexpected character");
+        return null;
     }
 
     /**
@@ -275,14 +257,23 @@ public final class Lexer {
      * valid escape sequences and rejecting unescaped newline or
      * carriage return characters.
      */
-    private void matchCharacter() {
+    private void matchCharacter(boolean isString) {
         if (match("\\\\")) {
             lexEscape();
+            return;
         }
 
-        if (match("[\n\r]")) {
+        if (match("[\\n\\r]")) {
             lexError("Unescaped new line or carriage return");
         }
+
+        if (!isString) {
+            if (match("[^'\\\\]")) return;
+        } else {
+            if (match("[^\"\\\\]")) return;
+        }
+
+        lexError("Missing char/string literal or empty/invalid character");
     }
 
     /**

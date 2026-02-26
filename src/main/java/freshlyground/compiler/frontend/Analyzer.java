@@ -14,6 +14,7 @@ import java.util.Optional;
 
 
 public final class Analyzer implements Ast.Visitor<Void> {
+    // TODO: move type matching helpers to environment
     public Scope scope;
     public Bindings bindings;
     private Environment.Type currentReturnType;

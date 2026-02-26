@@ -32,6 +32,7 @@ import java.util.function.Supplier;
  * </p>
  */
 public final class Parser {
+    // TODO move applicable helpers to token class
     private final TokenStream tokens;
     private boolean peek(Object... patterns) { return tokens.peek(patterns); }
     private boolean match(Object... patterns) { return tokens.match(patterns); }
