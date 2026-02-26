@@ -655,7 +655,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ";", 42)
                 ),
                 CompilerException.class,
-                "Invalid Length. Remaining: 0 Expected: 1",
+                "Invalid Primary Expression",
                 43
             )
         );
@@ -709,7 +709,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ";", 20)
                 ),
                 CompilerException.class,
-                "Invalid Length. Remaining: 0 Expected: 1",
+                "Invalid Primary Expression",
                 21
             )
         );
@@ -1218,7 +1218,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "-", 5)
                 ),
                 CompilerException.class,
-                "Invalid Length. Remaining: 0 Expected: 1",
+                "Invalid Primary Expression",
                 6
             ),
             Arguments.of("Missing Operand Add",
@@ -1228,7 +1228,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "+", 6)
                 ),
                 CompilerException.class,
-                "Invalid Length. Remaining: 0 Expected: 1",
+                "Invalid Primary Expression",
                 7
             ),
             Arguments.of("Missing Operand Logical",
@@ -1238,7 +1238,7 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, "AND", 6)
                 ),
                 CompilerException.class,
-                "Invalid Length. Remaining: 0 Expected: 1",
+                "Invalid Primary Expression",
                 9
             ),
             Arguments.of("Missing Operand Mult",
@@ -1248,7 +1248,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, "*", 6)
                 ),
                 CompilerException.class,
-                "Invalid Length. Remaining: 0 Expected: 1",
+                "Invalid Primary Expression",
                 7
             )
         );
@@ -1314,7 +1314,7 @@ final class ParserTests {
                 ),
                 CompilerException.class,
                 "Invalid Primary Expression",
-                1
+                0
             )
         );
     }
@@ -1407,8 +1407,8 @@ final class ParserTests {
                     new Token(Token.Type.IDENTIFIER, ")", 10)
                 ),
                 CompilerException.class,
-                "Missing: )",
-                11
+                "Trailing comma in argument list",
+                10
             ),
             Arguments.of("Missing Parameters",
                 List.of(
@@ -1422,7 +1422,7 @@ final class ParserTests {
                     new Token(Token.Type.OPERATOR, ")", 19)
                 ),
                 CompilerException.class,
-                "Invalid Primary Expression",
+                "Trailing comma in argument list",
                 19
             )
         );

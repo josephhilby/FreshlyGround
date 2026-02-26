@@ -40,12 +40,95 @@ public final class Parser {
         this.tokens = new TokenStream(tokens);
     }
 
+    /**
+     * Parses a complete token stream into an {@link Ast} (specifically an {@link Ast.Source}).
+     *
+     * <p>
+     * This method consumes the provided {@link Token} sequence according to the language grammar,
+     * constructing an Abstract Syntax Tree (AST). The parse is single-pass over the token stream
+     * (via {@link TokenStream}) and continues until the end of the stream is reached.
+     * </p>
+     *
+     * <p>
+     * The parser assumes the lexer has already performed lexical validation (token classes,
+     * unterminated literals, invalid escape sequences, etc.). Parsing is responsible for enforcing
+     * context-free structure (ordering, delimiters, grouping, and production rules).
+     * </p>
+     *
+     * <h3>Top-Level Grammar</h3>
+     *
+     * <pre>{@code
+     * source := { field } { method }
+     *
+     * field  := "LET" [ "CONST" ] identifier ":" identifier [ "=" expression ] ";"
+     *
+     * method := "DEF" identifier "(" [ parameters ] ")" [ ":" identifier ] "DO" { statement } "END"
+     * parameters := identifier ":" identifier { "," identifier ":" identifier }
+     * }</pre>
+     *
+     * <h3>Statements</h3>
+     *
+     * <pre>{@code
+     * statement :=
+     *     "LET" identifier [ ":" identifier ] [ "=" expression ] ";"
+     *   | "IF" expression "DO" { statement } [ "ELSE" { statement } ] "END"
+     *   | "FOR" "(" [ identifier "=" expression ] ";" expression ";" [ identifier "=" expression ] ")" { statement } "END"
+     *   | "WHILE" expression "DO" { statement } "END"
+     *   | "RETURN" expression ";"
+     *   | expression "=" expression ";"          // assignment (target must be a variable access)
+     *   | expression ";"                         // expression statement (must be a function call)
+     * }</pre>
+     *
+     * <h3>Expressions</h3>
+     *
+     * <pre>{@code
+     * expression :=
+     *     logical
+     *
+     * logical :=
+     *     equality { ("AND" | "OR") equality }
+     *
+     * equality :=
+     *     additive { ("<" | "<=" | ">" | ">=" | "==" | "!=") additive }
+     *
+     * additive :=
+     *     multiplicative { ("+" | "-") multiplicative }
+     *
+     * multiplicative :=
+     *     secondary { ("*" | "/") secondary }
+     *
+     * secondary :=
+     *     primary { "." identifier [ "(" [ arguments ] ")" ] }
+     *
+     * arguments :=
+     *     expression { "," expression }           // trailing commas are rejected
+     *
+     * primary :=
+     *     "NIL" | "TRUE" | "FALSE"
+     *   | [ "+" | "-" ] (integer | decimal)      // sign is parsed here (no unary expression node)
+     *   | character | string                     // escape sequences are interpreted into AST values
+     *   | "(" expression ")"
+     *   | identifier [ "(" [ arguments ] ")" ]   // variable access or function call
+     * }</pre>
+     *
+     * <p>
+     * Notes:
+     * <ul>
+     *   <li>Keywords (e.g., {@code LET}, {@code DEF}, {@code IF}) are expected as identifier literals
+     *       because the lexer emits them as {@link Token.Type#IDENTIFIER}.</li>
+     *   <li>Signed numeric literals are formed by pairing an optional leading {@code +} or {@code -}
+     *       operator token with an immediately following {@code INTEGER} or {@code DECIMAL} token.</li>
+     *   <li>String/character escape sequences ({@code \b \n \r \t \' \" \\}) are converted to their
+     *       corresponding character values in the produced AST literals.</li>
+     *   <li>All parse errors are reported as {@link CompilerException} with source index metadata.</li>
+     * </ul>
+     * </p>
+     *
+     * @return the parsed {@link Ast} root ({@link Ast.Source}).
+     * @throws CompilerException if the token stream does not conform to the grammar.
+     */
     public Ast parse() { return parseSource(); }
 
-    /**
-     * Parses the {@code source} rule.
-     */
-    // source ::= { field } { method }
     public Ast.Source parseSource() throws CompilerException {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
@@ -65,7 +148,6 @@ public final class Parser {
         return new Ast.Source(fields, methods);
     }
 
-    // field ::= LET CONST name : type = expression;
     public Ast.Field parseField() throws CompilerException {
         tokens.expectLiteral("LET");
         boolean constant = match("CONST");
@@ -87,7 +169,6 @@ public final class Parser {
         return new Ast.Field(name, type, constant, expression);
     }
 
-    // method ::= DEF name(parameter(s) : parameterType(s)) : returnType DO statement(s) END
     public Ast.Method parseMethod() throws CompilerException {
         tokens.expectLiteral("DEF");
         String name = tokens.expectType(Token.Type.IDENTIFIER).literal();
@@ -125,17 +206,16 @@ public final class Parser {
         return new Ast.Method(name, parameters, parameterTypes, returnType, statements);
     }
 
-    // statement ::= LET | IF | "FOR | WHILE | RETURN | expression.access | expression.function
     public Ast.Statement parseStatement() throws CompilerException {
-        if (tokens.match("LET"))    return parseDeclarationStatement();
-        if (tokens.match("IF"))     return parseIfStatement();
-        if (tokens.match("FOR"))    return parseForStatement();
-        if (tokens.match("WHILE"))  return parseWhileStatement();
-        if (tokens.match("RETURN")) return parseReturnStatement();
+        if (match("LET"))    return parseDeclarationStatement();
+        if (match("IF"))     return parseIfStatement();
+        if (match("FOR"))    return parseForStatement();
+        if (match("WHILE"))  return parseWhileStatement();
+        if (match("RETURN")) return parseReturnStatement();
 
         Ast.Expression expr = parseExpression();
 
-        if (tokens.match("=")) {
+        if (match("=")) {
             if (expr instanceof Ast.Expression.Access access) {
                 return parseAssignmentStatement(access);
             }
@@ -150,7 +230,6 @@ public final class Parser {
         return null;
     }
 
-    // LET name : type = expression;
     public Ast.Statement.Declaration parseDeclarationStatement() throws CompilerException {
         String name = tokens.expectType(Token.Type.IDENTIFIER).literal();
 
@@ -173,7 +252,6 @@ public final class Parser {
         return new Ast.Statement.Declaration(name, type, expression);
     }
 
-    // IF condition DO thenStatements ELSE elseStatements END
     public Ast.Statement.If parseIfStatement() throws CompilerException {
         Ast.Expression condition = parseExpression();
         tokens.expectLiteral("DO");
@@ -194,7 +272,6 @@ public final class Parser {
         return new Ast.Statement.If(condition, thenStatements, elseStatements);
     }
 
-    // FOR (initialization; condition; increment) statements END
     public Ast.Statement.For parseForStatement() throws CompilerException {
         tokens.expectLiteral("(");
 
@@ -216,7 +293,6 @@ public final class Parser {
         return new Ast.Statement.For(initialization, expression, increment, statements);
     }
 
-    // WHILE condition DO statements END
     public Ast.Statement.While parseWhileStatement() throws CompilerException {
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
@@ -229,27 +305,24 @@ public final class Parser {
         return new Ast.Statement.While(expression, statements);
     }
 
-    // RETURN value;
     public Ast.Statement.Return parseReturnStatement() throws CompilerException {
         Ast.Expression value = parseExpression();
         tokens.expectLiteral(";");
         return new Ast.Statement.Return(value);
     }
 
-    // receiver = value;
     public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression.Access receiver) throws CompilerException {
         Ast.Expression value = parseExpression();
         tokens.expectLiteral(";");
         return new Ast.Statement.Assignment(receiver, value);
     }
 
-    // expression;
     public Ast.Statement.Expression parseExpressionStatement(Ast.Expression.Function expression) throws CompilerException {
         tokens.expectLiteral(";");
         return new Ast.Statement.Expression(expression);
     }
 
-    // receiver = value (used in For loop init and inc)
+    // helper
     private Ast.Statement.Assignment parseLoopControlStatement(String section) {
         if (!peek(Token.Type.IDENTIFIER)) {
             return null;
@@ -272,32 +345,27 @@ public final class Parser {
         return new Ast.Statement.Assignment(access, value);
     }
 
-    // expression ::= logical_expression
     public Ast.Expression parseExpression() throws CompilerException {
         return parseLogicalExpression();
     }
 
-    // comparison_expression ( AND | OR ) comparison_expression
     public Ast.Expression parseLogicalExpression() throws CompilerException {
         return parseBinaryExpression(this::parseEqualityExpression, "AND",  "OR");
     }
 
-    // additive_expression ( < | <= | > | >= | == | != ) additive_expression
     public Ast.Expression parseEqualityExpression() throws CompilerException {
         return parseBinaryExpression(this::parseAdditiveExpression, "<", "<=", ">", ">=", "==", "!=");
     }
 
-    // multiplicative_expression ( + | - ) multiplicative_expression
     public Ast.Expression parseAdditiveExpression() throws CompilerException {
         return parseBinaryExpression(this::parseMultiplicativeExpression, "+", "-");
     }
 
-    // secondary_expression ( * | / ) secondary_expression
     public Ast.Expression parseMultiplicativeExpression() throws CompilerException {
         return parseBinaryExpression(this::parseSecondaryExpression, "*", "/");
     }
 
-    // expression operator expression
+    // helper
     private Ast.Expression parseBinaryExpression(
         Supplier<Ast.Expression> operand,
         String... operators
@@ -313,7 +381,6 @@ public final class Parser {
         return left;
     }
 
-    // receiver.literal(arguments)
     public Ast.Expression parseSecondaryExpression() throws CompilerException {
         Ast.Expression receiver = parsePrimaryExpression();
 
@@ -323,22 +390,12 @@ public final class Parser {
         return receiver;
     }
 
-    // primary_expression ::=
-    //       NIL
-    //     | TRUE | FALSE
-    //     | integer | decimal
-    //     | character | string
-    //     | (expression)
-    //     | literal[ (arguments) ]
     public Ast.Expression parsePrimaryExpression() throws CompilerException {
-        // NIL
         if (match("NIL")) return new Ast.Expression.Literal(null);
 
-        // TRUE | FALSE
         if (match("TRUE")) return new Ast.Expression.Literal(true);
         if (match("FALSE")) return new Ast.Expression.Literal(false);
 
-        // sign
         boolean negative = false;
         if (peek("+") || peek("-")) {
             if (peek("+", Token.Type.INTEGER) || peek("+", Token.Type.DECIMAL) ||
@@ -348,7 +405,6 @@ public final class Parser {
             }
         }
 
-        // (sign) integer | decimal
         if (peek(Token.Type.INTEGER)) {
             BigInteger n = new BigInteger(tokens.consume().literal());
             return new Ast.Expression.Literal(negative ? n.negate() : n);
@@ -358,33 +414,30 @@ public final class Parser {
             return new Ast.Expression.Literal(negative ? n.negate() : n);
         }
 
-        // character | string
         if (peek(Token.Type.CHARACTER) || peek(Token.Type.STRING)) {
             Token token = tokens.consume();
             String literal = token.literal();
 
             String inner = literal.substring(1, literal.length() - 1);
 
-            inner = decodeEscapes(inner, token.index() + 1);
+            String value = decodeEscapes(inner);
 
-            if (peek(Token.Type.STRING)) {
-                return new Ast.Expression.Literal(inner);
+            if (token.type() == Token.Type.STRING) {
+                return new Ast.Expression.Literal(value);
             }
 
-            if (inner.length() != 1) {
-                throw new CompilerException("Missing char/string literal or empty/invalid character", token.index() + 1);
+            if (value.length() != 1) {
+                parseError("Invalid character literal");
             }
-            return new Ast.Expression.Literal(inner.charAt(0));
+            return new Ast.Expression.Literal(value.charAt(0));
         }
 
-        // (expression)
         if (match("(")) {
             Ast.Expression expression = parseExpression();
             tokens.expectLiteral(")");
             return new Ast.Expression.Group(expression);
         }
 
-        // literal[ (arguments) ]
         if (peek(Token.Type.IDENTIFIER)) {
             String name = tokens.consume().literal();
 
@@ -402,6 +455,7 @@ public final class Parser {
         return null;
     }
 
+    // helper
     private Ast.Expression parseMemberAccessOrCall(Ast.Expression receiver) throws CompilerException {
         Token member = tokens.expectType(Token.Type.IDENTIFIER);
         String name = member.literal();
@@ -415,6 +469,7 @@ public final class Parser {
         return new Ast.Expression.Access(Optional.of(receiver), name);
     }
 
+    // helper
     private List<Ast.Expression> parseArgumentList() throws CompilerException {
         List<Ast.Expression> args = new ArrayList<>();
 
@@ -422,30 +477,34 @@ public final class Parser {
             return args;
         }
 
-        do {
+        args.add(parseExpression());
+
+        while (match(",")) {
+            if (peek(")")) {
+                parseError("Trailing comma in argument list");
+            }
             args.add(parseExpression());
-        } while (match(","));
+        }
 
         return args;
     }
 
-    // swap slashed escape characters with escape chars
-    private String decodeEscapes(String s, int baseIndexForErrors) {
-        StringBuilder out = new StringBuilder(s.length());
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
+    // helper
+    private String decodeEscapes(String str) {
+        StringBuilder out = new StringBuilder(str.length());
+        for (int i = 0; i < str.length(); i++) {
+            char chr = str.charAt(i);
 
-            if (c != '\\') {
-                out.append(c);
+            if (chr != '\\') {
+                out.append(chr);
                 continue;
             }
 
-            // '\' at end shouldn't happen if lexer is correct, but keep parser robust
-            if (i + 1 >= s.length()) {
-                throw new CompilerException("Invalid escape character", baseIndexForErrors + i);
+            if (i + 1 >= str.length()) {
+                parseError("Invalid escape character");
             }
 
-            char next = s.charAt(++i);
+            char next = str.charAt(++i);
             switch (next) {
                 case 'b'  -> out.append('\b');
                 case 'n'  -> out.append('\n');
@@ -454,7 +513,7 @@ public final class Parser {
                 case '\'' -> out.append('\'');
                 case '"'  -> out.append('"');
                 case '\\' -> out.append('\\');
-                default   -> throw new CompilerException("Invalid escape character", baseIndexForErrors + (i - 1));
+                default   -> parseError("Invalid escape character");
             }
         }
         return out.toString();
