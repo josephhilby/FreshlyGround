@@ -44,9 +44,7 @@ of the grammar. The construction of those tokens follows the below regular expre
 ```regexp
 identifier := [A-Za-z_] [A-Za-z0-9_]* ( - [A-Za-z0-9_]+ )*
 
-operator   := "<=" | ">=" | "==" | "!="
-            | "<"  | ">"  | "+"  | "-"  | "*" | "/"
-            | "."  | "("  | ")"  | ","  | ":" | "=" | ";"
+operator   := [<>!=] = | [<>+\-*/.,:();=]
 
 integer    := 0 | [1-9] [0-9]*
 decimal    := 0 \. [0-9]+ | [1-9] [0-9]* \. [0-9]+

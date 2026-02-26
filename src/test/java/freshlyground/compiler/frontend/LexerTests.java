@@ -7,7 +7,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -21,18 +20,18 @@ public class LexerTests {
 
     private static Stream<Arguments> testEntryPoint() {
         return Stream.of(
-            Arguments.of("Empty", "", Arrays.asList()),
-            Arguments.of("Backspace", "\b", Arrays.asList()),
-            Arguments.of("Line Feed", "\n", Arrays.asList()),
-            Arguments.of("Carriage Return", "\r", Arrays.asList()),
-            Arguments.of("Tab", "\t", Arrays.asList()),
-            Arguments.of("Leading Whitespace", " LET", Arrays.asList(
+            Arguments.of("Empty", "", List.of()),
+            Arguments.of("Backspace", "\b", List.of()),
+            Arguments.of("Line Feed", "\n", List.of()),
+            Arguments.of("Carriage Return", "\r", List.of()),
+            Arguments.of("Tab", "\t", List.of()),
+            Arguments.of("Leading Whitespace", " LET", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 1)
             )),
-            Arguments.of("Trailing Whitespace", "LET ", Arrays.asList(
+            Arguments.of("Trailing Whitespace", "LET ", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 0)
             )),
-            Arguments.of("Mixed Whitespace", " \t\r\nLET", Arrays.asList(
+            Arguments.of("Mixed Whitespace", " \t\r\nLET", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 4)
             ))
         );
@@ -66,19 +65,19 @@ public class LexerTests {
 
     private static Stream<Arguments> testIdentifiers() {
         return Stream.of(
-            Arguments.of("Leading Digit", "1fish2bluefish", Arrays.asList(
+            Arguments.of("Leading Digit", "1fish2bluefish", List.of(
                 new Token(Token.Type.INTEGER, "1", 0),
                 new Token(Token.Type.IDENTIFIER, "fish2bluefish", 1)
             )),
-            Arguments.of("Leading Hyphen", "-five", Arrays.asList(
+            Arguments.of("Leading Hyphen", "-five", List.of(
                 new Token(Token.Type.OPERATOR, "-", 0),
                 new Token(Token.Type.IDENTIFIER, "five", 1)
             )),
-            Arguments.of("Trailing Dash", "abcdefghijklmnopqrstuvwxyz012346789_-", Arrays.asList(
+            Arguments.of("Trailing Dash", "abcdefghijklmnopqrstuvwxyz012346789_-", List.of(
                 new Token(Token.Type.IDENTIFIER, "abcdefghijklmnopqrstuvwxyz012346789_", 0),
                 new Token(Token.Type.OPERATOR, "-", 36)
             )),
-            Arguments.of("Double Dash", "a--b", Arrays.asList(
+            Arguments.of("Double Dash", "a--b", List.of(
                 new Token(Token.Type.IDENTIFIER, "a", 0),
                 new Token(Token.Type.OPERATOR, "-", 1),
                 new Token(Token.Type.OPERATOR, "-", 2),
@@ -132,34 +131,34 @@ public class LexerTests {
 
     private static Stream<Arguments> testIntegers() {
         return Stream.of(
-            Arguments.of("Two Integers With Space", "123 456", Arrays.asList(
+            Arguments.of("Two Integers With Space", "123 456", List.of(
                 new Token(Token.Type.INTEGER, "123", 0),
                 new Token(Token.Type.INTEGER, "456", 4)
             )),
-            Arguments.of("Subtraction No Spaces", "15-10", Arrays.asList(
+            Arguments.of("Subtraction No Spaces", "15-10", List.of(
                 new Token(Token.Type.INTEGER, "15", 0),
                 new Token(Token.Type.OPERATOR, "-", 2),
                 new Token(Token.Type.INTEGER, "10", 3)
             )),
-            Arguments.of("Subtraction With Spaces", "15 - 10", Arrays.asList(
+            Arguments.of("Subtraction With Spaces", "15 - 10", List.of(
                 new Token(Token.Type.INTEGER, "15", 0),
                 new Token(Token.Type.OPERATOR, "-", 3),
                 new Token(Token.Type.INTEGER, "10", 5)
             )),
-            Arguments.of("Comma Separated", "1,234", Arrays.asList(
+            Arguments.of("Comma Separated", "1,234", List.of(
                 new Token(Token.Type.INTEGER, "1", 0),
                 new Token(Token.Type.OPERATOR, ",", 1),
                 new Token(Token.Type.INTEGER, "234", 2)
             )),
-            Arguments.of("Signed (-) Int", "-1", Arrays.asList(
+            Arguments.of("Signed (-) Int", "-1", List.of(
                 new Token(Token.Type.OPERATOR, "-", 0),
                 new Token(Token.Type.INTEGER, "1", 1)
             )),
-            Arguments.of("Signed (+) Zero", "+0", Arrays.asList(
+            Arguments.of("Signed (+) Zero", "+0", List.of(
                 new Token(Token.Type.OPERATOR, "+", 0),
                 new Token(Token.Type.INTEGER, "0", 1)
             )),
-            Arguments.of("Signed (+) Ints", "+1234", Arrays.asList(
+            Arguments.of("Signed (+) Ints", "+1234", List.of(
                 new Token(Token.Type.OPERATOR, "+", 0),
                 new Token(Token.Type.INTEGER, "1234", 1)
             ))
@@ -211,33 +210,33 @@ public class LexerTests {
 
     private static Stream<Arguments> testDecimals() {
         return Stream.of(
-            Arguments.of("Leading Decimal", ".5", Arrays.asList(
+            Arguments.of("Leading Decimal", ".5", List.of(
                 new Token(Token.Type.OPERATOR, ".", 0),
                 new Token(Token.Type.INTEGER, "5", 1)
             )),
-            Arguments.of("Trailing Decimal", "1.", Arrays.asList(
+            Arguments.of("Trailing Decimal", "1.", List.of(
                 new Token(Token.Type.INTEGER, "1", 0),
                 new Token(Token.Type.OPERATOR, ".", 1)
             )),
-            Arguments.of("Trailing Decimal Zero", "0.", Arrays.asList(
+            Arguments.of("Trailing Decimal Zero", "0.", List.of(
                 new Token(Token.Type.INTEGER, "0", 0),
                 new Token(Token.Type.OPERATOR, ".", 1)
             )),
-            Arguments.of("Double Decimal", "1..0", Arrays.asList(
+            Arguments.of("Double Decimal", "1..0", List.of(
                 new Token(Token.Type.INTEGER, "1", 0),
                 new Token(Token.Type.OPERATOR, ".", 1),
                 new Token(Token.Type.OPERATOR, ".", 2),
                 new Token(Token.Type.INTEGER, "0", 3)
             )),
-            Arguments.of("Signed (-) Decimal", "-1.0", Arrays.asList(
+            Arguments.of("Signed (-) Decimal", "-1.0", List.of(
                 new Token(Token.Type.OPERATOR, "-", 0),
                 new Token(Token.Type.DECIMAL, "1.0", 1)
             )),
-            Arguments.of("Signed (-) Zero", "-0.0", Arrays.asList(
+            Arguments.of("Signed (-) Zero", "-0.0", List.of(
                 new Token(Token.Type.OPERATOR, "-", 0),
                 new Token(Token.Type.DECIMAL, "0.0", 1)
             )),
-            Arguments.of("Signed (+) Decimal", "+123.321", Arrays.asList(
+            Arguments.of("Signed (+) Decimal", "+123.321", List.of(
                 new Token(Token.Type.OPERATOR, "+", 0),
                 new Token(Token.Type.DECIMAL, "123.321", 1)
             ))
@@ -253,17 +252,17 @@ public class LexerTests {
     private static Stream<Arguments> testCharacterHappyPath() {
         return Stream.of(
             // Start and end with a single quote (')
-            Arguments.of("Alphabetic", "\'c\'"),
-            Arguments.of("Unicode Character", "\'ρ\'"),
-            Arguments.of("Character", "\'&\'"),
+            Arguments.of("Alphabetic", "'c'"),
+            Arguments.of("Unicode Character", "'ρ'"),
+            Arguments.of("Character", "'&'"),
 
             // Supports escape characters (\), (bnrt'"\) and considered one character
-            Arguments.of("Newline Escape", "\'\\n\'"),
-            Arguments.of("Tab Escape", "\'\\t\'"),
-            Arguments.of("Backslash Escape", "\'\\\\\'"),
+            Arguments.of("Newline Escape", "'\\n'"),
+            Arguments.of("Tab Escape", "'\\t'"),
+            Arguments.of("Backslash Escape", "'\\\\'"),
 
             // Character cannot be a single quote ('), without being preceded by a backslash (\)
-            Arguments.of("Terminated Quote", "\'\\'\'")
+            Arguments.of("Terminated Quote", "'\\''")
         );
     }
 
@@ -276,24 +275,24 @@ public class LexerTests {
     private static Stream<Arguments> testCharacterSadPath() {
         return Stream.of(
             // Start and end with a single quote (')
-            Arguments.of("Unterminated Char", "\'c", "Unterminated character literal or oversized character", 2),
-            Arguments.of("Unterminated", "\'", "Missing char/string literal or empty/invalid character", 1),
-            Arguments.of("Not-Started Char", "c\'", "Missing char/string literal or empty/invalid character", 2),
-            Arguments.of("Empty", "\'\'", "Missing char/string literal or empty/invalid character", 1),
+            Arguments.of("Unterminated Char", "'c", "Unterminated character literal or oversized character", 2),
+            Arguments.of("Unterminated", "'", "Missing char/string literal or empty/invalid character", 1),
+            Arguments.of("Not-Started Char", "c'", "Missing char/string literal or empty/invalid character", 2),
+            Arguments.of("Empty", "''", "Missing char/string literal or empty/invalid character", 1),
 
             // Contain one and only one character
-            Arguments.of("Multiple", "\'ab\'", "Unterminated character literal or oversized character", 2),
-            Arguments.of("Multiples", "\'abc\'", "Unterminated character literal or oversized character", 2),
+            Arguments.of("Multiple", "'ab'", "Unterminated character literal or oversized character", 2),
+            Arguments.of("Multiples", "'abc'", "Unterminated character literal or oversized character", 2),
 
             // Supports escape characters (\), (bnrt'"\) and considered one character
-            Arguments.of("Invalid Escape Character", "\'\\x\'", "Invalid escape character", 2),
-            Arguments.of("Invalid (Unicode) Escape Character", "\'\\u12G4\'", "Invalid escape character", 2),
+            Arguments.of("Invalid Escape Character", "'\\x'", "Invalid escape character", 2),
+            Arguments.of("Invalid (Unicode) Escape Character", "'\\u12G4'", "Invalid escape character", 2),
 
             // Character cannot be a single quote ('), without being preceded by a backslash (\)
-            Arguments.of("Unterminated Quote", "\'\'\'", "Missing char/string literal or empty/invalid character", 1),
+            Arguments.of("Unterminated Quote", "'''", "Missing char/string literal or empty/invalid character", 1),
 
             // Cannot span multiple lines, opening and closing quotes must be on the same line, no \n
-            Arguments.of("Newline No Escape", "\'\n\'", "Unescaped new line or carriage return", 2)
+            Arguments.of("Newline No Escape", "'\n'", "Unescaped new line or carriage return", 2)
         );
     }
 
@@ -352,7 +351,7 @@ public class LexerTests {
 
     private static Stream<Arguments> testStrings() {
         return Stream.of(
-            Arguments.of("Newline at End", "unterminated\n", Arrays.asList(
+            Arguments.of("Newline at End", "unterminated\n", List.of(
                 new Token(Token.Type.IDENTIFIER, "unterminated", 0)
             ))
         );
@@ -419,11 +418,11 @@ public class LexerTests {
 
     private static Stream<Arguments> testOperators() {
         return Stream.of(
-            Arguments.of("Extra Char", "<=>", Arrays.asList(
+            Arguments.of("Extra Char", "<=>", List.of(
                 new Token(Token.Type.OPERATOR, "<=", 0),
                 new Token(Token.Type.OPERATOR, ">", 2)
             )),
-            Arguments.of("Double Operator", ">>", Arrays.asList(
+            Arguments.of("Double Operator", ">>", List.of(
                 new Token(Token.Type.OPERATOR, ">", 0),
                 new Token(Token.Type.OPERATOR, ">", 1)
             ))
@@ -438,21 +437,21 @@ public class LexerTests {
 
     private static Stream<Arguments> testExamples() {
         return Stream.of(
-            Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
+            Arguments.of("Example 1", "LET x = 5;", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                 new Token(Token.Type.IDENTIFIER, "x", 4),
                 new Token(Token.Type.OPERATOR, "=", 6),
                 new Token(Token.Type.INTEGER, "5", 8),
                 new Token(Token.Type.OPERATOR, ";", 9)
             )),
-            Arguments.of("Example 2", "print(\"Hello, World!\");", Arrays.asList(
+            Arguments.of("Example 2", "print(\"Hello, World!\");", List.of(
                 new Token(Token.Type.IDENTIFIER, "print", 0),
                 new Token(Token.Type.OPERATOR, "(", 5),
                 new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
                 new Token(Token.Type.OPERATOR, ")", 21),
                 new Token(Token.Type.OPERATOR, ";", 22)
             )),
-            Arguments.of("Example 4", "LET x = 5-2;", Arrays.asList(
+            Arguments.of("Example 4", "LET x = 5-2;", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                 new Token(Token.Type.IDENTIFIER, "x", 4),
                 new Token(Token.Type.OPERATOR, "=", 6),
@@ -461,7 +460,7 @@ public class LexerTests {
                 new Token(Token.Type.INTEGER, "2", 10),
                 new Token(Token.Type.OPERATOR, ";", 11)
             )),
-            Arguments.of("Example 5", "LET x = 5.1-2.2;", Arrays.asList(
+            Arguments.of("Example 5", "LET x = 5.1-2.2;", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                 new Token(Token.Type.IDENTIFIER, "x", 4),
                 new Token(Token.Type.OPERATOR, "=", 6),
@@ -470,7 +469,7 @@ public class LexerTests {
                 new Token(Token.Type.DECIMAL, "2.2", 12),
                 new Token(Token.Type.OPERATOR, ";", 15)
             )),
-            Arguments.of("Example 6", "LET x = 5 -2;", Arrays.asList(
+            Arguments.of("Example 6", "LET x = 5 -2;", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                 new Token(Token.Type.IDENTIFIER, "x", 4),
                 new Token(Token.Type.OPERATOR, "=", 6),
@@ -479,7 +478,7 @@ public class LexerTests {
                 new Token(Token.Type.INTEGER, "2", 11),
                 new Token(Token.Type.OPERATOR, ";", 12)
             )),
-            Arguments.of("Example 7", "LET x = 5 -0;", Arrays.asList(
+            Arguments.of("Example 7", "LET x = 5 -0;", List.of(
                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                 new Token(Token.Type.IDENTIFIER, "x", 4),
                 new Token(Token.Type.OPERATOR, "=", 6),
@@ -488,7 +487,7 @@ public class LexerTests {
                 new Token(Token.Type.INTEGER, "0", 11),
                 new Token(Token.Type.OPERATOR, ";", 12)
             )),
-            Arguments.of("Example 8", "abc 123 456.789 'c' \"string\" /", Arrays.asList(
+            Arguments.of("Example 8", "abc 123 456.789 'c' \"string\" /", List.of(
                 new Token(Token.Type.IDENTIFIER, "abc", 0),
                 new Token(Token.Type.INTEGER, "123", 4),
                 new Token(Token.Type.DECIMAL, "456.789", 8),
@@ -496,12 +495,12 @@ public class LexerTests {
                 new Token(Token.Type.STRING, "\"string\"", 20),
                 new Token(Token.Type.OPERATOR, "/", 29)
             )),
-            Arguments.of("Example 9", "15 - 10", Arrays.asList(
+            Arguments.of("Example 9", "15 - 10", List.of(
                 new Token(Token.Type.INTEGER, "15", 0),
                 new Token(Token.Type.OPERATOR, "-", 3),
                 new Token(Token.Type.INTEGER, "10", 5)
             )),
-            Arguments.of("Example 10", "1.a", Arrays.asList(
+            Arguments.of("Example 10", "1.a", List.of(
                 new Token(Token.Type.INTEGER, "1", 0),
                 new Token(Token.Type.OPERATOR, ".", 1),
                 new Token(Token.Type.IDENTIFIER, "a", 2)
