@@ -905,586 +905,572 @@ final class ParserTests {
     // TODO testLiteralExpressionError
     //
 
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testGroupExpression(String test, List<Token> tokens, Ast.Expression.Group expected) {
-//        test(tokens, expected, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testGroupExpression() {
-//        return Stream.of(
-//            Arguments.of("Grouped Variable",
-//                List.of(
-//                    //(expr)
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr", 1),
-//                    new Token(Token.Type.OPERATOR, ")", 5)
-//                ),
-//                new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
-//            ),
-//            Arguments.of("Grouped Binary",
-//                List.of(
-//                    //(expr1 + expr2)
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
-//                    new Token(Token.Type.OPERATOR, "+", 7),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
-//                    new Token(Token.Type.OPERATOR, ")", 14)
-//                ),
-//                new Ast.Expression.Group(new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2")
-//                ))
-//            ),
-//            Arguments.of("Grouped Multiple Binary",
-//                List.of(
-//                    // (expr1 + expr2 + expr3)
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
-//                    new Token(Token.Type.OPERATOR, "+", 7),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
-//                    new Token(Token.Type.OPERATOR, "+", 15),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
-//                    new Token(Token.Type.OPERATOR, ")", 22)
-//                ),
-//                new Ast.Expression.Group(new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Binary("+",
-//                        new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr2")
-//                    ),
-//                    new Ast.Expression.Access(Optional.empty(), "expr3")
-//                ))
-//            ),
-//            Arguments.of("Grouped More Multiple Binary",
-//                List.of(
-//                    // (expr1 + expr2 + expr3 + expr4)
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
-//                    new Token(Token.Type.OPERATOR, "-", 7),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
-//                    new Token(Token.Type.OPERATOR, "+", 15),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
-//                    new Token(Token.Type.OPERATOR, "+", 23),
-//                    new Token(Token.Type.IDENTIFIER, "expr4", 25),
-//                    new Token(Token.Type.OPERATOR, ")", 30)
-//                ),
-//                new Ast.Expression.Group(new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Binary("+",
-//                        new Ast.Expression.Binary("-",
-//                            new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                            new Ast.Expression.Access(Optional.empty(), "expr2")
-//                        ),
-//                        new Ast.Expression.Access(Optional.empty(), "expr3")
-//                    ),
-//                    new Ast.Expression.Access(Optional.empty(), "expr4")
-//                ))
-//            ),
-//            Arguments.of("Grouped Multiple Binary PEMDS",
-//                List.of(
-//                    // (expr1 + expr2 * expr3)
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
-//                    new Token(Token.Type.OPERATOR, "+", 7),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
-//                    new Token(Token.Type.OPERATOR, "*", 15),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
-//                    new Token(Token.Type.OPERATOR, ")", 22)
-//                ),
-//                new Ast.Expression.Group(new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Binary("*",
-//                        new Ast.Expression.Access(Optional.empty(), "expr2"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr3")
-//                    )
-//                ))
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testGroupExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
-//        testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseStatement);
-//    }
-//
-//    private static Stream<Arguments> testGroupExpressionError() {
-//        return Stream.of(
-//            Arguments.of("Missing )",
-//                List.of(
-//                    // (expr
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr", 1)
-//                ),
-//                CompilerException.class,
-//                "Missing: )",
-//                5
-//            ),
-//            Arguments.of("Wrong ]",
-//                List.of(
-//                    // (expr]
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr", 1),
-//                    new Token(Token.Type.OPERATOR, "]", 5)
-//                ),
-//                CompilerException.class,
-//                "Missing: )",
-//                5
-//            ),
-//            Arguments.of("Missing Closing ) Binary",
-//                List.of(
-//                    // (expr1 + expr2
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
-//                    new Token(Token.Type.OPERATOR, "+", 7),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9)
-//                ),
-//                CompilerException.class,
-//                "Missing: )",
-//                14
-//            ),
-//            // TODO: need to fix should be "Missing: operator"
-//            Arguments.of("Missing Operator Binary",
-//                List.of(
-//                    // (expr1 expr2)
-//                    new Token(Token.Type.OPERATOR, "(", 0),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 7),
-//                    new Token(Token.Type.OPERATOR, ")", 11)
-//                ),
-//                CompilerException.class,
-//                "Missing: )",
-//                7
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testBinaryExpression(String test, List<Token> tokens, Ast.Expression.Binary expected) {
-//        test(tokens, expected, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testBinaryExpression() {
-//        return Stream.of(
-//            Arguments.of("Binary And",
-//                List.of(
-//                    //expr1 AND expr2
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "AND", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 10)
-//                ),
-//                new Ast.Expression.Binary("AND",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2")
-//                )
-//            ),
-//            Arguments.of("Binary Or",
-//                List.of(
-//                    // expr1 OR expr2
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.IDENTIFIER, "OR", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 10)
-//                ),
-//                new Ast.Expression.Binary("OR",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2")
-//                )
-//            ),
-//            Arguments.of("Multiple Binary And",
-//                List.of(
-//                    // expr1 AND expr2 OR expr3
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.IDENTIFIER, "AND", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
-//                    new Token(Token.Type.IDENTIFIER, "OR", 15),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 18)
-//                ),
-//                new Ast.Expression.Binary("OR",
-//                    new Ast.Expression.Binary("AND",
-//                        new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr2")
-//                    ),
-//                    new Ast.Expression.Access(Optional.empty(), "expr3")
-//                )
-//            ),
-//            Arguments.of("Binary Equality",
-//                List.of(
-//                    //expr1 == expr2
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "==", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9)
-//                ),
-//                new Ast.Expression.Binary("==",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2")
-//                )
-//            ),
-//            Arguments.of("Binary Addition",
-//                List.of(
-//                    //expr1 + expr2
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "+", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 8)
-//                ),
-//                new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2")
-//                )
-//            ),
-//            Arguments.of("Binary Multiplication",
-//                List.of(
-//                    //expr1 * expr2
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "*", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 8)
-//                ),
-//                new Ast.Expression.Binary("*",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2")
-//                )
-//            ),
-//            Arguments.of("Binary Multiple +/*",
-//                List.of(
-//                    // expr1 + expr2 * expr3
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "+", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
-//                    new Token(Token.Type.OPERATOR, "*", 14),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
-//                ),
-//                new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Binary("*",
-//                        new Ast.Expression.Access(Optional.empty(), "expr2"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr3")
-//                    )
-//                )
-//            ),
-//            Arguments.of("Binary Multiple +/* Rev",
-//                List.of(
-//                    // expr1 * expr2 + expr3
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "*", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
-//                    new Token(Token.Type.OPERATOR, "+", 14),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
-//                ),
-//                new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Binary("*",
-//                        new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr2")
-//                    ),
-//                    new Ast.Expression.Access(Optional.empty(), "expr3")
-//                )
-//            ),
-//            Arguments.of("Binary Multiple AND OR",
-//                List.of(
-//                    // expr1 AND expr2 OR expr3
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "AND", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
-//                    new Token(Token.Type.OPERATOR, "OR", 14),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
-//                ),
-//                new Ast.Expression.Binary("OR",
-//                    new Ast.Expression.Binary("AND",
-//                        new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr2")
-//                    ),
-//                    new Ast.Expression.Access(Optional.empty(), "expr3")
-//                )
-//            ),
-//            Arguments.of("Binary Multiple == !=",
-//                List.of(
-//                    // expr1 == expr2 != expr3
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "==", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
-//                    new Token(Token.Type.OPERATOR, "!=", 14),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
-//                ),
-//                new Ast.Expression.Binary("!=",
-//                    new Ast.Expression.Binary("==",
-//                        new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr2")
-//                    ),
-//                    new Ast.Expression.Access(Optional.empty(), "expr3")
-//                )
-//            ),
-//            Arguments.of("Multiple Binary Logic Comparison",
-//                List.of(
-//                    // expr1 == expr2 AND expr3 == expr4
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "==", 6),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
-//                    new Token(Token.Type.IDENTIFIER, "AND", 15),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 18),
-//                    new Token(Token.Type.OPERATOR, "==", 24),
-//                    new Token(Token.Type.IDENTIFIER, "expr4", 27)
-//                ),
-//                new Ast.Expression.Binary("AND",
-//                    new Ast.Expression.Binary("==",
-//                        new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr2")
-//                    ),
-//                    new Ast.Expression.Binary("==",
-//                        new Ast.Expression.Access(Optional.empty(), "expr3"),
-//                        new Ast.Expression.Access(Optional.empty(), "expr4")
-//                    )
-//                )
-//            ),
-//            Arguments.of("Signed Literal Multiplies Correctly",
-//                List.of(
-//                    new Token(Token.Type.OPERATOR, "-", 0),
-//                    new Token(Token.Type.INTEGER, "1", 1),
-//                    new Token(Token.Type.OPERATOR, "*", 3),
-//                    new Token(Token.Type.INTEGER, "2", 5)
-//                ),
-//                new Ast.Expression.Binary("*",
-//                    new Ast.Expression.Literal(new BigInteger("-1")),
-//                    new Ast.Expression.Literal(new BigInteger("2"))
-//                )
-//            ),
-//            Arguments.of("Signed Literal Adds Correctly",
-//                List.of(
-//                    new Token(Token.Type.INTEGER, "10", 0),
-//                    new Token(Token.Type.OPERATOR, "+", 3),
-//                    new Token(Token.Type.OPERATOR, "-", 5),
-//                    new Token(Token.Type.INTEGER, "1", 6)
-//                ),
-//                new Ast.Expression.Binary("+",
-//                    new Ast.Expression.Literal(new BigInteger("10")),
-//                    new Ast.Expression.Literal(new BigInteger("-1"))
-//                )
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testBinaryExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
-//        testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testBinaryExpressionError() {
-//        return Stream.of(
-//            Arguments.of("Missing Operand",
-//                List.of(
-//                    // expr -
-//                    new Token(Token.Type.IDENTIFIER, "expr", 0),
-//                    new Token(Token.Type.OPERATOR, "-", 5)
-//                ),
-//                CompilerException.class,
-//                "Invalid Primary Expression",
-//                6
-//            ),
-//            Arguments.of("Missing Operand Add",
-//                List.of(
-//                    // expr1 +
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "+", 6)
-//                ),
-//                CompilerException.class,
-//                "Invalid Primary Expression",
-//                7
-//            ),
-//            Arguments.of("Missing Operand Logical",
-//                List.of(
-//                    // expr1 AND
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.IDENTIFIER, "AND", 6)
-//                ),
-//                CompilerException.class,
-//                "Invalid Primary Expression",
-//                9
-//            ),
-//            Arguments.of("Missing Operand Mult",
-//                List.of(
-//                    // expr1 *
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                    new Token(Token.Type.OPERATOR, "*", 6)
-//                ),
-//                CompilerException.class,
-//                "Invalid Primary Expression",
-//                7
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testAccessExpression(String test, List<Token> tokens, Ast.Expression.Access expected) {
-//        test(tokens, expected, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testAccessExpression() {
-//        return Stream.of(
-//            Arguments.of("Variable",
-//                // name
-//                List.of(new Token(Token.Type.IDENTIFIER, "name", 0)),
-//                new Ast.Expression.Access(Optional.empty(), "name")
-//            ),
-//            Arguments.of("Field Access",
-//                List.of(
-//                    //obj.field
-//                    new Token(Token.Type.IDENTIFIER, "obj", 0),
-//                    new Token(Token.Type.OPERATOR, ".", 3),
-//                    new Token(Token.Type.IDENTIFIER, "field", 4)
-//                ),
-//                new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "obj")), "field")
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testAccessExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
-//        testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testAccessExpressionError() {
-//        return Stream.of(
-//            Arguments.of("Missing Operand",
-//                List.of(
-//                    // obj.5
-//                    new Token(Token.Type.IDENTIFIER, "obj", 0),
-//                    new Token(Token.Type.OPERATOR, ".", 3),
-//                    new Token(Token.Type.INTEGER, "5", 4)
-//                ),
-//                CompilerException.class,
-//                "Type Error. Expected: IDENTIFIER, Got: INTEGER",
-//                4
-//            ),
-//            Arguments.of("Invalid Expression",
-//                List.of(
-//                    // ?
-//                    new Token(Token.Type.OPERATOR, "?", 0)
-//                ),
-//                CompilerException.class,
-//                "Invalid Primary Expression",
-//                0
-//            ),
-//            Arguments.of("Unary Minus Before Identifier Not Allowed",
-//                List.of(
-//                    new Token(Token.Type.OPERATOR, "-", 0),
-//                    new Token(Token.Type.IDENTIFIER, "x", 1)
-//                ),
-//                CompilerException.class,
-//                "Invalid Primary Expression",
-//                0
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testFunctionExpression(String test, List<Token> tokens, Ast.Expression.Function expected) {
-//        test(tokens, expected, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testFunctionExpression() {
-//        return Stream.of(
-//            Arguments.of("Zero Arguments",
-//                List.of(
-//                    //name()
-//                    new Token(Token.Type.IDENTIFIER, "name", 0),
-//                    new Token(Token.Type.OPERATOR, "(", 4),
-//                    new Token(Token.Type.OPERATOR, ")", 5)
-//                ),
-//                new Ast.Expression.Function(Optional.empty(), "name", List.of())
-//            ),
-//            Arguments.of("Multiple Arguments",
-//                List.of(
-//                    //name(expr1, expr2, expr3)
-//                    new Token(Token.Type.IDENTIFIER, "name", 0),
-//                    new Token(Token.Type.OPERATOR, "(", 4),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 5),
-//                    new Token(Token.Type.OPERATOR, ",", 10),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 12),
-//                    new Token(Token.Type.OPERATOR, ",", 17),
-//                    new Token(Token.Type.IDENTIFIER, "expr3", 19),
-//                    new Token(Token.Type.OPERATOR, ")", 24)
-//                ),
-//                new Ast.Expression.Function(Optional.empty(), "name", List.of(
-//                    new Ast.Expression.Access(Optional.empty(), "expr1"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr2"),
-//                    new Ast.Expression.Access(Optional.empty(), "expr3")
-//                ))
-//            ),
-//            Arguments.of("Method Call",
-//                List.of(
-//                    //obj.method()
-//                    new Token(Token.Type.IDENTIFIER, "obj", 0),
-//                    new Token(Token.Type.OPERATOR, ".", 3),
-//                    new Token(Token.Type.IDENTIFIER, "method", 4),
-//                    new Token(Token.Type.OPERATOR, "(", 10),
-//                    new Token(Token.Type.OPERATOR, ")", 11)
-//                ),
-//                new Ast.Expression.Function(Optional.of(new Ast.Expression.Access(Optional.empty(), "obj")), "method", List.of())
-//            ),
-//            Arguments.of("Function Field Access",
-//                List.of(
-//                    // obj.field(arg1, arg2)
-//                    new Token(Token.Type.IDENTIFIER, "obj", 0),
-//                    new Token(Token.Type.OPERATOR, ".", 3),
-//                    new Token(Token.Type.IDENTIFIER, "field", 4),
-//                    new Token(Token.Type.OPERATOR, "(", 9),
-//                    new Token(Token.Type.IDENTIFIER, "arg1", 10),
-//                    new Token(Token.Type.OPERATOR, ",", 14),
-//                    new Token(Token.Type.IDENTIFIER, "arg2", 16),
-//                    new Token(Token.Type.OPERATOR, ")", 20)
-//                ),
-//                new Ast.Expression.Function(Optional.of(new
-//                    Ast.Expression.Access(Optional.empty(), "obj")),
-//                    "field",
-//                    List.of(
-//                        new Ast.Expression.Access(Optional.empty(), "arg1"),
-//                        new Ast.Expression.Access(Optional.empty(), "arg2")
-//                    )
-//                )
-//            )
-//        );
-//    }
-//
-//    @ParameterizedTest(name = "{0}")
-//    @MethodSource
-//    void testFunctionExpressionError(String test, List<Token> tokens, Class<? extends CompilerException> expectedType, String expectedMessage, int expectedIndex) {
-//        testError(tokens, expectedType, expectedMessage, expectedIndex, Parser::parseExpression);
-//    }
-//
-//    private static Stream<Arguments> testFunctionExpressionError() {
-//        return Stream.of(
-//            Arguments.of("Trailing Comma",
-//                List.of(
-//                    // name(expr,)
-//                    new Token(Token.Type.IDENTIFIER, "name", 0),
-//                    new Token(Token.Type.OPERATOR, "(", 4),
-//                    new Token(Token.Type.IDENTIFIER, "expr", 5),
-//                    new Token(Token.Type.OPERATOR, ",", 9),
-//                    new Token(Token.Type.IDENTIFIER, ")", 10)
-//                ),
-//                CompilerException.class,
-//                "Trailing comma in argument list",
-//                10
-//            ),
-//            Arguments.of("Missing Parameters",
-//                List.of(
-//                    // name(expr1, expr2, )
-//                    new Token(Token.Type.IDENTIFIER, "name", 0),
-//                    new Token(Token.Type.OPERATOR, "(", 4),
-//                    new Token(Token.Type.IDENTIFIER, "expr1", 5),
-//                    new Token(Token.Type.OPERATOR, ",", 10),
-//                    new Token(Token.Type.IDENTIFIER, "expr2", 12),
-//                    new Token(Token.Type.OPERATOR, ",", 17),
-//                    new Token(Token.Type.OPERATOR, ")", 19)
-//                ),
-//                CompilerException.class,
-//                "Trailing comma in argument list",
-//                19
-//            )
-//        );
-//    }
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testGroupExpression(String test, List<Token> tokens, Ast.Expression.Group expected) {
+        testParse(tokenExpressionWrapper(tokens), expressionWrapper(expected));
+    }
 
+    private static Stream<Arguments> testGroupExpression() {
+        return Stream.of(
+            Arguments.of("Grouped Variable",
+                List.of(
+                    //(expr)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1),
+                    new Token(Token.Type.OPERATOR, ")", 5)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
+            ),
+            Arguments.of("Grouped Binary",
+                List.of(
+                    //(expr1 + expr2)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, ")", 14)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                ))
+            ),
+            Arguments.of("Grouped Multiple Binary",
+                List.of(
+                    // (expr1 + expr2 + expr3)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "+", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                    new Token(Token.Type.OPERATOR, ")", 22)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                ))
+            ),
+            Arguments.of("Grouped More Multiple Binary",
+                List.of(
+                    // (expr1 + expr2 + expr3 + expr4)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "-", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "+", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                    new Token(Token.Type.OPERATOR, "+", 23),
+                    new Token(Token.Type.IDENTIFIER, "expr4", 25),
+                    new Token(Token.Type.OPERATOR, ")", 30)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Binary("+",
+                        new Ast.Expression.Binary("-",
+                            new Ast.Expression.Access(Optional.empty(), "expr1"),
+                            new Ast.Expression.Access(Optional.empty(), "expr2")
+                        ),
+                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr4")
+                ))
+            ),
+            Arguments.of("Grouped Multiple Binary PEMDS",
+                List.of(
+                    // (expr1 + expr2 * expr3)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.OPERATOR, "*", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 17),
+                    new Token(Token.Type.OPERATOR, ")", 22)
+                ),
+                new Ast.Expression.Group(new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                    )
+                ))
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testGroupExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testParseError(tokenExpressionWrapper(tokens), expectedMessage, expectedIndex);
+    }
+
+    private static Stream<Arguments> testGroupExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing )",
+                List.of(
+                    // (expr
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1)
+                ),
+                "Missing: )",
+                1000
+            ),
+            Arguments.of("Wrong ]",
+                List.of(
+                    // (expr]
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr", 1),
+                    new Token(Token.Type.OPERATOR, "]", 5)
+                ),
+                "Missing: )",
+                5
+            ),
+            Arguments.of("Missing Closing ) Binary",
+                List.of(
+                    // (expr1 + expr2
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.OPERATOR, "+", 7),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                ),
+                "Missing: )",
+                1000
+            ),
+            // TODO: need to fix should be "Missing: operator"
+            Arguments.of("Missing Operator Binary",
+                List.of(
+                    // (expr1 expr2)
+                    new Token(Token.Type.OPERATOR, "(", 0),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 1),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 7),
+                    new Token(Token.Type.OPERATOR, ")", 11)
+                ),
+                "Missing: )",
+                7
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testBinaryExpression(String test, List<Token> tokens, Ast.Expression.Binary expected) {
+        testParse(tokenExpressionWrapper(tokens), expressionWrapper(expected));
+    }
+
+    private static Stream<Arguments> testBinaryExpression() {
+        return Stream.of(
+            Arguments.of("Binary And",
+                List.of(
+                    //expr1 AND expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "AND", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 10)
+                ),
+                new Ast.Expression.Binary("AND",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
+            Arguments.of("Binary Or",
+                List.of(
+                    // expr1 OR expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.IDENTIFIER, "OR", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 10)
+                ),
+                new Ast.Expression.Binary("OR",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
+            Arguments.of("Multiple Binary And",
+                List.of(
+                    // expr1 AND expr2 OR expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.IDENTIFIER, "AND", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.IDENTIFIER, "OR", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 18)
+                ),
+                new Ast.Expression.Binary("OR",
+                    new Ast.Expression.Binary("AND",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            ),
+            Arguments.of("Binary Equality",
+                List.of(
+                    //expr1 == expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "==", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                ),
+                new Ast.Expression.Binary("==",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
+            Arguments.of("Binary Addition",
+                List.of(
+                    //expr1 + expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "+", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                ),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
+            Arguments.of("Binary Multiplication",
+                List.of(
+                    //expr1 * expr2
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "*", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8)
+                ),
+                new Ast.Expression.Binary("*",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2")
+                )
+            ),
+            Arguments.of("Binary Multiple +/*",
+                List.of(
+                    // expr1 + expr2 * expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "+", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "*", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                        new Ast.Expression.Access(Optional.empty(), "expr3")
+                    )
+                )
+            ),
+            Arguments.of("Binary Multiple +/* Rev",
+                List.of(
+                    // expr1 * expr2 + expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "*", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "+", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Binary("*",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            ),
+            Arguments.of("Binary Multiple AND OR",
+                List.of(
+                    // expr1 AND expr2 OR expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "AND", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "OR", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("OR",
+                    new Ast.Expression.Binary("AND",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            ),
+            Arguments.of("Binary Multiple == !=",
+                List.of(
+                    // expr1 == expr2 != expr3
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "==", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 8),
+                    new Token(Token.Type.OPERATOR, "!=", 14),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 16)
+                ),
+                new Ast.Expression.Binary("!=",
+                    new Ast.Expression.Binary("==",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                )
+            ),
+            Arguments.of("Multiple Binary Logic Comparison",
+                List.of(
+                    // expr1 == expr2 AND expr3 == expr4
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "==", 6),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                    new Token(Token.Type.IDENTIFIER, "AND", 15),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 18),
+                    new Token(Token.Type.OPERATOR, "==", 24),
+                    new Token(Token.Type.IDENTIFIER, "expr4", 27)
+                ),
+                new Ast.Expression.Binary("AND",
+                    new Ast.Expression.Binary("==",
+                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                        new Ast.Expression.Access(Optional.empty(), "expr2")
+                    ),
+                    new Ast.Expression.Binary("==",
+                        new Ast.Expression.Access(Optional.empty(), "expr3"),
+                        new Ast.Expression.Access(Optional.empty(), "expr4")
+                    )
+                )
+            ),
+            Arguments.of("Signed Literal Multiplies Correctly",
+                List.of(
+                    new Token(Token.Type.OPERATOR, "-", 0),
+                    new Token(Token.Type.INTEGER, "1", 1),
+                    new Token(Token.Type.OPERATOR, "*", 3),
+                    new Token(Token.Type.INTEGER, "2", 5)
+                ),
+                new Ast.Expression.Binary("*",
+                    new Ast.Expression.Literal(new BigInteger("-1")),
+                    new Ast.Expression.Literal(new BigInteger("2"))
+                )
+            ),
+            Arguments.of("Signed Literal Adds Correctly",
+                List.of(
+                    new Token(Token.Type.INTEGER, "10", 0),
+                    new Token(Token.Type.OPERATOR, "+", 3),
+                    new Token(Token.Type.OPERATOR, "-", 5),
+                    new Token(Token.Type.INTEGER, "1", 6)
+                ),
+                new Ast.Expression.Binary("+",
+                    new Ast.Expression.Literal(new BigInteger("10")),
+                    new Ast.Expression.Literal(new BigInteger("-1"))
+                )
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testBinaryExpressionError(String test, List<Token> tokens,String expectedMessage, int expectedIndex) {
+        testParseError(tokenExpressionWrapper(tokens), expectedMessage, expectedIndex);
+    }
+
+    private static Stream<Arguments> testBinaryExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Operand",
+                List.of(
+                    // expr -
+                    new Token(Token.Type.IDENTIFIER, "expr", 0),
+                    new Token(Token.Type.OPERATOR, "-", 5)
+                ),
+                "Invalid Primary Expression",
+                1000
+            ),
+            Arguments.of("Missing Operand Add",
+                List.of(
+                    // expr1 +
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "+", 6)
+                ),
+                "Invalid Primary Expression",
+                1000
+            ),
+            Arguments.of("Missing Operand Logical",
+                List.of(
+                    // expr1 AND
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.IDENTIFIER, "AND", 6)
+                ),
+                "Invalid Primary Expression",
+                1000
+            ),
+            Arguments.of("Missing Operand Mult",
+                List.of(
+                    // expr1 *
+                    new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                    new Token(Token.Type.OPERATOR, "*", 6)
+                ),
+                "Invalid Primary Expression",
+                1000
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAccessExpression(String test, List<Token> tokens, Ast.Expression.Access expected) {
+        testParse(tokenExpressionWrapper(tokens), expressionWrapper(expected));
+    }
+
+    private static Stream<Arguments> testAccessExpression() {
+        return Stream.of(
+            Arguments.of("Variable",
+                // name
+                List.of(new Token(Token.Type.IDENTIFIER, "name", 0)),
+                new Ast.Expression.Access(Optional.empty(), "name")
+            ),
+            Arguments.of("Field Access",
+                List.of(
+                    //obj.field
+                    new Token(Token.Type.IDENTIFIER, "obj", 0),
+                    new Token(Token.Type.OPERATOR, ".", 3),
+                    new Token(Token.Type.IDENTIFIER, "field", 4)
+                ),
+                new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "obj")), "field")
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testAccessExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testParseError(tokenExpressionWrapper(tokens), expectedMessage, expectedIndex);
+    }
+
+    private static Stream<Arguments> testAccessExpressionError() {
+        return Stream.of(
+            Arguments.of("Missing Operand",
+                List.of(
+                    // obj.5
+                    new Token(Token.Type.IDENTIFIER, "obj", 0),
+                    new Token(Token.Type.OPERATOR, ".", 3),
+                    new Token(Token.Type.INTEGER, "5", 4)
+                ),
+                "Type Error. Expected: IDENTIFIER, Got: INTEGER",
+                4
+            ),
+            Arguments.of("Invalid Expression",
+                List.of(
+                    // ?
+                    new Token(Token.Type.OPERATOR, "?", 0)
+                ),
+                "Invalid Primary Expression",
+                0
+            ),
+            Arguments.of("Unary Minus Before Identifier Not Allowed",
+                List.of(
+                    new Token(Token.Type.OPERATOR, "-", 0),
+                    new Token(Token.Type.IDENTIFIER, "x", 1)
+                ),
+                "Invalid Primary Expression",
+                0
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testFunctionExpression(String test, List<Token> tokens, Ast.Expression.Function expected) {
+        testParse(tokenExpressionWrapper(tokens), expressionWrapper(expected));
+    }
+
+    private static Stream<Arguments> testFunctionExpression() {
+        return Stream.of(
+            Arguments.of("Zero Arguments",
+                List.of(
+                    //name()
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.OPERATOR, ")", 5)
+                ),
+                new Ast.Expression.Function(Optional.empty(), "name", List.of())
+            ),
+            Arguments.of("Multiple Arguments",
+                List.of(
+                    //name(expr1, expr2, expr3)
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 5),
+                    new Token(Token.Type.OPERATOR, ",", 10),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 12),
+                    new Token(Token.Type.OPERATOR, ",", 17),
+                    new Token(Token.Type.IDENTIFIER, "expr3", 19),
+                    new Token(Token.Type.OPERATOR, ")", 24)
+                ),
+                new Ast.Expression.Function(Optional.empty(), "name", List.of(
+                    new Ast.Expression.Access(Optional.empty(), "expr1"),
+                    new Ast.Expression.Access(Optional.empty(), "expr2"),
+                    new Ast.Expression.Access(Optional.empty(), "expr3")
+                ))
+            ),
+            Arguments.of("Method Call",
+                List.of(
+                    //obj.method()
+                    new Token(Token.Type.IDENTIFIER, "obj", 0),
+                    new Token(Token.Type.OPERATOR, ".", 3),
+                    new Token(Token.Type.IDENTIFIER, "method", 4),
+                    new Token(Token.Type.OPERATOR, "(", 10),
+                    new Token(Token.Type.OPERATOR, ")", 11)
+                ),
+                new Ast.Expression.Function(Optional.of(new Ast.Expression.Access(Optional.empty(), "obj")), "method", List.of())
+            ),
+            Arguments.of("Function Field Access",
+                List.of(
+                    // obj.field(arg1, arg2)
+                    new Token(Token.Type.IDENTIFIER, "obj", 0),
+                    new Token(Token.Type.OPERATOR, ".", 3),
+                    new Token(Token.Type.IDENTIFIER, "field", 4),
+                    new Token(Token.Type.OPERATOR, "(", 9),
+                    new Token(Token.Type.IDENTIFIER, "arg1", 10),
+                    new Token(Token.Type.OPERATOR, ",", 14),
+                    new Token(Token.Type.IDENTIFIER, "arg2", 16),
+                    new Token(Token.Type.OPERATOR, ")", 20)
+                ),
+                new Ast.Expression.Function(Optional.of(new
+                    Ast.Expression.Access(Optional.empty(), "obj")),
+                    "field",
+                    List.of(
+                        new Ast.Expression.Access(Optional.empty(), "arg1"),
+                        new Ast.Expression.Access(Optional.empty(), "arg2")
+                    )
+                )
+            )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testFunctionExpressionError(String test, List<Token> tokens, String expectedMessage, int expectedIndex) {
+        testParseError(tokenExpressionWrapper(tokens), expectedMessage, expectedIndex);
+    }
+
+    private static Stream<Arguments> testFunctionExpressionError() {
+        return Stream.of(
+            Arguments.of("Trailing Comma",
+                List.of(
+                    // name(expr,)
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.IDENTIFIER, "expr", 5),
+                    new Token(Token.Type.OPERATOR, ",", 9),
+                    new Token(Token.Type.IDENTIFIER, ")", 10)
+                ),
+                "Trailing comma in argument list",
+                10
+            ),
+            Arguments.of("Missing Parameters",
+                List.of(
+                    // name(expr1, expr2, )
+                    new Token(Token.Type.IDENTIFIER, "name", 0),
+                    new Token(Token.Type.OPERATOR, "(", 4),
+                    new Token(Token.Type.IDENTIFIER, "expr1", 5),
+                    new Token(Token.Type.OPERATOR, ",", 10),
+                    new Token(Token.Type.IDENTIFIER, "expr2", 12),
+                    new Token(Token.Type.OPERATOR, ",", 17),
+                    new Token(Token.Type.OPERATOR, ")", 19)
+                ),
+                "Trailing comma in argument list",
+                19
+            )
+        );
+    }
 
     private static void testParse(List<Token> tokens, Ast.Source expected) {
         Parser parser = new Parser(tokens);
