@@ -9,13 +9,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-public final class Generator implements Ast.Visitor<Void> {
+public final class JavaGenerator implements Ast.Visitor<Void> {
     private final StringWriter stringWriter;
     private final PrintWriter writer;
     private final Bindings bindings;
     private int indent = 0;
 
-    public Generator(Bindings bindings) {
+    public JavaGenerator(Bindings bindings) {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.bindings = bindings;

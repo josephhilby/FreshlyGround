@@ -71,48 +71,48 @@ public final class Environment {
      */
     public static final class Type {
         public static final Type ANY       = new Type("Any", "Object", false, new Scope(null));
-        public static final Type NIL       = new Type("Nil", "Void", false, new Scope(ANY.scope));
-        public static final Type STRING    = new Type("String", "String", false, new Scope(ANY.scope));
-        public static final Type PRIMITIVE = new Type("Primitive", "", true, new Scope(ANY.scope));
-        public static final Type BOOLEAN   = new Type("Boolean", "boolean", false, new Scope(PRIMITIVE.scope));
-        public static final Type INTEGER   = new Type("Integer", "int", false, new Scope(PRIMITIVE.scope));
-        public static final Type DECIMAL   = new Type("Decimal", "double", false, new Scope(PRIMITIVE.scope));
-        public static final Type CHARACTER = new Type("Character", "char", false, new Scope(PRIMITIVE.scope));
+        public static final Type NIL       = new Type("Nil", "Void", false, new Scope(ANY.typeScope));
+        public static final Type STRING    = new Type("String", "String", false, new Scope(ANY.typeScope));
+        public static final Type PRIMITIVE = new Type("Primitive", "", true, new Scope(ANY.typeScope));
+        public static final Type BOOLEAN   = new Type("Boolean", "boolean", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type INTEGER   = new Type("Integer", "int", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type DECIMAL   = new Type("Decimal", "double", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type CHARACTER = new Type("Character", "char", false, new Scope(PRIMITIVE.typeScope));
 
         private final String name;
         private final String jvmName;
         private final boolean internalType;
-        private final Scope scope;
+        private final Scope typeScope;
 
-        public Type(String name, String jvmName, boolean internalType, Scope scope) {
+        public Type(String name, String jvmName, boolean internalType, Scope typeScope) {
             this.name = name;
             this.jvmName = jvmName;
             this.internalType = internalType;
-            this.scope = scope;
+            this.typeScope = typeScope;
         }
 
         public String getName() { return name; }
         public String getJvmName() { return jvmName; }
-        public Scope getScope() { return this.scope; }
+        public Scope getScope() { return this.typeScope; }
 
         /**
          * Looks up a member function by name and explicit arity.
          *
          * <p>Member functions are stored in the type scope with an implicit receiver
-         * parameter as argument 0 (i.e., {@code this}). Therefore, this method adds 1
-         * to the explicit arity when performing lookup.</p>
+         * parameter as argument 0 (e.g., calling {@code rec.func(arg)}, invokes {@code func(rec, arg)}).
+         * Therefore, this method adds 1 to the explicit arity when performing lookup.</p>
          *
          * @param name the member function name
          * @param arity the number of explicit arguments at the call site
          */
-        public Function lookupFunction(String name, int arity) { return scope.lookupFunction(name, arity + 1); }
-        public Variable lookupVariable(String name) { return scope.lookupVariable(name); }
+        public Function lookupMemberFunction(String name, int arity) { return typeScope.lookupFunction(name, arity + 1); }
+        public Variable lookupMemberVariable(String name) { return typeScope.lookupVariable(name); }
 
         @Override
         public String toString() {
             return "Type{" +
                     "name='" + name + '\'' +
-                    ", scope='" + scope + '\'' +
+                    ", scope='" + typeScope + '\'' +
                     '}';
         }
     }
