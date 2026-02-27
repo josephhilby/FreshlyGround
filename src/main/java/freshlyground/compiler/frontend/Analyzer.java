@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static freshlyground.compiler.semantic.Environment.*;
+
 
 public final class Analyzer implements Ast.Visitor<Void> {
     // TODO: move type matching helpers to environment
@@ -355,13 +357,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "==", "!=")) {
-            compareTypes(leftType, rightType);
+            requireSame(leftType, rightType);
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "<=", ">=", "<", ">")) {
             requireAssignables(Environment.Type.PRIMITIVE, leftType, rightType);
-            compareTypes(leftType, rightType);
-            excludeTypes(Environment.Type.BOOLEAN, leftType);
+            requireSame(leftType, rightType);
+            requireNot(Environment.Type.BOOLEAN, leftType);
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
@@ -471,62 +473,5 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         return null;
-    }
-
-    // helper
-    private void compareTypes(Environment.Type type1, Environment.Type type2) {
-        if (type1.equals(type2)) {
-            return;
-        }
-        throw new CompilerException("Types mismatch");
-    }
-
-    // helper
-    private void excludeTypes(Environment.Type type1, Environment.Type type2) {
-        if (type1.equals(type2)) {
-            throw new CompilerException("Type must not be: " + type1);
-        }
-    }
-
-    // helper
-    public static void requireAssignables(Environment.Type target, Environment.Type... actuals) {
-        for (Environment.Type actual : actuals) {
-            requireAssignable(target, actual);
-        }
-    }
-
-    /**
-     * Validates that a value of the {@code actual} type may be assigned to a target of the
-     * {@code target} type.
-     *
-     * <p>Assignability follows the nominal type relationships established by
-     * {@link Environment.Type} and does not perform general subtype traversal.
-     * A value is assignable if:</p>
-     *
-     * <ol>
-     *   <li>The target and actual types are identical</li>
-     *   <li>The target type is {@code Any}</li>
-     *   <li>The target type is {@code Primitive} and the actual type is one of
-     *       {@code Integer}, {@code Decimal}, {@code Character}, or {@code Boolean}</li>
-     * </ol>
-     *
-     * <p>This method enforces the same type lattice implied by the scoped type hierarchy,
-     * ensuring consistency between semantic type checking and type-level scope inheritance.</p>
-     *
-     * @throws CompilerException if the assignment is not permitted by the language rules
-     */
-    public static void requireAssignable(Environment.Type target, Environment.Type actual) {
-        if (target == actual ||
-            target == Environment.Type.ANY ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.INTEGER) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.DECIMAL) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.CHARACTER) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.BOOLEAN)
-        ) {
-            return;
-        }
-
-        // else CompilerException
-        throw new CompilerException("Type mismatch");
     }
 }

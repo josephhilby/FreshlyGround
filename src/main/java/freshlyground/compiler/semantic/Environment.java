@@ -30,7 +30,6 @@ public final class Environment {
 
         return TYPES.get(name);
     }
-
     public static Type sourceLookupType(String name) {
         Type type = lookupType(name);
         if (type.internalType) {
@@ -38,13 +37,43 @@ public final class Environment {
         }
         return type;
     }
-
     private static void registerType(Type type) {
         if (TYPES.containsKey(type.getName())) {
             throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
         }
 
         TYPES.put(type.getName(), type);
+    }
+
+    public static boolean requireSame(Type target, Type actual) {
+        if (actual.equals(target)) {
+            return true;
+        }
+        throw new CompilerException("Types mismatch: must be type " + target.getName() + " but was " + actual.getName());
+    }
+    public static boolean requireNot(Type target, Type actual) {
+        if (actual.equals(target)) {
+            throw new CompilerException("Type must not be: " + target.getName());
+        }
+        return true;
+    }
+    public static boolean requireAssignables(Type target, Type... actuals) {
+        for (Environment.Type actual : actuals) {
+            requireAssignable(target, actual);
+        }
+        return true;
+    }
+    public static boolean requireAssignable(Type target, Type actual) {
+        if (
+            target.equals(Type.ANY) || target.equals(actual) ||
+           (target.equals(Type.PRIMITIVE) && actual.equals(Type.INTEGER)) ||
+           (target.equals(Type.PRIMITIVE) && actual.equals(Type.DECIMAL)) ||
+           (target.equals(Type.PRIMITIVE) && actual.equals(Type.CHARACTER)) ||
+           (target.equals(Type.PRIMITIVE) && actual.equals(Type.BOOLEAN))
+        ) {
+            return true;
+        }
+        throw new CompilerException("Type unassignable: " + actual.getName() + " -> " + target.getName());
     }
 
     static {

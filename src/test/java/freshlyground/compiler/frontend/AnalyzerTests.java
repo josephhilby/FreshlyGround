@@ -132,7 +132,7 @@ public final class AnalyzerTests {
                         new Ast.Expression.Literal(BigInteger.ONE)
                     ))
                 )),
-                "Type mismatch"
+                "Type unassignable: Integer -> Decimal"
             )
         );
     }
@@ -312,7 +312,7 @@ public final class AnalyzerTests {
                         Optional.of(new Ast.Expression.Literal(BigInteger.ONE))
                     ))
                 ),
-                "Type mismatch"
+                "Type unassignable: String -> Boolean"
             ),
             Arguments.of("Empty Statements",
                 // IF TRUE DO END
@@ -391,7 +391,7 @@ public final class AnalyzerTests {
             // FOR (; 0; ) LET x = 1; END
             Arguments.of("Invalid Condition",
                 new Ast.Statement.For(null, new Ast.Expression.Literal(BigInteger.ZERO), null, List.of()),
-                "Type mismatch"
+                "Type unassignable: Integer -> Boolean"
             )
         );
     }
@@ -425,7 +425,7 @@ public final class AnalyzerTests {
             // WHILE 0 DO END
             Arguments.of("Invalid Condition",
                 new Ast.Statement.While(new Ast.Expression.Literal(BigInteger.ZERO), List.of()),
-                "Type mismatch"
+                "Type unassignable: Integer -> Boolean"
             )
         );
     }
@@ -583,7 +583,7 @@ public final class AnalyzerTests {
                     new Ast.Expression.Literal(BigInteger.ONE),
                     new Ast.Expression.Literal(BigDecimal.ONE)
                 ),
-                "Type mismatch"
+                "Type unassignable: Decimal -> Integer"
             ),
             Arguments.of("GT Different Types",
                 // 1 > 10.0
@@ -591,7 +591,7 @@ public final class AnalyzerTests {
                     new Ast.Expression.Literal(BigInteger.ONE),
                     new Ast.Expression.Literal(BigDecimal.TEN)
                 ),
-                "Types mismatch"
+                "Types mismatch: must be type Integer but was Decimal"
             ),
             Arguments.of("Not Equal Different Types",
                 // 1 != 10.0
@@ -599,7 +599,7 @@ public final class AnalyzerTests {
                     new Ast.Expression.Literal(BigInteger.ONE),
                     new Ast.Expression.Literal(BigDecimal.TEN)
                 ),
-                "Types mismatch"
+                "Types mismatch: must be type Integer but was Decimal"
             ),
             Arguments.of("Logical AND Invalid",
                 // TRUE AND "FALSE"
@@ -607,7 +607,7 @@ public final class AnalyzerTests {
                     new Ast.Expression.Literal(Boolean.TRUE),
                     new Ast.Expression.Literal("FALSE")
                 ),
-                "Type mismatch"
+                "Type unassignable: String -> Boolean"
             )
         );
     }
@@ -692,9 +692,9 @@ public final class AnalyzerTests {
     @MethodSource
     public void testRequireAssignable(String test, Environment.Type target, Environment.Type type, boolean success) {
         if (success) {
-            Assertions.assertDoesNotThrow(() -> Analyzer.requireAssignable(target, type));
+            Assertions.assertDoesNotThrow(() -> Environment.requireAssignable(target, type));
         } else {
-            Assertions.assertThrows(CompilerException.class, () -> Analyzer.requireAssignable(target, type));
+            Assertions.assertThrows(CompilerException.class, () -> Environment.requireAssignable(target, type));
         }
     }
     private static Stream<Arguments> testRequireAssignable() {
