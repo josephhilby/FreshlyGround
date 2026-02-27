@@ -26,7 +26,6 @@ public final class Scope {
         functions.put(func.getName() + "/" + func.getParameterTypes().size(), func);
         return func;
     }
-
     public Environment.Function lookupFunction(String name, int arity) {
         if (functions.containsKey(name + "/" + arity)) {
             return functions.get(name + "/" + arity);
@@ -37,7 +36,6 @@ public final class Scope {
 
         throw new CompilerException("The function " + name + "/" + arity + " is not defined in this scope.");
     }
-
     public Environment.Variable defineVariable(String name, String jvmName, Environment.Type type, boolean constant) {
         if (variables.containsKey(name)) {
             throw new CompilerException("The variable " + name + " is already defined in this scope.");
@@ -47,7 +45,6 @@ public final class Scope {
         variables.put(variable.getName(), variable);
         return variables.get(name);
     }
-
     public Environment.Variable lookupVariable(String name) {
         if (variables.containsKey(name)) {
             return variables.get(name);

@@ -17,12 +17,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class GeneratorTests {
+public class JavaGeneratorTests {
     private static final Environment.Type OBJECT_TYPE;
     static {
         Scope objectScope = new Scope(Environment.Type.ANY.getScope());
         objectScope.defineVariable("field", "fld", Environment.Type.INTEGER, false);
-        // as this is a nested function that Type.ANY is added to allow for the invoking object to be passed as a param
         objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
         OBJECT_TYPE = new Environment.Type("object", "obj", false, objectScope);
     }
@@ -1239,7 +1238,7 @@ public class GeneratorTests {
      * Helper function for tests, using a StringWriter as the output stream.
      */
     private static void test(Ast ast, Bindings bindings, String expected) {
-        String result = new Generator(bindings).emit(ast);
+        String result = new JavaGenerator(bindings).emit(ast);
         Assertions.assertEquals(expected, result);
     }
 }

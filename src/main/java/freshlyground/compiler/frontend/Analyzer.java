@@ -12,20 +12,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static freshlyground.compiler.semantic.Environment.*;
+
 
 public final class Analyzer implements Ast.Visitor<Void> {
     // TODO: move type matching helpers to environment
-    public Scope scope;
+    public Scope lexicalScope;
     public Bindings bindings;
     private Environment.Type currentReturnType;
 
     public Analyzer() {
-        scope = new Scope(null);
+        lexicalScope = new Scope(null);
         bindings = new Bindings();
-        Builtins.install(scope);
+        Builtins.install(lexicalScope);
     }
 
-    public Scope getScope() { return scope; }
+    public Scope getScope() { return lexicalScope; }
     public Bindings getBindings() { return bindings; }
     public void setReturnType(Environment.Type returnType) { this.currentReturnType = returnType; }
 
@@ -47,7 +49,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // throws a CompilerException if: no 'main/0' type INT
-        Environment.Function main = scope.lookupFunction("main", 0);
+        Environment.Function main = lexicalScope.lookupFunction("main", 0);
         if (main.getType() != Environment.Type.INTEGER) {
             throw new CompilerException("main() return type must be an integer");
         }
@@ -78,8 +80,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             throw new CompilerException("CONST must have a value");
         }
 
-        // define variable in current scope, then set
-        Environment.Variable variable = scope.defineVariable(name, name, Environment.sourceLookupType(typeName), constant);
+        // define variable in current lexical scope, then set
+        Environment.Variable variable = lexicalScope.defineVariable(name, name, Environment.sourceLookupType(typeName), constant);
         bindings.setVariable(ast, variable);
         return null;
     }
@@ -104,8 +106,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             currentReturnType = Environment.sourceLookupType(ast.getReturnTypeName().get());
         }
 
-        // define and set function in current scope
-        Environment.Function function = scope.defineFunction(name, name, paramTypes, currentReturnType);
+        // define and set function in current lexical scope
+        Environment.Function function = lexicalScope.defineFunction(name, name, paramTypes, currentReturnType);
         bindings.setFunction(ast, function);
 
         // visit statements (including parameters) in new scope
@@ -114,12 +116,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     // helper
-    private void visitAllStatements(List<String> parameters, List<Environment.Type> paramTypes, List<Ast.Statement> statements) {
+    private void visitAllStatements(
+        List<String> parameters,
+        List<Environment.Type> paramTypes,
+        List<Ast.Statement> statements
+    ) {
         try {
-            scope = new Scope(scope);
+            lexicalScope = new Scope(lexicalScope);
 
             for (int i = 0; i < parameters.size(); i++) {
-                scope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false);
+                lexicalScope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false);
             }
 
             for (Ast.Statement statement : statements) {
@@ -127,7 +133,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             }
 
         } finally {
-            scope = scope.getParent();
+            lexicalScope = lexicalScope.getParent();
         }
     }
 
@@ -161,8 +167,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(target, type);
         }
 
-        // define and set variable in current scope
-        Environment.Variable variable = scope.defineVariable(name, name, type, false);
+        // define and set variable in current lexical scope
+        Environment.Variable variable = lexicalScope.defineVariable(name, name, type, false);
         bindings.setVariable(ast, variable);
         return null;
     }
@@ -262,14 +268,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
     // helper
     private void visitStatements(List<Ast.Statement> statements) {
         try {
-            scope = new Scope(scope);
+            lexicalScope = new Scope(lexicalScope);
 
             for (Ast.Statement statement : statements) {
                 visit(statement);
             }
 
         } finally {
-            scope = scope.getParent();
+            lexicalScope = lexicalScope.getParent();
         }
     }
 
@@ -351,13 +357,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "==", "!=")) {
-            compareTypes(leftType, rightType);
+            requireSame(leftType, rightType);
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "<=", ">=", "<", ">")) {
             requireAssignables(Environment.Type.PRIMITIVE, leftType, rightType);
-            compareTypes(leftType, rightType);
-            excludeTypes(Environment.Type.BOOLEAN, leftType);
+            requireSame(leftType, rightType);
+            requireNot(Environment.Type.BOOLEAN, leftType);
             bindings.setType(ast, Environment.Type.BOOLEAN);
 
         } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
@@ -419,10 +425,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 throw new CompilerException("Receiver: type is unresolved");
             }
 
-            variable = receiverType.lookupVariable(ast.getName());
+            variable = receiverType.lookupMemberVariable(ast.getName());
 
         } else {
-            variable = scope.lookupVariable(ast.getName());
+            variable = lexicalScope.lookupVariable(ast.getName());
         }
 
         // set variable and type
@@ -449,10 +455,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 throw new CompilerException("Receiver: type is unresolved");
             }
 
-            function = receiverType.lookupFunction(ast.getName(), arguments.size());
+            function = receiverType.lookupMemberFunction(ast.getName(), arguments.size());
             parameterOffset = 1;
         } else {
-            function = scope.lookupFunction(ast.getName(), arguments.size());
+            function = lexicalScope.lookupFunction(ast.getName(), arguments.size());
         }
 
         // set function
@@ -467,62 +473,5 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         return null;
-    }
-
-    // helper
-    private void compareTypes(Environment.Type type1, Environment.Type type2) {
-        if (type1.equals(type2)) {
-            return;
-        }
-        throw new CompilerException("Types mismatch");
-    }
-
-    // helper
-    private void excludeTypes(Environment.Type type1, Environment.Type type2) {
-        if (type1.equals(type2)) {
-            throw new CompilerException("Type must not be: " + type1);
-        }
-    }
-
-    // helper
-    public static void requireAssignables(Environment.Type target, Environment.Type... actuals) {
-        for (Environment.Type actual : actuals) {
-            requireAssignable(target, actual);
-        }
-    }
-
-    /**
-     * Validates that a value of the {@code actual} type may be assigned to a target of the
-     * {@code target} type.
-     *
-     * <p>Assignability follows the nominal type relationships established by
-     * {@link Environment.Type} and does not perform general subtype traversal.
-     * A value is assignable if:</p>
-     *
-     * <ol>
-     *   <li>The target and actual types are identical</li>
-     *   <li>The target type is {@code Any}</li>
-     *   <li>The target type is {@code Primitive} and the actual type is one of
-     *       {@code Integer}, {@code Decimal}, {@code Character}, or {@code Boolean}</li>
-     * </ol>
-     *
-     * <p>This method enforces the same type lattice implied by the scoped type hierarchy,
-     * ensuring consistency between semantic type checking and type-level scope inheritance.</p>
-     *
-     * @throws CompilerException if the assignment is not permitted by the language rules
-     */
-    public static void requireAssignable(Environment.Type target, Environment.Type actual) {
-        if (target == actual ||
-            target == Environment.Type.ANY ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.INTEGER) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.DECIMAL) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.CHARACTER) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.BOOLEAN)
-        ) {
-            return;
-        }
-
-        // else CompilerException
-        throw new CompilerException("Type mismatch");
     }
 }
