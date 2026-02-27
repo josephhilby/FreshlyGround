@@ -517,7 +517,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
            (target == Environment.Type.PRIMITIVE && actual == Environment.Type.INTEGER) ||
            (target == Environment.Type.PRIMITIVE && actual == Environment.Type.DECIMAL) ||
            (target == Environment.Type.PRIMITIVE && actual == Environment.Type.CHARACTER) ||
-           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.BOOLEAN)) {
+           (target == Environment.Type.PRIMITIVE && actual == Environment.Type.BOOLEAN)
+        ) {
             return;
         }
 
