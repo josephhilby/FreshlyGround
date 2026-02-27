@@ -98,7 +98,7 @@ public final class Parser {
      *     secondary { ("*" | "/") secondary }
      *
      * secondary :=
-     *     primary { "." identifier [ "(" [ arguments ] ")" ] }
+     *     primary { "." identifier [ "(" [ arguments ] ")" ] }  // member access and function calls
      *
      * arguments :=
      *     expression { "," expression }           // trailing commas are rejected
@@ -129,7 +129,7 @@ public final class Parser {
      */
     public Ast parse() { return parseSource(); }
 
-    public Ast.Source parseSource() throws CompilerException {
+    private Ast.Source parseSource() throws CompilerException {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
 
@@ -148,7 +148,7 @@ public final class Parser {
         return new Ast.Source(fields, methods);
     }
 
-    public Ast.Field parseField() throws CompilerException {
+    private Ast.Field parseField() throws CompilerException {
         tokens.expectLiteral("LET");
         boolean constant = match("CONST");
         String name = tokens.expectType(Token.Type.IDENTIFIER).literal();
@@ -169,7 +169,7 @@ public final class Parser {
         return new Ast.Field(name, type, constant, expression);
     }
 
-    public Ast.Method parseMethod() throws CompilerException {
+    private Ast.Method parseMethod() throws CompilerException {
         tokens.expectLiteral("DEF");
         String name = tokens.expectType(Token.Type.IDENTIFIER).literal();
 
@@ -206,7 +206,7 @@ public final class Parser {
         return new Ast.Method(name, parameters, parameterTypes, returnType, statements);
     }
 
-    public Ast.Statement parseStatement() throws CompilerException {
+    private Ast.Statement parseStatement() throws CompilerException {
         if (match("LET"))    return parseDeclarationStatement();
         if (match("IF"))     return parseIfStatement();
         if (match("FOR"))    return parseForStatement();
@@ -230,7 +230,7 @@ public final class Parser {
         return null;
     }
 
-    public Ast.Statement.Declaration parseDeclarationStatement() throws CompilerException {
+    private Ast.Statement.Declaration parseDeclarationStatement() throws CompilerException {
         String name = tokens.expectType(Token.Type.IDENTIFIER).literal();
 
         Optional<String> type = Optional.empty();
@@ -252,7 +252,7 @@ public final class Parser {
         return new Ast.Statement.Declaration(name, type, expression);
     }
 
-    public Ast.Statement.If parseIfStatement() throws CompilerException {
+    private Ast.Statement.If parseIfStatement() throws CompilerException {
         Ast.Expression condition = parseExpression();
         tokens.expectLiteral("DO");
 
@@ -272,7 +272,7 @@ public final class Parser {
         return new Ast.Statement.If(condition, thenStatements, elseStatements);
     }
 
-    public Ast.Statement.For parseForStatement() throws CompilerException {
+    private Ast.Statement.For parseForStatement() throws CompilerException {
         tokens.expectLiteral("(");
 
         Ast.Statement.Assignment initialization = parseLoopControlStatement("initialization");
@@ -293,7 +293,7 @@ public final class Parser {
         return new Ast.Statement.For(initialization, expression, increment, statements);
     }
 
-    public Ast.Statement.While parseWhileStatement() throws CompilerException {
+    private Ast.Statement.While parseWhileStatement() throws CompilerException {
         Ast.Expression expression = parseExpression();
         List<Ast.Statement> statements = new ArrayList<>();
 
@@ -305,19 +305,19 @@ public final class Parser {
         return new Ast.Statement.While(expression, statements);
     }
 
-    public Ast.Statement.Return parseReturnStatement() throws CompilerException {
+    private Ast.Statement.Return parseReturnStatement() throws CompilerException {
         Ast.Expression value = parseExpression();
         tokens.expectLiteral(";");
         return new Ast.Statement.Return(value);
     }
 
-    public Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression.Access receiver) throws CompilerException {
+    private Ast.Statement.Assignment parseAssignmentStatement(Ast.Expression.Access receiver) throws CompilerException {
         Ast.Expression value = parseExpression();
         tokens.expectLiteral(";");
         return new Ast.Statement.Assignment(receiver, value);
     }
 
-    public Ast.Statement.Expression parseExpressionStatement(Ast.Expression.Function expression) throws CompilerException {
+    private Ast.Statement.Expression parseExpressionStatement(Ast.Expression.Function expression) throws CompilerException {
         tokens.expectLiteral(";");
         return new Ast.Statement.Expression(expression);
     }
@@ -345,23 +345,23 @@ public final class Parser {
         return new Ast.Statement.Assignment(access, value);
     }
 
-    public Ast.Expression parseExpression() throws CompilerException {
+    private Ast.Expression parseExpression() throws CompilerException {
         return parseLogicalExpression();
     }
 
-    public Ast.Expression parseLogicalExpression() throws CompilerException {
+    private Ast.Expression parseLogicalExpression() throws CompilerException {
         return parseBinaryExpression(this::parseEqualityExpression, "AND",  "OR");
     }
 
-    public Ast.Expression parseEqualityExpression() throws CompilerException {
+    private Ast.Expression parseEqualityExpression() throws CompilerException {
         return parseBinaryExpression(this::parseAdditiveExpression, "<", "<=", ">", ">=", "==", "!=");
     }
 
-    public Ast.Expression parseAdditiveExpression() throws CompilerException {
+    private Ast.Expression parseAdditiveExpression() throws CompilerException {
         return parseBinaryExpression(this::parseMultiplicativeExpression, "+", "-");
     }
 
-    public Ast.Expression parseMultiplicativeExpression() throws CompilerException {
+    private Ast.Expression parseMultiplicativeExpression() throws CompilerException {
         return parseBinaryExpression(this::parseSecondaryExpression, "*", "/");
     }
 
@@ -381,7 +381,7 @@ public final class Parser {
         return left;
     }
 
-    public Ast.Expression parseSecondaryExpression() throws CompilerException {
+    private Ast.Expression parseSecondaryExpression() throws CompilerException {
         Ast.Expression receiver = parsePrimaryExpression();
 
         while (match(".")) {
@@ -390,7 +390,7 @@ public final class Parser {
         return receiver;
     }
 
-    public Ast.Expression parsePrimaryExpression() throws CompilerException {
+    private Ast.Expression parsePrimaryExpression() throws CompilerException {
         if (match("NIL")) return new Ast.Expression.Literal(null);
 
         if (match("TRUE")) return new Ast.Expression.Literal(true);
