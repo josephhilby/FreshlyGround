@@ -16,7 +16,6 @@ import static freshlyground.compiler.semantic.Environment.*;
 
 
 public final class Analyzer implements Ast.Visitor<Void> {
-    // TODO: move type matching helpers to environment
     public Scope lexicalScope;
     public Bindings bindings;
     private Environment.Type currentReturnType;
@@ -36,7 +35,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return bindings;
     }
 
-    // [ fields ] [ methods ]
     @Override
     public Void visit(Ast.Source ast) {
         // visit fields, then visit methods, return null
@@ -57,7 +55,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // LET [ constant ] name : typeName [ = value ];
     @Override
     public Void visit(Ast.Field ast) {
         boolean constant = ast.getConstant();
@@ -86,8 +83,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // DEF name([ parameter : paramType ]) [ : returnType ]
-    //   DO statements END
     @Override
     public Void visit(Ast.Method ast) {
         String name = ast.getName();
@@ -137,14 +132,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
     }
 
-    // expression;
     @Override
     public Void visit(Ast.Statement.Expression ast) {
         visit(ast.getExpression());
         return null;
     }
 
-    // LET name [ : type ] [ = value ];
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
         String name = ast.getName();
@@ -173,7 +166,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // receiver = value;
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
         visit(ast.getReceiver());
@@ -189,7 +181,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // IF condition DO statements [ ELSE statements ] END
     @Override
     public Void visit(Ast.Statement.If ast) {
         Ast.Expression condition = ast.getCondition();
@@ -215,8 +206,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // FOR ([ initialization ]; condition; [ increment ])
-    //   statements END
     @Override
     public Void visit(Ast.Statement.For ast) {
         Ast.Statement.Assignment initialization;
@@ -251,7 +240,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // WHILE condition DO statements END
     @Override
     public Void visit(Ast.Statement.While ast) {
         visit(ast.getCondition());
@@ -279,7 +267,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
     }
 
-    // RETURN value;
     @Override
     public Void visit(Ast.Statement.Return ast) {
         visit(ast.getValue());
@@ -410,7 +397,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return false;
     }
 
-    // [ receiver. ] variable
     @Override
     public Void visit(Ast.Expression.Access ast) {
         Environment.Variable variable;
@@ -437,7 +423,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // [ receiver.] function([ arguments ])
     @Override
     public Void visit(Ast.Expression.Function ast) {
         int parameterOffset = 0;

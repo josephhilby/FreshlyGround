@@ -1,6 +1,6 @@
 package freshlyground.cli;
 
-import freshlyground.compiler.backend.JavaGenerator;
+import freshlyground.compiler.backend.java.Generator;
 import freshlyground.common.Token;
 import freshlyground.compiler.frontend.Analyzer;
 import freshlyground.compiler.frontend.Ast;
@@ -41,7 +41,7 @@ public final class CompilerMain {
         Bindings bindings = new Analyzer().decorate(ast);
 
         // Generate
-        String result = new JavaGenerator(bindings).emit(ast);
+        String result = new Generator(bindings).emit(ast);
 
         // Write output
         Files.writeString(output, result, StandardCharsets.UTF_8);

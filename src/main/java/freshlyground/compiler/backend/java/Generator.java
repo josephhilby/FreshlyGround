@@ -1,4 +1,4 @@
-package freshlyground.compiler.backend;
+package freshlyground.compiler.backend.java;
 
 import freshlyground.common.CompilerException;
 import freshlyground.compiler.semantic.BindingMap.Bindings;
@@ -9,13 +9,13 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-public final class JavaGenerator implements Ast.Visitor<Void> {
+public final class Generator implements Ast.Visitor<Void> {
     private final StringWriter stringWriter;
     private final PrintWriter writer;
     private final Bindings bindings;
     private int indent = 0;
 
-    public JavaGenerator(Bindings bindings) {
+    public Generator(Bindings bindings) {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.bindings = bindings;
@@ -97,7 +97,7 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        print(bindings.getFunction(ast).getType().getJvmName(), " ", bindings.getFunction(ast).getName());
+        print(getJavaType(bindings.getFunction(ast).getType()), " ", bindings.getFunction(ast).getName());
 
         if (ast.getParameters().isEmpty()) {
             print("() {");
@@ -134,7 +134,7 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        print(bindings.getVariable(ast).getType().getJvmName(), " ", bindings.getVariable(ast).getJvmName());
+        print(getJavaType(bindings.getVariable(ast).getType()), " ", bindings.getVariable(ast).getJvmName());
 
         if (ast.getValue().isPresent()) {
             print(" = ", ast.getValue().get());
@@ -311,7 +311,12 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
         return null;
     }
 
-    private String getJavaType(String plcTypeName) {
-        return Environment.lookupType(plcTypeName).getJvmName();
+    // helper
+    private String getJavaType(String typeName) {
+        return TypeMapper.getJavaType(Environment.lookupType(typeName));
+    }
+
+    private String getJavaType(Environment.Type type) {
+        return TypeMapper.getJavaType(type);
     }
 }

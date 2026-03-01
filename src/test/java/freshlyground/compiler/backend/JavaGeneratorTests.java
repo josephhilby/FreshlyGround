@@ -1,5 +1,6 @@
 package freshlyground.compiler.backend;
 
+import freshlyground.compiler.backend.java.Generator;
 import freshlyground.compiler.frontend.Analyzer;
 import freshlyground.compiler.frontend.Ast;
 import freshlyground.compiler.semantic.BindingMap.Bindings;
@@ -18,12 +19,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class JavaGeneratorTests {
-    private static final Environment.Type OBJECT_TYPE;
+
     static {
-        Scope objectScope = new Scope(Environment.Type.ANY.getScope());
-        objectScope.defineVariable("field", "fld", Environment.Type.INTEGER, false);
-        objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "obj", false, objectScope);
+        Scope any = Environment.lookupType("Any").getScope();
+        any.defineVariable("field", "fld", Environment.Type.INTEGER, false);
+        any.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
     }
 
     @ParameterizedTest(name = "{0}")
@@ -431,7 +431,7 @@ public class JavaGeneratorTests {
                         List.of(new Ast.Expression.Literal(BigInteger.ONE)))))
                 ),
                 String.join(System.lineSeparator(),
-                    "Void func(String x, String y, String z) {",
+                    "void func(String x, String y, String z) {",
                     "    function(1);",
                     "}"
                 )
@@ -463,7 +463,7 @@ public class JavaGeneratorTests {
                             List.of(new Ast.Expression.Access(Optional.empty(), "z")))))
                 ),
                 String.join(System.lineSeparator(),
-                    "Void func(int x, double y, String z) {",
+                    "void func(int x, double y, String z) {",
                     "    System.out.println(x);",
                     "    System.out.println(y);",
                     "    System.out.println(z);",
@@ -482,7 +482,7 @@ public class JavaGeneratorTests {
                             List.of(new Ast.Expression.Literal(BigInteger.ONE)))))
                 ),
                 String.join(System.lineSeparator(),
-                    "Void func() {",
+                    "void func() {",
                     "    function(1);",
                     "}"
                 )
@@ -591,7 +591,7 @@ public class JavaGeneratorTests {
         Analyzer analyzer = new Analyzer();
         analyzer.getScope().defineVariable("variableStr", "var", Environment.Type.STRING, false);
         analyzer.getScope().defineVariable("variableFunc", "var", Environment.Type.CHARACTER, false);
-        analyzer.getScope().defineVariable("object", "obj", OBJECT_TYPE, false);
+        analyzer.getScope().defineVariable("object", "obj", Environment.Type.ANY, false);
         analyzer.getScope().defineVariable("field", "fld", Environment.Type.INTEGER, false);
         analyzer.getScope().defineFunction("funcOne", "funcONE", List.of(), Environment.Type.CHARACTER);
         analyzer.getScope().defineVariable("variableOne", "varONE", Environment.Type.CHARACTER, false);
@@ -1152,7 +1152,7 @@ public class JavaGeneratorTests {
     void testAccessExpression(String test, Ast.Expression.Access ast, String expected) {
         Analyzer analyzer = new Analyzer();
         analyzer.getScope().defineVariable("variable", "var", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("object", "obj", OBJECT_TYPE, false);
+        analyzer.getScope().defineVariable("object", "obj", Environment.Type.ANY, false);
         analyzer.getScope().defineVariable("field", "fld", Environment.Type.INTEGER, false);
 
         Bindings bindings = analyzer.decorate(ast);
@@ -1238,7 +1238,7 @@ public class JavaGeneratorTests {
      * Helper function for tests, using a StringWriter as the output stream.
      */
     private static void test(Ast ast, Bindings bindings, String expected) {
-        String result = new JavaGenerator(bindings).emit(ast);
+        String result = new Generator(bindings).emit(ast);
         Assertions.assertEquals(expected, result);
     }
 }

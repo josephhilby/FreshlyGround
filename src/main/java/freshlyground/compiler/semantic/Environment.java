@@ -99,29 +99,26 @@ public final class Environment {
      * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
      */
     public static final class Type {
-        public static final Type ANY       = new Type("Any", "Object", false, new Scope(null));
-        public static final Type NIL       = new Type("Nil", "Void", false, new Scope(ANY.typeScope));
-        public static final Type STRING    = new Type("String", "String", false, new Scope(ANY.typeScope));
-        public static final Type PRIMITIVE = new Type("Primitive", "", true, new Scope(ANY.typeScope));
-        public static final Type BOOLEAN   = new Type("Boolean", "boolean", false, new Scope(PRIMITIVE.typeScope));
-        public static final Type INTEGER   = new Type("Integer", "int", false, new Scope(PRIMITIVE.typeScope));
-        public static final Type DECIMAL   = new Type("Decimal", "double", false, new Scope(PRIMITIVE.typeScope));
-        public static final Type CHARACTER = new Type("Character", "char", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type ANY       = new Type("Any", false, new Scope(null));
+        public static final Type NIL       = new Type("Nil", false, new Scope(ANY.typeScope));
+        public static final Type STRING    = new Type("String", false, new Scope(ANY.typeScope));
+        public static final Type PRIMITIVE = new Type("Primitive", true, new Scope(ANY.typeScope));
+        public static final Type BOOLEAN   = new Type("Boolean", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type INTEGER   = new Type("Integer", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type DECIMAL   = new Type("Decimal", false, new Scope(PRIMITIVE.typeScope));
+        public static final Type CHARACTER = new Type("Character", false, new Scope(PRIMITIVE.typeScope));
 
         private final String name;
-        private final String jvmName;
         private final boolean internalType;
         private final Scope typeScope;
 
-        public Type(String name, String jvmName, boolean internalType, Scope typeScope) {
+        public Type(String name, boolean internalType, Scope typeScope) {
             this.name = name;
-            this.jvmName = jvmName;
             this.internalType = internalType;
             this.typeScope = typeScope;
         }
 
         public String getName() { return name; }
-        public String getJvmName() { return jvmName; }
         public Scope getScope() { return this.typeScope; }
 
         /**

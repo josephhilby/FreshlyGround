@@ -1,6 +1,6 @@
 package freshlyground.compiler.integration;
 
-import freshlyground.compiler.backend.JavaGenerator;
+import freshlyground.compiler.backend.java.Generator;
 
 import freshlyground.common.Token;
 import freshlyground.compiler.frontend.Analyzer;
@@ -21,12 +21,10 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class JavaInigrationTests {
-    private static final Environment.Type OBJECT_TYPE;
     static {
-        Scope objectScope = new Scope(Environment.Type.ANY.getScope());
-        objectScope.defineVariable("field", "fld", Environment.Type.INTEGER, false);
-        objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "obj", false, objectScope);
+        Scope any = Environment.lookupType("Any").getScope();
+        any.defineVariable("field", "fld", Environment.Type.INTEGER, false);
+        any.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
     }
 
     @ParameterizedTest(name = "{0}")
@@ -40,7 +38,7 @@ public class JavaInigrationTests {
 
         // ast -> ANALYZER -> ast (decorated)
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("object", "obj", OBJECT_TYPE, false);
+        analyzer.getScope().defineVariable("object", "obj", Environment.Type.ANY, false);
         Bindings bindings = analyzer.decorate(ast);
 
         test(expected, ast, bindings);
@@ -165,7 +163,7 @@ public class JavaInigrationTests {
                              Ast ast,
                              Bindings bindings) {
         // ast (decorated) -> GENERATOR -> java
-        String result = new JavaGenerator(bindings).emit(ast);
+        String result = new Generator(bindings).emit(ast);
 
         Assertions.assertEquals(expected, result);
     }

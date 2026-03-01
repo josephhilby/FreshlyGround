@@ -14,21 +14,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * Tests have been provided for a few selective parts of the AST, and are not
- * exhaustive. You should add additional tests for the remaining parts and make
- * sure to handle all the cases defined in the specification which have not
- * been tested here.
- */
 public final class AnalyzerTests {
-
-    private static final Environment.Type OBJECT_TYPE;
     static {
-        Scope objectScope = new Scope(Environment.Type.ANY.getScope());
-        objectScope.defineVariable("field", "field", Environment.Type.INTEGER, false);
-        // as this is a nested function that Type.ANY is added to allow for the invoking object to be passed as a param
-        objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "object", false, objectScope);
+        Scope any = Environment.lookupType("Any").getScope();
+        any.defineVariable("field", "field", Environment.Type.INTEGER, false);
+        any.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
     }
 
 
@@ -212,7 +202,7 @@ public final class AnalyzerTests {
     public void testAssignmentStatementHappyPath(String test, Ast.Statement.Assignment ast, Environment.Variable expected) {
         Analyzer analyzer = new Analyzer();
         analyzer.getScope().defineVariable("variable", "variable", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("object", "object", OBJECT_TYPE, false);
+        analyzer.getScope().defineVariable("object", "object", Environment.Type.ANY, false);
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getVariable(ast.getReceiver()));
     }
@@ -617,7 +607,7 @@ public final class AnalyzerTests {
     public void testAccessExpressionHappyPath(String test, Ast.Expression.Access ast, Environment.Variable expected) {
         Analyzer analyzer = new Analyzer();
         analyzer.getScope().defineVariable("variable", "variable", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("object", "object", OBJECT_TYPE, false);
+        analyzer.getScope().defineVariable("object", "object", Environment.Type.ANY, false);
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getVariable(ast));
     }
@@ -644,7 +634,7 @@ public final class AnalyzerTests {
         Analyzer analyzer = new Analyzer();
         analyzer.getScope().defineFunction("function", "function", List.of(), Environment.Type.INTEGER);
         analyzer.getScope().defineFunction("function", "function", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER);
-        analyzer.getScope().defineVariable("object", "object", OBJECT_TYPE, false);
+        analyzer.getScope().defineVariable("object", "object", Environment.Type.ANY, false);
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getFunction(ast));
     }
