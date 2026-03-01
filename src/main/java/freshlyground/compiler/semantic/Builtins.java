@@ -25,7 +25,7 @@ public final class Builtins {
         any.defineFunction("stringify", "toString", Arrays.asList(Environment.Type.ANY), Environment.Type.STRING);
 
         Scope string = Environment.lookupType("String").getScope();
-        string.defineVariable("length", "length()", Environment.Type.INTEGER, false);
+        string.defineFunction("length", "length()", Arrays.asList(Environment.Type.STRING), Environment.Type.INTEGER);
         string.defineFunction("slice", "substring", Arrays.asList(Environment.Type.STRING, Environment.Type.INTEGER, Environment.Type.INTEGER), Environment.Type.STRING);
     }
 }
