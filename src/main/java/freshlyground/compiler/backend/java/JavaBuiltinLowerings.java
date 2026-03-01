@@ -1,7 +1,7 @@
 package freshlyground.compiler.backend.java;
 
 import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.semantic.Builtins;
+import freshlyground.compiler.semantic.Lowering;
 import freshlyground.compiler.semantic.Scope;
 
 import java.util.Map;

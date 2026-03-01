@@ -1,9 +1,9 @@
-package freshlyground.compiler.backend.java;
+package freshlyground.compiler.semantic;
 
 public record Lowering(Kind kind, String target) {
     public enum Kind {
-        STATIC_CALL,   // e.g. System.out.println(...)
-        VIRTUAL_CALL  // e.g. receiver.toString(...)
+        STATIC_CALL,   // e.g. function(...);
+        VIRTUAL_CALL  // e.g. receiver.function(...);
     }
 
     public static Lowering staticCall(String global) {
