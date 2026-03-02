@@ -4,7 +4,7 @@ import freshlyground.common.CompilerException;
 import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.Ast;
-import freshlyground.compiler.backend.java.shared.Lowering;
+import freshlyground.compiler.backend.shared.Lowering;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

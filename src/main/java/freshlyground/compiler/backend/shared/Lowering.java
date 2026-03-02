@@ -1,4 +1,4 @@
-package freshlyground.compiler.backend.java.shared;
+package freshlyground.compiler.backend.shared;
 
 public record Lowering(Kind kind, String target) {
     public enum Kind {
