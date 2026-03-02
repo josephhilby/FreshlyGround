@@ -78,7 +78,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define variable in current lexical scope, then set
-        Environment.Variable variable = lexicalScope.defineVariable(name, name, Environment.sourceLookupType(typeName), constant);
+        Environment.Variable variable = lexicalScope.defineVariable(name, Environment.sourceLookupType(typeName), constant);
         bindings.setVariable(ast, variable);
         return null;
     }
@@ -102,7 +102,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define and set function in current lexical scope
-        Environment.Function function = lexicalScope.defineFunction(name, name, paramTypes, currentReturnType);
+        Environment.Function function = lexicalScope.defineFunction(name, paramTypes, currentReturnType);
         bindings.setFunction(ast, function);
 
         // visit statements (including parameters) in new scope
@@ -120,7 +120,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             lexicalScope = new Scope(lexicalScope);
 
             for (int i = 0; i < parameters.size(); i++) {
-                lexicalScope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false);
+                lexicalScope.defineVariable(parameters.get(i), paramTypes.get(i), false);
             }
 
             for (Ast.Statement statement : statements) {
@@ -161,7 +161,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define and set variable in current lexical scope
-        Environment.Variable variable = lexicalScope.defineVariable(name, name, type, false);
+        Environment.Variable variable = lexicalScope.defineVariable(name, type, false);
         bindings.setVariable(ast, variable);
         return null;
     }

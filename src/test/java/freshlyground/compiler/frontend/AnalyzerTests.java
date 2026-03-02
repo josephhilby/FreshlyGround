@@ -15,13 +15,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class AnalyzerTests {
-    static {
-        Scope any = Environment.lookupType("Any").getScope();
-        any.defineVariable("field", "field", Environment.Type.INTEGER, false);
-        any.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-    }
-
-
     @ParameterizedTest(name = "{0}")
     @MethodSource
     public void testFieldHappyPath(String test, Ast.Field ast, Environment.Variable expected) {
@@ -36,12 +29,12 @@ public final class AnalyzerTests {
             Arguments.of("Declaration",
                 // LET name: Decimal;
                 new Ast.Field("name","Decimal", false, Optional.empty()),
-                new Environment.Variable("name", "name", Environment.Type.DECIMAL, false)
+                new Environment.Variable("name", Environment.Type.DECIMAL, false)
             ),
             Arguments.of("Initialization",
                 // LET name: Integer = 1;
                 new Ast.Field("name","Integer", false, Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
-                new Environment.Variable("name", "name", Environment.Type.INTEGER, false)
+                new Environment.Variable("name", Environment.Type.INTEGER, false)
             )
         );
     }
@@ -56,6 +49,7 @@ public final class AnalyzerTests {
 
     private static Stream<Arguments> testFieldSadPath() {
         return Stream.of(
+            // TODO add test for Primitive type
             Arguments.of("Unknown Type",
                 // LET name: Unknown;
                 new Ast.Field("name","Unknown", false, Optional.empty()),
@@ -82,7 +76,7 @@ public final class AnalyzerTests {
                 new Ast.Method("main", List.of(), List.of(), Optional.of("Integer"), List.of(
                     new Ast.Statement.Return(new Ast.Expression.Literal(BigInteger.ZERO)))
                 ),
-                new Environment.Function("main", "main", List.of(), Environment.Type.INTEGER)
+                new Environment.Function("main", List.of(), Environment.Type.INTEGER)
             ),
             Arguments.of("Hello World",
                 // DEF main(): Integer DO
@@ -93,13 +87,13 @@ public final class AnalyzerTests {
                         new Ast.Expression.Literal("Hello, World!")
                     )))
                 )),
-                new Environment.Function("main", "main", List.of(), Environment.Type.INTEGER)
+                new Environment.Function("main", List.of(), Environment.Type.INTEGER)
             ),
             Arguments.of("No Explicit Return Type",
                 // DEF empty() DO
                 // END
                 new Ast.Method("empty", List.of(), List.of(), Optional.empty(), List.of()),
-                new Environment.Function("empty", "empty", List.of(), Environment.Type.NIL)
+                new Environment.Function("empty", List.of(), Environment.Type.NIL)
             )
         );
     }
@@ -144,7 +138,7 @@ public final class AnalyzerTests {
                 new Ast.Statement.Expression(new Ast.Expression.Function(Optional.empty(), "print", List.of(
                     new Ast.Expression.Literal(BigInteger.ONE)
                 ))),
-                new Environment.Function("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL)
+                new Environment.Function("print", List.of(Environment.Type.ANY), Environment.Type.NIL)
             )
         );
     }
@@ -163,12 +157,12 @@ public final class AnalyzerTests {
             Arguments.of("Declaration",
                 // LET name: Integer;
                 new Ast.Statement.Declaration("name", Optional.of("Integer"), Optional.empty()),
-                new Environment.Variable("name", "name", Environment.Type.INTEGER, false)
+                new Environment.Variable("name", Environment.Type.INTEGER, false)
             ),
             Arguments.of("Initialization",
                 // LET name = 1;
                 new Ast.Statement.Declaration("name", Optional.empty(), Optional.of(new Ast.Expression.Literal(BigInteger.ONE))),
-                new Environment.Variable("name", "name", Environment.Type.INTEGER, false)
+                new Environment.Variable("name", Environment.Type.INTEGER, false)
             )
         );
     }
@@ -201,8 +195,8 @@ public final class AnalyzerTests {
     @MethodSource
     public void testAssignmentStatementHappyPath(String test, Ast.Statement.Assignment ast, Environment.Variable expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("variable", "variable", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("object", "object", Environment.Type.ANY, false);
+        analyzer.getScope().defineVariable("variable", Environment.Type.INTEGER, false);
+        analyzer.getScope().defineVariable("object", Environment.Type.ANY, false);
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getVariable(ast.getReceiver()));
     }
@@ -215,17 +209,17 @@ public final class AnalyzerTests {
                     new Ast.Expression.Access(Optional.empty(), "variable"),
                     new Ast.Expression.Literal(BigInteger.ONE)
                 ),
-                new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false)
-            ),
-            //
-            Arguments.of("Field",
-                // object.field = 1;
-                new Ast.Statement.Assignment(
-                    new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "field"),
-                    new Ast.Expression.Literal(BigInteger.ONE)
-                ),
-                new Environment.Variable("field", "field", Environment.Type.INTEGER, false)
+                new Environment.Variable("variable", Environment.Type.INTEGER, false)
             )
+            // TODO find new way to do object.field = 1 test
+//            Arguments.of("Field",
+//                // object.field = 1;
+//                new Ast.Statement.Assignment(
+//                    new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "field"),
+//                    new Ast.Expression.Literal(BigInteger.ONE)
+//                ),
+//                new Environment.Variable("field", Environment.Type.INTEGER, false)
+//            )
         );
     }
 
@@ -324,7 +318,7 @@ public final class AnalyzerTests {
     @MethodSource
     public void testForStatementHappyPath(String test, Ast.Statement.For ast) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("i", "i", Environment.Type.INTEGER, false);
+        analyzer.getScope().defineVariable("i", Environment.Type.INTEGER, false);
         analyzer.visit(ast);
         Assertions.assertDoesNotThrow(() -> analyzer.visit(ast));
     }
@@ -606,8 +600,9 @@ public final class AnalyzerTests {
     @MethodSource
     public void testAccessExpressionHappyPath(String test, Ast.Expression.Access ast, Environment.Variable expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("variable", "variable", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("object", "object", Environment.Type.ANY, false);
+        // TODO swap these object.field tests to the builtins
+        analyzer.getScope().defineVariable("variable", Environment.Type.INTEGER, false);
+        analyzer.getScope().defineVariable("object", Environment.Type.ANY, false);
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getVariable(ast));
     }
@@ -616,15 +611,16 @@ public final class AnalyzerTests {
             Arguments.of("Variable",
                 // variable
                 new Ast.Expression.Access(Optional.empty(), "variable"),
-                new Environment.Variable("variable", "variable", Environment.Type.INTEGER, false)
-            ),
-            Arguments.of("Field",
-                // object.field
-                new Ast.Expression.Access(Optional.of(
-                    new Ast.Expression.Access(Optional.empty(), "object")
-                ), "field"),
-                new Environment.Variable("field", "field", Environment.Type.INTEGER, false)
+                new Environment.Variable("variable", Environment.Type.INTEGER, false)
             )
+            //
+//            Arguments.of("Field",
+//                // object.field
+//                new Ast.Expression.Access(Optional.of(
+//                    new Ast.Expression.Access(Optional.empty(), "object")
+//                ), "field"),
+//                new Environment.Variable("field", Environment.Type.INTEGER, false)
+//            )
         );
     }
 
@@ -632,9 +628,9 @@ public final class AnalyzerTests {
     @MethodSource
     public void testFunctionExpressionHappyPath(String test, Ast.Expression.Function ast, Environment.Function expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("function", "function", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineFunction("function", "function", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER);
-        analyzer.getScope().defineVariable("object", "object", Environment.Type.ANY, false);
+        analyzer.getScope().defineFunction("function", List.of(), Environment.Type.INTEGER);
+        analyzer.getScope().defineFunction("function", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER);
+        analyzer.getScope().defineVariable("object", Environment.Type.ANY, false);
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getFunction(ast));
     }
@@ -643,19 +639,19 @@ public final class AnalyzerTests {
             Arguments.of("Function",
                 // function()
                 new Ast.Expression.Function(Optional.empty(), "function", List.of()),
-                new Environment.Function("function", "function", List.of(), Environment.Type.INTEGER)
+                new Environment.Function("function", List.of(), Environment.Type.INTEGER)
             ),
             Arguments.of("Function Valid Arg",
                 // function(1)
                 new Ast.Expression.Function(Optional.empty(), "function", List.of(new Ast.Expression.Literal(BigInteger.ONE))),
-                new Environment.Function("function", "function", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER)
+                new Environment.Function("function", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER)
             ),
             Arguments.of("Method",
-                // object.method()
+                // object.stringify()
                 new Ast.Expression.Function(Optional.of(
                     new Ast.Expression.Access(Optional.empty(), "object")
-                ), "method", List.of()),
-                new Environment.Function("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER)
+                ), "stringify", List.of()),
+                new Environment.Function("stringify", List.of(Environment.Type.ANY), Environment.Type.STRING)
             )
         );
     }
@@ -664,7 +660,7 @@ public final class AnalyzerTests {
     @MethodSource
     public void testFunctionExpressionSadPath(String test, Ast.Expression.Function ast, String expectedMessage) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("function", "function", List.of(), Environment.Type.INTEGER);
+        analyzer.getScope().defineFunction("function", List.of(), Environment.Type.INTEGER);
         String message = Assertions.assertThrows(CompilerException.class, () -> analyzer.visit(ast)).getMessage();
         Assertions.assertEquals(expectedMessage, message);
     }

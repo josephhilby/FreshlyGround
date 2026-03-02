@@ -17,12 +17,12 @@ public final class Scope {
 
     public Scope getParent() { return parent; }
 
-    public Environment.Function defineFunction(String name, String jvmName, List<Environment.Type> parameterTypes, Environment.Type returnType) {
+    public Environment.Function defineFunction(String name, List<Environment.Type> parameterTypes, Environment.Type returnType) {
         if (functions.containsKey(name + "/" + parameterTypes.size())) {
             throw new CompilerException("The function " + name + "/" + parameterTypes.size() + " is already defined in this scope.");
         }
 
-        Environment.Function func = new Environment.Function(name, jvmName, parameterTypes, returnType);
+        Environment.Function func = new Environment.Function(name, parameterTypes, returnType);
         functions.put(func.getName() + "/" + func.getParameterTypes().size(), func);
         return func;
     }
@@ -36,12 +36,12 @@ public final class Scope {
 
         throw new CompilerException("The function " + name + "/" + arity + " is not defined in this scope.");
     }
-    public Environment.Variable defineVariable(String name, String jvmName, Environment.Type type, boolean constant) {
+    public Environment.Variable defineVariable(String name, Environment.Type type, boolean constant) {
         if (variables.containsKey(name)) {
             throw new CompilerException("The variable " + name + " is already defined in this scope.");
         }
 
-        Environment.Variable variable = new Environment.Variable(name, jvmName, type, constant);
+        Environment.Variable variable = new Environment.Variable(name, type, constant);
         variables.put(variable.getName(), variable);
         return variables.get(name);
     }

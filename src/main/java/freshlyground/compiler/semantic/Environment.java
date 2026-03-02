@@ -145,19 +145,16 @@ public final class Environment {
 
     public static final class Function {
         private final String name;
-        private final String jvmName;
         private final List<Type> parameterTypes;
         private final Type returnType;
 
-        public Function(String name, String jvmName, List<Type> parameterTypes, Type returnType) {
+        public Function(String name, List<Type> parameterTypes, Type returnType) {
             this.name = name;
-            this.jvmName = jvmName;
             this.parameterTypes = parameterTypes;
             this.returnType = returnType;
         }
 
         public String getName() { return name; }
-        public String getJvmName() { return jvmName; }
         public List<Type> getParameterTypes() { return parameterTypes; }
         public Type getType() { return returnType; }
 
@@ -167,7 +164,6 @@ public final class Environment {
             if (!(obj instanceof Function other)) return false;
 
             return Objects.equals(name, other.name) &&
-                Objects.equals(jvmName, other.jvmName) &&
                 Objects.equals(parameterTypes, other.parameterTypes) &&
                 Objects.equals(returnType, other.returnType);
         }
@@ -185,19 +181,16 @@ public final class Environment {
 
     public static final class Variable {
         private final String name;
-        private final String jvmName;
         private final Type type;
         private final boolean constant;
 
-        public Variable(String name, String jvmName, Type type, boolean constant) {
+        public Variable(String name, Type type, boolean constant) {
             this.name = name;
-            this.jvmName = jvmName;
             this.type = type;
             this.constant = constant;
         }
 
         public String getName() { return name; }
-        public String getJvmName() { return jvmName; }
         public Type getType() { return type; }
         public boolean getConstant() { return constant; }
 
@@ -207,7 +200,6 @@ public final class Environment {
             if (!(obj instanceof Variable other)) return false;
 
             return Objects.equals(name, other.name) &&
-                Objects.equals(jvmName, other.jvmName) &&
                 Objects.equals(constant, other.constant) &&
                 Objects.equals(type, other.type);
         }

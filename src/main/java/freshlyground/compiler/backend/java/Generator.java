@@ -4,6 +4,7 @@ import freshlyground.common.CompilerException;
 import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.backend.java.shared.Lowering;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -13,17 +14,24 @@ public final class Generator implements Ast.Visitor<Void> {
     private final StringWriter stringWriter;
     private final PrintWriter writer;
     private final Bindings bindings;
+    private final JavaBuiltinLowerings builtinLowerings;
     private int indent = 0;
 
     public Generator(Bindings bindings) {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.bindings = bindings;
+        this.builtinLowerings = new JavaBuiltinLowerings();
     }
 
     public String emit(Ast ast) {
         visit(ast);
         return stringWriter.toString();
+    }
+
+    @FunctionalInterface
+    interface JavaPrint {
+        void out(Object... parts);
     }
 
     private void print(Object... objects) {
@@ -34,6 +42,10 @@ public final class Generator implements Ast.Visitor<Void> {
                 writer.write(object.toString());
             }
         }
+    }
+
+    private JavaPrint printer() {
+        return this::print;
     }
 
     private void newline(int indent) {
@@ -134,7 +146,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        print(getJavaType(bindings.getVariable(ast).getType()), " ", bindings.getVariable(ast).getJvmName());
+        print(getJavaType(bindings.getVariable(ast).getType()), " ", bindings.getVariable(ast).getName());
 
         if (ast.getValue().isPresent()) {
             print(" = ", ast.getValue().get());
@@ -281,20 +293,28 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", bindings.getVariable(ast).getJvmName());
+            print(receiver, ".", bindings.getVariable(ast).getName());
         } else {
-            print(bindings.getVariable(ast).getJvmName());
+            print(bindings.getVariable(ast).getName());
         }
         return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
+        Environment.Function function = bindings.getFunction(ast);
+        Lowering builtin = builtinLowerings.lowerBuiltin(function);
+
+        if (builtin != null) {
+            builtinLowerings.emitCall(printer(), ast, builtin);
+            return null;
+        }
+
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", bindings.getFunction(ast).getJvmName(), "(");
+            print(receiver, ".", bindings.getFunction(ast).getName(), "(");
         } else {
-            print(bindings.getFunction(ast).getJvmName(), "(");
+            print(bindings.getFunction(ast).getName(), "(");
         }
 
         if (!ast.getArguments().isEmpty()) {

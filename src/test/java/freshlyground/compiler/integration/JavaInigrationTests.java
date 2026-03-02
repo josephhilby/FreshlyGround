@@ -21,12 +21,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class JavaInigrationTests {
-    static {
-        Scope any = Environment.lookupType("Any").getScope();
-        any.defineVariable("field", "fld", Environment.Type.INTEGER, false);
-        any.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-    }
-
     @ParameterizedTest(name = "{0}")
     @MethodSource
     void testSource(String test, String input, String expected) {
@@ -38,7 +32,7 @@ public class JavaInigrationTests {
 
         // ast -> ANALYZER -> ast (decorated)
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("object", "obj", Environment.Type.ANY, false);
+        analyzer.getScope().defineVariable("object", Environment.Type.ANY, false);
         Bindings bindings = analyzer.decorate(ast);
 
         test(expected, ast, bindings);
