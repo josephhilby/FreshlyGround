@@ -9,7 +9,7 @@ import freshlyground.common.Lowering;
 import java.util.List;
 import java.util.Map;
 
-public final class JavaBuiltinLowerings {
+public final class BuiltinLowerings {
     private final Map<Environment.Function, Lowering> functions = Map.of(
         Symbols.PRINT,        Lowering.staticCall("System.out.println"),
         Symbols.ANY_STRINGIFY,Lowering.virtualCall("toString"),

@@ -14,14 +14,14 @@ public final class Generator implements Ast.Visitor<Void> {
     private final StringWriter stringWriter;
     private final PrintWriter writer;
     private final Bindings bindings;
-    private final JavaBuiltinLowerings builtinLowerings;
+    private final BuiltinLowerings builtinLowerings;
     private int indent = 0;
 
     public Generator(Bindings bindings) {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.bindings = bindings;
-        this.builtinLowerings = new JavaBuiltinLowerings();
+        this.builtinLowerings = new BuiltinLowerings();
     }
 
     public String emit(Ast ast) {
