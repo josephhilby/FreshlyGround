@@ -4,7 +4,7 @@ import freshlyground.common.CompilerException;
 import freshlyground.compiler.frontend.Ast;
 import freshlyground.compiler.semantic.Builtins.Symbols;
 import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.backend.shared.Lowering;
+import freshlyground.common.Lowering;
 
 import java.util.List;
 import java.util.Map;
