@@ -7,7 +7,7 @@ public record TypeLowering(Kind kind, String representation) {
     public enum Kind {
         PRIMITIVE,   // scalar: int/double/boolean/char or wasm i32/f64
         REFERENCE,   // object/handle: Object/String or wasm i32/externref
-        VOID         // no result (return position only)
+        VOID
     }
 
     public TypeLowering {
