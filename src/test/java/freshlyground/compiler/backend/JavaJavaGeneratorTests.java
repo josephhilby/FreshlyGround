@@ -1,6 +1,6 @@
 package freshlyground.compiler.backend;
 
-import freshlyground.compiler.backend.java.Generator;
+import freshlyground.compiler.backend.java.JavaGenerator;
 import freshlyground.compiler.frontend.Analyzer;
 import freshlyground.compiler.frontend.artifacts.Ast;
 import freshlyground.compiler.semantic.Bindings;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class JavaGeneratorTests {
+public class JavaJavaGeneratorTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource
     void testSource(String test, Ast.Source ast, String expected) {
@@ -1229,7 +1229,7 @@ public class JavaGeneratorTests {
      * Helper function for tests, using a StringWriter as the output stream.
      */
     private static void test(Ast ast, Bindings bindings, String expected) {
-        String result = new Generator(bindings).emit(ast);
+        String result = new JavaGenerator(bindings).emit(ast);
         Assertions.assertEquals(expected, result);
     }
 }

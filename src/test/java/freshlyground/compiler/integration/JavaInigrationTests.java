@@ -1,6 +1,6 @@
 package freshlyground.compiler.integration;
 
-import freshlyground.compiler.backend.java.Generator;
+import freshlyground.compiler.backend.java.JavaGenerator;
 
 import freshlyground.compiler.frontend.artifacts.common.Token;
 import freshlyground.compiler.frontend.Analyzer;
@@ -155,7 +155,7 @@ public class JavaInigrationTests {
                              Ast ast,
                              Bindings bindings) {
         // ast (decorated) -> GENERATOR -> java
-        String result = new Generator(bindings).emit(ast);
+        String result = new JavaGenerator(bindings).emit(ast);
 
         Assertions.assertEquals(expected, result);
     }
