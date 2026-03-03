@@ -5,6 +5,7 @@ import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.Ast;
 import freshlyground.common.Lowering;
+import freshlyground.compiler.semantic.Types;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -242,22 +243,22 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        if (bindings.getType(ast).equals(Environment.Type.INTEGER)) {
+        if (bindings.getType(ast).equals(Types.INTEGER)) {
             print(ast.getLiteral());
 
-        } else if (bindings.getType(ast).equals(Environment.Type.DECIMAL)) {
+        } else if (bindings.getType(ast).equals(Types.DECIMAL)) {
             print(ast.getLiteral());
 
-        } else if (bindings.getType(ast).equals(Environment.Type.STRING)) {
+        } else if (bindings.getType(ast).equals(Types.STRING)) {
             print("\"", ast.getLiteral(), "\"");
 
-        } else if (bindings.getType(ast).equals(Environment.Type.CHARACTER)) {
+        } else if (bindings.getType(ast).equals(Types.CHARACTER)) {
             print("'", ast.getLiteral(), "'");
 
-        } else if (bindings.getType(ast).equals(Environment.Type.BOOLEAN)) {
+        } else if (bindings.getType(ast).equals(Types.BOOLEAN)) {
             print(ast.getLiteral());
 
-        } else if (bindings.getType(ast).equals(Environment.Type.NIL)) {
+        } else if (bindings.getType(ast).equals(Types.NIL)) {
             print("null");
 
         } else {

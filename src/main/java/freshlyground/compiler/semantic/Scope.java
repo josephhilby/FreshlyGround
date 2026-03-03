@@ -36,6 +36,7 @@ public final class Scope {
 
         throw new CompilerException("The function " + name + "/" + arity + " is not defined in this scope.");
     }
+
     public Environment.Variable defineVariable(String name, Environment.Type type, boolean constant) {
         if (variables.containsKey(name)) {
             throw new CompilerException("The variable " + name + " is already defined in this scope.");

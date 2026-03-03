@@ -2,7 +2,7 @@ package freshlyground.compiler.backend.java;
 
 import freshlyground.common.CompilerException;
 import freshlyground.compiler.frontend.Ast;
-import freshlyground.compiler.semantic.Builtins.Symbols;
+import freshlyground.compiler.semantic.StandardLibrary.Symbols;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.common.Lowering;
 

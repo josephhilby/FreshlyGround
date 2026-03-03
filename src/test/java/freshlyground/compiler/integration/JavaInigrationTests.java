@@ -11,6 +11,7 @@ import freshlyground.compiler.semantic.BindingMap.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
 
+import freshlyground.compiler.semantic.Types;
 import org.junit.jupiter.api.Assertions;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,7 +33,7 @@ public class JavaInigrationTests {
 
         // ast -> ANALYZER -> ast (decorated)
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("object", Environment.Type.ANY, false);
+        analyzer.getScope().defineVariable("object", Types.ANY, false);
         Bindings bindings = analyzer.decorate(ast);
 
         test(expected, ast, bindings);
