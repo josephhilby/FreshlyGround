@@ -93,13 +93,13 @@ browser-based execution environment, and a Hack VM backend for compilation to th
         - [x] Change `Compariable` to `Primitive`
         - [x] Update comparable expression semantic rules
         - [x] Update `Analyzer`
-    - [ ] Introduce `Builtins` for member functions and variables
+    - [x] Introduce `Builtins` for member functions and variables
         - [x] Move current member functions and variables into `Builtins`
         - [x] Restrict `Builtins` file to in scope declarations only
-        - [ ] Use generator or host ABI to implement functionality
-    - [ ] Remove JVM-specific concerns from `Environment` and member functions and variables
-        - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
-        - [ ] Remove all references to `jvmName` in `Environment` and `Builtins`
+        - [x] Use generator or host ABI to implement functionality
+    - [x] Remove JVM-specific concerns from `Environment` and member functions and variables
+        - [x] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
+        - [x] Remove all references to `jvmName` in `Environment` and `Builtins`
     - [ ] Ensure consistency with `nullable` values
         - [ ] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
         - [ ] Update Scope `parent` to `Optional<Scope>`
@@ -118,7 +118,6 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 #### Testing Improvements
 
 - [ ] Refactor and expand test suite
-    - [ ] Eliminate overlap between test layers
     - [ ] Ensure unit tests validate only class-level responsibilities
     - [ ] Reclassify current end-to-end tests as interaction tests
     - [ ] Introduce CLI-driven end-to-end tests
@@ -128,7 +127,6 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 - [ ] Add WebAssembly backend
     - [ ] Generate WAT (WebAssembly Text) from AST + Bindings
     - [ ] Define minimal host ABI for runtime interaction (e.g., `print_i32`)
-- [ ] Remove Java transpiler backend
 
 #### Web Execution Environment
 
