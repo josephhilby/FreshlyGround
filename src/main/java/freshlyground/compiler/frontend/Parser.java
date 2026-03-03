@@ -1,7 +1,9 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
-import freshlyground.common.Token;
+import freshlyground.compiler.frontend.artifacts.common.Token;
+import freshlyground.compiler.frontend.artifacts.Ast;
+import freshlyground.compiler.frontend.artifacts.TokenStream;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

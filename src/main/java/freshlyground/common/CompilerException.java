@@ -4,8 +4,8 @@ import java.util.Optional;
 
 /**
  * A {@code CompilerException} represents an unrecoverable error encountered during
- *  * compilation. It may originate from any compiler phase, including lexing,
- *  * parsing, semantic analysis, or code generation.
+ * compilation. It may originate from any compiler phase, including lexing,
+ * parsing, semantic analysis, or code generation.
  *
  * <ul>
  *   <li>{@code message} — a human-readable description of the syntax error.</li>

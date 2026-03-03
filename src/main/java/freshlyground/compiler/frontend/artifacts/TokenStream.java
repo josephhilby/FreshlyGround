@@ -1,8 +1,8 @@
-package freshlyground.compiler.frontend;
+package freshlyground.compiler.frontend.artifacts;
 
 import freshlyground.common.CompilerException;
-import freshlyground.common.Stream;
-import freshlyground.common.Token;
+import freshlyground.compiler.frontend.artifacts.common.Stream;
+import freshlyground.compiler.frontend.artifacts.common.Token;
 
 import java.util.List;
 import java.util.Optional;

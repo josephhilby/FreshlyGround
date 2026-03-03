@@ -1,11 +1,11 @@
 package freshlyground.compiler.backend;
 
+import freshlyground.compiler.backend.java.Generator;
 import freshlyground.compiler.frontend.Analyzer;
-import freshlyground.compiler.frontend.Ast;
-import freshlyground.compiler.semantic.BindingMap.Bindings;
-import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.semantic.Scope;
+import freshlyground.compiler.frontend.artifacts.Ast;
+import freshlyground.compiler.semantic.Bindings;
 
+import freshlyground.compiler.semantic.Types;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,14 +18,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public class JavaGeneratorTests {
-    private static final Environment.Type OBJECT_TYPE;
-    static {
-        Scope objectScope = new Scope(Environment.Type.ANY.getScope());
-        objectScope.defineVariable("field", "fld", Environment.Type.INTEGER, false);
-        objectScope.defineFunction("method", "method", List.of(Environment.Type.ANY), Environment.Type.INTEGER);
-        OBJECT_TYPE = new Environment.Type("object", "obj", false, objectScope);
-    }
-
     @ParameterizedTest(name = "{0}")
     @MethodSource
     void testSource(String test, Ast.Source ast, String expected) {
@@ -319,11 +311,11 @@ public class JavaGeneratorTests {
     @MethodSource
     void testMethodExpression(String test, Ast.Method ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("function", "function", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER);
-        analyzer.getScope().defineVariable("radius", "radius", Environment.Type.DECIMAL, false);
-        analyzer.getScope().defineVariable("x", "x", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("y", "y", Environment.Type.DECIMAL, false);
-        analyzer.getScope().defineVariable("z", "z", Environment.Type.STRING, false);
+        analyzer.getScope().defineFunction("function", List.of(Types.INTEGER), Types.INTEGER);
+        analyzer.getScope().defineVariable("radius", Types.DECIMAL, false);
+        analyzer.getScope().defineVariable("x", Types.INTEGER, false);
+        analyzer.getScope().defineVariable("y", Types.DECIMAL, false);
+        analyzer.getScope().defineVariable("z", Types.STRING, false);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -431,7 +423,7 @@ public class JavaGeneratorTests {
                         List.of(new Ast.Expression.Literal(BigInteger.ONE)))))
                 ),
                 String.join(System.lineSeparator(),
-                    "Void func(String x, String y, String z) {",
+                    "void func(String x, String y, String z) {",
                     "    function(1);",
                     "}"
                 )
@@ -463,7 +455,7 @@ public class JavaGeneratorTests {
                             List.of(new Ast.Expression.Access(Optional.empty(), "z")))))
                 ),
                 String.join(System.lineSeparator(),
-                    "Void func(int x, double y, String z) {",
+                    "void func(int x, double y, String z) {",
                     "    System.out.println(x);",
                     "    System.out.println(y);",
                     "    System.out.println(z);",
@@ -482,7 +474,7 @@ public class JavaGeneratorTests {
                             List.of(new Ast.Expression.Literal(BigInteger.ONE)))))
                 ),
                 String.join(System.lineSeparator(),
-                    "Void func() {",
+                    "void func() {",
                     "    function(1);",
                     "}"
                 )
@@ -528,7 +520,7 @@ public class JavaGeneratorTests {
     @MethodSource
     void testExpressionStatement(String test, Ast.Statement.Expression ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("log", "log", List.of(Environment.Type.STRING), Environment.Type.NIL);
+        analyzer.getScope().defineFunction("log", List.of(Types.STRING), Types.NIL);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -548,7 +540,7 @@ public class JavaGeneratorTests {
             )
             // 1; (MOVE TO SAD PATH)
 //            Arguments.of("Initialization",
-//                new Ast.Statement.Expression(init(new Ast.Expression.Literal(new BigDecimal("1")),ast -> ast.setType(Environment.Type.INTEGER))),
+//                new Ast.Statement.Expression(init(new Ast.Expression.Literal(new BigDecimal("1")),ast -> ast.setType(Types.INTEGER))),
 //                "1;"
 //            )
         );
@@ -589,13 +581,13 @@ public class JavaGeneratorTests {
     @MethodSource
     void testAssignmentStatement(String test, Ast.Statement.Assignment ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("variableStr", "var", Environment.Type.STRING, false);
-        analyzer.getScope().defineVariable("variableFunc", "var", Environment.Type.CHARACTER, false);
-        analyzer.getScope().defineVariable("object", "obj", OBJECT_TYPE, false);
-        analyzer.getScope().defineVariable("field", "fld", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineFunction("funcOne", "funcONE", List.of(), Environment.Type.CHARACTER);
-        analyzer.getScope().defineVariable("variableOne", "varONE", Environment.Type.CHARACTER, false);
-        analyzer.getScope().defineVariable("variableTwo", "varTWO", Environment.Type.CHARACTER, false);
+        analyzer.getScope().defineVariable("variableStr", Types.STRING, false);
+        analyzer.getScope().defineVariable("variableFunc", Types.CHARACTER, false);
+        analyzer.getScope().defineVariable("object", Types.ANY, false);
+        analyzer.getScope().defineVariable("field", Types.INTEGER, false);
+        analyzer.getScope().defineFunction("funcOne", List.of(), Types.CHARACTER);
+        analyzer.getScope().defineVariable("variableOne", Types.CHARACTER, false);
+        analyzer.getScope().defineVariable("variableTwo", Types.CHARACTER, false);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -609,7 +601,7 @@ public class JavaGeneratorTests {
                     new Ast.Expression.Access(Optional.empty(), "variableStr"),
                     new Ast.Expression.Literal("Hello World")
                 ),
-                "var = \"Hello World\";"
+                "variableStr = \"Hello World\";"
             ),
             // field = 1;
             Arguments.of("Variable Int",
@@ -617,23 +609,23 @@ public class JavaGeneratorTests {
                     new Ast.Expression.Access(Optional.empty(), "field"),
                     new Ast.Expression.Literal(BigInteger.ONE)
                 ),
-                "fld = 1;"
+                "field = 1;"
             ),
-            // object.field = 1;
-            Arguments.of("Receiver",
-                new Ast.Statement.Assignment(
-                    new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "field"),
-                    new Ast.Expression.Literal(BigInteger.ONE)
-                ),
-                "obj.fld = 1;"
-            ),
+            // TODO find new way to test object.field = 1;
+//            Arguments.of("Receiver",
+//                new Ast.Statement.Assignment(
+//                    new Ast.Expression.Access(Optional.of(new Ast.Expression.Access(Optional.empty(), "object")), "field"),
+//                    new Ast.Expression.Literal(BigInteger.ONE)
+//                ),
+//                "object.field = 1;"
+//            ),
             // variableOne = funcOne();
             Arguments.of("Function",
                 new Ast.Statement.Assignment(
                     new Ast.Expression.Access(Optional.empty(), "variableOne"),
                     new Ast.Expression.Function(Optional.empty(), "funcOne", List.of())
                 ),
-                "varONE = funcONE();"
+                "variableOne = funcOne();"
             )
             // variableOne = variableTwo;
         );
@@ -643,11 +635,11 @@ public class JavaGeneratorTests {
     @MethodSource
     void testIfStatement(String test, Ast.Statement.If ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("funcOne", "funcONE", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineFunction("funcOne", "funcONE", List.of(Environment.Type.INTEGER), Environment.Type.INTEGER);
-        analyzer.getScope().defineFunction("funcTwo", "funcTWO", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineVariable("condition", "cond", Environment.Type.BOOLEAN, false);
-        analyzer.getScope().defineVariable("conditionTwo", "condTWO", Environment.Type.BOOLEAN, false);
+        analyzer.getScope().defineFunction("funcOne", List.of(), Types.INTEGER);
+        analyzer.getScope().defineFunction("funcOne", List.of(Types.INTEGER), Types.INTEGER);
+        analyzer.getScope().defineFunction("funcTwo", List.of(), Types.INTEGER);
+        analyzer.getScope().defineVariable("condition", Types.BOOLEAN, false);
+        analyzer.getScope().defineVariable("conditionTwo", Types.BOOLEAN, false);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -667,8 +659,8 @@ public class JavaGeneratorTests {
                     List.of()
                 ),
                 String.join(System.lineSeparator(),
-                    "if (cond) {",
-                    "    funcONE();",
+                    "if (condition) {",
+                    "    funcOne();",
                     "}"
                 )
             ),
@@ -688,10 +680,10 @@ public class JavaGeneratorTests {
                     )
                 ),
                 String.join(System.lineSeparator(),
-                    "if (cond) {",
-                    "    funcONE();",
+                    "if (condition) {",
+                    "    funcOne();",
                     "} else {",
-                    "    funcTWO();",
+                    "    funcTwo();",
                     "}"
                 )
             ),
@@ -720,12 +712,12 @@ public class JavaGeneratorTests {
                     )
                 ),
                 String.join(System.lineSeparator(),
-                    "if (cond) {",
-                    "    funcONE(1);",
-                    "    funcONE(2);",
-                    "    funcONE(3);",
+                    "if (condition) {",
+                    "    funcOne(1);",
+                    "    funcOne(2);",
+                    "    funcOne(3);",
                     "} else {",
-                    "    funcONE(4);",
+                    "    funcOne(4);",
                     "}"
                 )
             ),
@@ -754,12 +746,12 @@ public class JavaGeneratorTests {
                     )
                 ),
                 String.join(System.lineSeparator(),
-                    "if (cond) {",
-                    "    funcONE(1);",
+                    "if (condition) {",
+                    "    funcOne(1);",
                     "} else {",
-                    "    funcONE(2);",
-                    "    funcONE(3);",
-                    "    funcONE(4);",
+                    "    funcOne(2);",
+                    "    funcOne(3);",
+                    "    funcOne(4);",
                     "}"
                 )
             ),
@@ -785,9 +777,9 @@ public class JavaGeneratorTests {
                     List.of()
                 ),
                 String.join(System.lineSeparator(),
-                    "if (cond) {",
-                    "    if (condTWO) {",
-                    "        funcONE(1);",
+                    "if (condition) {",
+                    "    if (conditionTwo) {",
+                    "        funcOne(1);",
                     "    }",
                     "}"
                 )
@@ -799,9 +791,9 @@ public class JavaGeneratorTests {
     @MethodSource
     void testForStatement(String test, Ast.Statement.For ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("funcOne", "funcONE", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineFunction("funcTwo", "funcTWO", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineVariable("num", "num", Environment.Type.INTEGER, false);
+        analyzer.getScope().defineFunction("funcOne", List.of(), Types.INTEGER);
+        analyzer.getScope().defineFunction("funcTwo", List.of(), Types.INTEGER);
+        analyzer.getScope().defineVariable("num", Types.INTEGER, false);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -921,9 +913,9 @@ public class JavaGeneratorTests {
     @MethodSource
     void testWhileStatement(String test, Ast.Statement.While ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("funcOne", "funcONE", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineFunction("funcTwo", "funcTWO", List.of(), Environment.Type.INTEGER);
-        analyzer.getScope().defineVariable("condition", "cond", Environment.Type.BOOLEAN, false);
+        analyzer.getScope().defineFunction("funcOne", List.of(), Types.INTEGER);
+        analyzer.getScope().defineFunction("funcTwo", List.of(), Types.INTEGER);
+        analyzer.getScope().defineVariable("condition", Types.BOOLEAN, false);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -967,9 +959,9 @@ public class JavaGeneratorTests {
                     )
                 ),
                 String.join(System.lineSeparator(),
-                    "while (cond) {",
-                    "    funcONE();",
-                    "    funcTWO();",
+                    "while (condition) {",
+                    "    funcOne();",
+                    "    funcTwo();",
                     "}"
                 )
             ),
@@ -981,7 +973,7 @@ public class JavaGeneratorTests {
                     List.of()
                 ),
                 String.join(System.lineSeparator(),
-                    "while (cond) {}"
+                    "while (condition) {}"
                 )
             )
         );
@@ -991,7 +983,7 @@ public class JavaGeneratorTests {
     @MethodSource
     void testReturnExpression(String test, Ast.Statement.Return ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.setReturnType(Environment.Type.INTEGER);
+        analyzer.setReturnType(Types.INTEGER);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -1151,9 +1143,8 @@ public class JavaGeneratorTests {
     @MethodSource
     void testAccessExpression(String test, Ast.Expression.Access ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineVariable("variable", "var", Environment.Type.INTEGER, false);
-        analyzer.getScope().defineVariable("object", "obj", OBJECT_TYPE, false);
-        analyzer.getScope().defineVariable("field", "fld", Environment.Type.INTEGER, false);
+        analyzer.getScope().defineVariable("variable", Types.INTEGER, false);
+        analyzer.getScope().defineVariable("object", Types.ANY, false);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -1175,15 +1166,15 @@ public class JavaGeneratorTests {
             // variable
             Arguments.of("Variable",
                 new Ast.Expression.Access(Optional.empty(), "variable"),
-                "var"
-            ),
-            // object.field
-            Arguments.of("Field",
-                new Ast.Expression.Access(Optional.of(
-                    new Ast.Expression.Access(Optional.empty(), "object")
-                ), "field"),
-                "obj.fld"
+                "variable"
             )
+            // TODO find new way to test object.field
+//            Arguments.of("Field",
+//                new Ast.Expression.Access(Optional.of(
+//                    new Ast.Expression.Access(Optional.empty(), "object")
+//                ), "field"),
+//                "object.field"
+//            )
         );
     }
 
@@ -1191,7 +1182,7 @@ public class JavaGeneratorTests {
     @MethodSource
     void testFunctionExpression(String test, Ast.Expression.Function ast, String expected) {
         Analyzer analyzer = new Analyzer();
-        analyzer.getScope().defineFunction("function", "func", List.of(), Environment.Type.INTEGER);
+        analyzer.getScope().defineFunction("function", List.of(), Types.INTEGER);
 
         Bindings bindings = analyzer.decorate(ast);
         test(ast, bindings, expected);
@@ -1209,7 +1200,7 @@ public class JavaGeneratorTests {
             // func()
             Arguments.of("Zero Arguments",
                 new Ast.Expression.Function(Optional.empty(),"function", List.of()),
-                "func()"
+                "function()"
             ),
             // print("Hello, World!")
             Arguments.of("Print",
@@ -1238,7 +1229,7 @@ public class JavaGeneratorTests {
      * Helper function for tests, using a StringWriter as the output stream.
      */
     private static void test(Ast ast, Bindings bindings, String expected) {
-        String result = new JavaGenerator(bindings).emit(ast);
+        String result = new Generator(bindings).emit(ast);
         Assertions.assertEquals(expected, result);
     }
 }

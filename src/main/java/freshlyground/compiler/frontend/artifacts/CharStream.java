@@ -1,7 +1,7 @@
-package freshlyground.compiler.frontend;
+package freshlyground.compiler.frontend.artifacts;
 
-import freshlyground.common.Stream;
-import freshlyground.common.Token;
+import freshlyground.compiler.frontend.artifacts.common.Stream;
+import freshlyground.compiler.frontend.artifacts.common.Token;
 
 /**
  * A helper class maintaining the state of the input string, by tracking the input string's

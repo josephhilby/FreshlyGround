@@ -1,10 +1,12 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.BindingMap.Bindings;
-import freshlyground.compiler.semantic.Builtins;
+import freshlyground.compiler.frontend.artifacts.Ast;
+import freshlyground.compiler.semantic.Bindings;
+import freshlyground.compiler.semantic.StandardLibrary;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;
+import freshlyground.compiler.semantic.Types;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -16,7 +18,6 @@ import static freshlyground.compiler.semantic.Environment.*;
 
 
 public final class Analyzer implements Ast.Visitor<Void> {
-    // TODO: move type matching helpers to environment
     public Scope lexicalScope;
     public Bindings bindings;
     private Environment.Type currentReturnType;
@@ -24,7 +25,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Analyzer() {
         lexicalScope = new Scope(null);
         bindings = new Bindings();
-        Builtins.install(lexicalScope);
+        StandardLibrary.install(lexicalScope);
     }
 
     public Scope getScope() { return lexicalScope; }
@@ -36,7 +37,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return bindings;
     }
 
-    // [ fields ] [ methods ]
     @Override
     public Void visit(Ast.Source ast) {
         // visit fields, then visit methods, return null
@@ -50,14 +50,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // throws a CompilerException if: no 'main/0' type INT
         Environment.Function main = lexicalScope.lookupFunction("main", 0);
-        if (main.getType() != Environment.Type.INTEGER) {
+        if (main.returnType() != Types.INTEGER) {
             throw new CompilerException("main() return type must be an integer");
         }
 
         return null;
     }
 
-    // LET [ constant ] name : typeName [ = value ];
     @Override
     public Void visit(Ast.Field ast) {
         boolean constant = ast.getConstant();
@@ -81,13 +80,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define variable in current lexical scope, then set
-        Environment.Variable variable = lexicalScope.defineVariable(name, name, Environment.sourceLookupType(typeName), constant);
+        Environment.Variable variable = lexicalScope.defineVariable(name, Environment.sourceLookupType(typeName), constant);
         bindings.setVariable(ast, variable);
         return null;
     }
 
-    // DEF name([ parameter : paramType ]) [ : returnType ]
-    //   DO statements END
     @Override
     public Void visit(Ast.Method ast) {
         String name = ast.getName();
@@ -101,13 +98,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // check and save return type
-        currentReturnType = Environment.Type.NIL;
+        currentReturnType = Types.NIL;
         if (ast.getReturnTypeName().isPresent()) {
             currentReturnType = Environment.sourceLookupType(ast.getReturnTypeName().get());
         }
 
         // define and set function in current lexical scope
-        Environment.Function function = lexicalScope.defineFunction(name, name, paramTypes, currentReturnType);
+        Environment.Function function = lexicalScope.defineFunction(name, paramTypes, currentReturnType);
         bindings.setFunction(ast, function);
 
         // visit statements (including parameters) in new scope
@@ -125,7 +122,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             lexicalScope = new Scope(lexicalScope);
 
             for (int i = 0; i < parameters.size(); i++) {
-                lexicalScope.defineVariable(parameters.get(i), parameters.get(i), paramTypes.get(i), false);
+                lexicalScope.defineVariable(parameters.get(i), paramTypes.get(i), false);
             }
 
             for (Ast.Statement statement : statements) {
@@ -137,14 +134,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
     }
 
-    // expression;
     @Override
     public Void visit(Ast.Statement.Expression ast) {
         visit(ast.getExpression());
         return null;
     }
 
-    // LET name [ : type ] [ = value ];
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
         String name = ast.getName();
@@ -168,28 +163,26 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         // define and set variable in current lexical scope
-        Environment.Variable variable = lexicalScope.defineVariable(name, name, type, false);
+        Environment.Variable variable = lexicalScope.defineVariable(name, type, false);
         bindings.setVariable(ast, variable);
         return null;
     }
 
-    // receiver = value;
     @Override
     public Void visit(Ast.Statement.Assignment ast) {
         visit(ast.getReceiver());
         visit(ast.getValue());
 
         // can't assign to constant
-        if (bindings.getVariable(ast.getReceiver()).getConstant()) {
+        if (bindings.getVariable(ast.getReceiver()).constant()) {
             throw new CompilerException("Cannot reassign constant");
         }
 
         // throws a CompilerException if: value is not assignable to receiver
-        requireAssignable(bindings.getVariable(ast.getReceiver()).getType(), bindings.getType(ast.getValue()));
+        requireAssignable(bindings.getVariable(ast.getReceiver()).type(), bindings.getType(ast.getValue()));
         return null;
     }
 
-    // IF condition DO statements [ ELSE statements ] END
     @Override
     public Void visit(Ast.Statement.If ast) {
         Ast.Expression condition = ast.getCondition();
@@ -197,7 +190,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(condition);
 
         // throws a CompilerException if: condition not Bool
-        requireAssignable(Environment.Type.BOOLEAN, bindings.getType(condition));
+        requireAssignable(Types.BOOLEAN, bindings.getType(condition));
 
         // throws a CompilerException if: thenStatements empty
         if (ast.getThenStatements().isEmpty()) {
@@ -215,8 +208,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // FOR ([ initialization ]; condition; [ increment ])
-    //   statements END
     @Override
     public Void visit(Ast.Statement.For ast) {
         Ast.Statement.Assignment initialization;
@@ -227,7 +218,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             initialization = ast.getInitialization();
 
             // throws a CompilerException if: initialization exists AND not Comparable
-            requireAssignable(Environment.Type.PRIMITIVE, bindings.getType(initialization.getReceiver()));
+            requireAssignable(Types.PRIMITIVE, bindings.getType(initialization.getReceiver()));
         }
 
         if (ast.getIncrement() != null) {
@@ -244,20 +235,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getCondition());
 
         // throws a CompilerException if: condition not Bool
-        requireAssignable(Environment.Type.BOOLEAN, bindings.getType(ast.getCondition()));
+        requireAssignable(Types.BOOLEAN, bindings.getType(ast.getCondition()));
 
         visitStatements(ast.getStatements());
 
         return null;
     }
 
-    // WHILE condition DO statements END
     @Override
     public Void visit(Ast.Statement.While ast) {
         visit(ast.getCondition());
 
         // throws a CompilerException if: value is not Boolean
-        requireAssignable(Environment.Type.BOOLEAN, bindings.getType(ast.getCondition()));
+        requireAssignable(Types.BOOLEAN, bindings.getType(ast.getCondition()));
 
         // visits WHILE statements in new scope
         visitStatements(ast.getStatements());
@@ -279,7 +269,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
     }
 
-    // RETURN value;
     @Override
     public Void visit(Ast.Statement.Return ast) {
         visit(ast.getValue());
@@ -298,16 +287,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // validate and set literal type
         if (literal instanceof String) {
-            bindings.setType(ast, Environment.Type.STRING);
+            bindings.setType(ast, Types.STRING);
 
         } else if (literal instanceof Character) {
-            bindings.setType(ast, Environment.Type.CHARACTER);
+            bindings.setType(ast, Types.CHARACTER);
 
         } else if (literal instanceof Boolean) {
-            bindings.setType(ast, Environment.Type.BOOLEAN);
+            bindings.setType(ast, Types.BOOLEAN);
 
         } else if (literal == null) {
-            bindings.setType(ast, Environment.Type.NIL);
+            bindings.setType(ast, Types.NIL);
 
         } else if (literal instanceof BigInteger bigInteger) {
             if (bigInteger.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0 ||
@@ -316,7 +305,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 // throws a CompilerException if: INT out of range
                 throw new CompilerException("INT Overflow or Underflow");
             }
-            bindings.setType(ast, Environment.Type.INTEGER);
+            bindings.setType(ast, Types.INTEGER);
 
         } else if (literal instanceof BigDecimal bigDecimal) {
             if (bigDecimal.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0 ||
@@ -325,7 +314,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 // throws a CompilerException if: DOUBLE out of range
                 throw new CompilerException("DOUBLE Overflow or Underflow");
             }
-            bindings.setType(ast, Environment.Type.DECIMAL);
+            bindings.setType(ast, Types.DECIMAL);
 
         } else {
             // throws a CompilerException if: Unknown Type
@@ -353,30 +342,30 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // throws a CompilerException if: all errant casts
         if (check(operator, "AND", "OR")) {
-            requireAssignables(Environment.Type.BOOLEAN, leftType, rightType);
-            bindings.setType(ast, Environment.Type.BOOLEAN);
+            requireAssignables(Types.BOOLEAN, leftType, rightType);
+            bindings.setType(ast, Types.BOOLEAN);
 
         } else if (check(operator, "==", "!=")) {
             requireSame(leftType, rightType);
-            bindings.setType(ast, Environment.Type.BOOLEAN);
+            bindings.setType(ast, Types.BOOLEAN);
 
         } else if (check(operator, "<=", ">=", "<", ">")) {
-            requireAssignables(Environment.Type.PRIMITIVE, leftType, rightType);
+            requireAssignables(Types.PRIMITIVE, leftType, rightType);
             requireSame(leftType, rightType);
-            requireNot(Environment.Type.BOOLEAN, leftType);
-            bindings.setType(ast, Environment.Type.BOOLEAN);
+            requireNot(Types.BOOLEAN, leftType);
+            bindings.setType(ast, Types.BOOLEAN);
 
-        } else if (check(operator, "+") && check(Environment.Type.STRING, leftType, rightType)) {
-            bindings.setType(ast, Environment.Type.STRING);
+        } else if (check(operator, "+") && check(Types.STRING, leftType, rightType)) {
+            bindings.setType(ast, Types.STRING);
 
         } else if (check(operator, "+", "-", "*", "/")) {
-            if (check(Environment.Type.INTEGER, leftType)) {
-                requireAssignables(Environment.Type.INTEGER, leftType, rightType);
-                bindings.setType(ast, Environment.Type.INTEGER);
+            if (check(Types.INTEGER, leftType)) {
+                requireAssignables(Types.INTEGER, leftType, rightType);
+                bindings.setType(ast, Types.INTEGER);
 
-            } else if (check(Environment.Type.DECIMAL, leftType)) {
-                requireAssignables(Environment.Type.DECIMAL, leftType, rightType);
-                bindings.setType(ast, Environment.Type.DECIMAL);
+            } else if (check(Types.DECIMAL, leftType)) {
+                requireAssignables(Types.DECIMAL, leftType, rightType);
+                bindings.setType(ast, Types.DECIMAL);
 
             } else {
                 throw new CompilerException("Arithmetic Operators must have matching types, INT or DECIMAL");
@@ -410,7 +399,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return false;
     }
 
-    // [ receiver. ] variable
     @Override
     public Void visit(Ast.Expression.Access ast) {
         Environment.Variable variable;
@@ -433,11 +421,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // set variable and type
         bindings.setVariable(ast, variable);
-        bindings.setType(ast, variable.getType());
+        bindings.setType(ast, variable.type());
         return null;
     }
 
-    // [ receiver.] function([ arguments ])
     @Override
     public Void visit(Ast.Expression.Function ast) {
         int parameterOffset = 0;
@@ -465,7 +452,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         bindings.setFunction(ast, function);
 
         // checks provided arguments are assignable to parameter types
-        parameterTypes = function.getParameterTypes();
+        parameterTypes = function.parameterTypes();
         for (Ast.Expression argument : arguments) {
             visit(argument);
             requireAssignable(parameterTypes.get(parameterOffset), bindings.getType(argument));

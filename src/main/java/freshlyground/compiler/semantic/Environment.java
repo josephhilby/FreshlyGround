@@ -1,12 +1,10 @@
 package freshlyground.compiler.semantic;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.frontend.Ast;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * <p>{@code Environment} defines the data structures used during semantic analysis
@@ -14,7 +12,7 @@ import java.util.Objects;
  * or execution.</p>
  *
  * <p>Built-in bindings (global functions and type members) are installed separately
- * by {@link Builtins}.</p>
+ * by {@link StandardLibrary}.</p>
  */
 public final class Environment {
 
@@ -22,6 +20,15 @@ public final class Environment {
      * Closed set of nominal types supported by the compiler.
      */
     private static final Map<String, Type> TYPES = new HashMap<>();
+    public static void registerTypes(Type... types) {
+        for (Type type : types) {
+            if (TYPES.containsKey(type.getName())) {
+                throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
+            }
+
+            TYPES.put(type.getName(), type);
+        }
+    }
 
     public static Type lookupType(String name) {
         if (!TYPES.containsKey(name)) {
@@ -32,17 +39,10 @@ public final class Environment {
     }
     public static Type sourceLookupType(String name) {
         Type type = lookupType(name);
-        if (type.internalType) {
-            throw new CompilerException("Type: " + name + "is an internal classification for semantic resolution.");
+        if (type.isInternalType()) {
+            throw new CompilerException("Type: " + name + " is an internal classification for semantic resolution.");
         }
         return type;
-    }
-    private static void registerType(Type type) {
-        if (TYPES.containsKey(type.getName())) {
-            throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
-        }
-
-        TYPES.put(type.getName(), type);
     }
 
     public static boolean requireSame(Type target, Type actual) {
@@ -64,27 +64,18 @@ public final class Environment {
         return true;
     }
     public static boolean requireAssignable(Type target, Type actual) {
-        if (
-            target.equals(Type.ANY) || target.equals(actual) ||
-           (target.equals(Type.PRIMITIVE) && actual.equals(Type.INTEGER)) ||
-           (target.equals(Type.PRIMITIVE) && actual.equals(Type.DECIMAL)) ||
-           (target.equals(Type.PRIMITIVE) && actual.equals(Type.CHARACTER)) ||
-           (target.equals(Type.PRIMITIVE) && actual.equals(Type.BOOLEAN))
-        ) {
+        if (target == Types.ANY || target == actual) {
             return true;
         }
-        throw new CompilerException("Type unassignable: " + actual.getName() + " -> " + target.getName());
-    }
 
-    static {
-        registerType(Type.ANY);
-        registerType(Type.NIL);
-        registerType(Type.PRIMITIVE);
-        registerType(Type.BOOLEAN);
-        registerType(Type.INTEGER);
-        registerType(Type.DECIMAL);
-        registerType(Type.CHARACTER);
-        registerType(Type.STRING);
+        if (target == Types.PRIMITIVE) {
+            return actual == Types.INTEGER
+                || actual == Types.DECIMAL
+                || actual == Types.CHARACTER
+                || actual == Types.BOOLEAN;
+        }
+
+        throw new CompilerException("Type unassignable: " + actual.getName() + " -> " + target.getName());
     }
 
     /**
@@ -99,29 +90,18 @@ public final class Environment {
      * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
      */
     public static final class Type {
-        public static final Type ANY       = new Type("Any", "Object", false, new Scope(null));
-        public static final Type NIL       = new Type("Nil", "Void", false, new Scope(ANY.typeScope));
-        public static final Type STRING    = new Type("String", "String", false, new Scope(ANY.typeScope));
-        public static final Type PRIMITIVE = new Type("Primitive", "", true, new Scope(ANY.typeScope));
-        public static final Type BOOLEAN   = new Type("Boolean", "boolean", false, new Scope(PRIMITIVE.typeScope));
-        public static final Type INTEGER   = new Type("Integer", "int", false, new Scope(PRIMITIVE.typeScope));
-        public static final Type DECIMAL   = new Type("Decimal", "double", false, new Scope(PRIMITIVE.typeScope));
-        public static final Type CHARACTER = new Type("Character", "char", false, new Scope(PRIMITIVE.typeScope));
-
         private final String name;
-        private final String jvmName;
         private final boolean internalType;
         private final Scope typeScope;
 
-        public Type(String name, String jvmName, boolean internalType, Scope typeScope) {
+        public Type(String name, boolean internalType, Scope typeScope) {
             this.name = name;
-            this.jvmName = jvmName;
             this.internalType = internalType;
             this.typeScope = typeScope;
         }
 
         public String getName() { return name; }
-        public String getJvmName() { return jvmName; }
+        public boolean isInternalType() { return internalType; }
         public Scope getScope() { return this.typeScope; }
 
         /**
@@ -146,75 +126,27 @@ public final class Environment {
         }
     }
 
-    public static final class Function {
-        private final String name;
-        private final String jvmName;
-        private final List<Type> parameterTypes;
-        private final Type returnType;
-
-        public Function(String name, String jvmName, List<Type> parameterTypes, Type returnType) {
-            this.name = name;
-            this.jvmName = jvmName;
-            this.parameterTypes = parameterTypes;
-            this.returnType = returnType;
+    public record Function(String name, List<Type> parameterTypes, Type returnType) {
+        public Function {
+            parameterTypes = List.copyOf(parameterTypes);
         }
 
-        public String getName() { return name; }
-        public String getJvmName() { return jvmName; }
-        public List<Type> getParameterTypes() { return parameterTypes; }
-        public Type getType() { return returnType; }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (!(obj instanceof Function other)) return false;
-
-            return Objects.equals(name, other.name) &&
-                Objects.equals(jvmName, other.jvmName) &&
-                Objects.equals(parameterTypes, other.parameterTypes) &&
-                Objects.equals(returnType, other.returnType);
+        public int arity() {
+            return parameterTypes.size();
         }
 
         @Override
         public String toString() {
             return "Function{" +
                 "name='" + name + '\'' +
-                ", arity=" + parameterTypes.size() +
+                ", arity=" + arity() +
                 ", parameterTypes=" + parameterTypes +
                 ", returnType=" + returnType +
                 '}';
         }
     }
 
-    public static final class Variable {
-        private final String name;
-        private final String jvmName;
-        private final Type type;
-        private final boolean constant;
-
-        public Variable(String name, String jvmName, Type type, boolean constant) {
-            this.name = name;
-            this.jvmName = jvmName;
-            this.type = type;
-            this.constant = constant;
-        }
-
-        public String getName() { return name; }
-        public String getJvmName() { return jvmName; }
-        public Type getType() { return type; }
-        public boolean getConstant() { return constant; }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (!(obj instanceof Variable other)) return false;
-
-            return Objects.equals(name, other.name) &&
-                Objects.equals(jvmName, other.jvmName) &&
-                Objects.equals(constant, other.constant) &&
-                Objects.equals(type, other.type);
-        }
-
+    public record Variable(String name, Type type, boolean constant) {
         @Override
         public String toString() {
             return "Variable{" +

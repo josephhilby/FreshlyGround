@@ -1,6 +1,8 @@
-package freshlyground.compiler.frontend;
+package freshlyground.compiler.frontend.artifacts;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.frontend.Analyzer;
+import freshlyground.compiler.frontend.Parser;
 
 import java.util.List;
 import java.util.Objects;

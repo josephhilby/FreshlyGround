@@ -1,11 +1,14 @@
-package freshlyground.common;
+package freshlyground.compiler.frontend.artifacts.common;
+
+import freshlyground.compiler.frontend.artifacts.CharStream;
+import freshlyground.compiler.frontend.artifacts.TokenStream;
 
 import java.util.Objects;
 
 /**
  * {@code Stream} is an abstraction that generalizes the sequential logic
- * shared by both {@link freshlyground.compiler.frontend.CharStream} (lexer)
- * and {@link freshlyground.compiler.frontend.TokenStream} (parser). It
+ * shared by both {@link CharStream} (lexer)
+ * and {@link TokenStream} (parser). It
  * provides a common mechanism for:
  *
  * <ul>

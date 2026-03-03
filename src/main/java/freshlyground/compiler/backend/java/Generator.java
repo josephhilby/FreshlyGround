@@ -1,29 +1,38 @@
-package freshlyground.compiler.backend;
+package freshlyground.compiler.backend.java;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.BindingMap.Bindings;
+import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.artifacts.Ast;
+import freshlyground.compiler.backend.common.Lowering;
+import freshlyground.compiler.semantic.Types;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-public final class JavaGenerator implements Ast.Visitor<Void> {
+public final class Generator implements Ast.Visitor<Void> {
     private final StringWriter stringWriter;
     private final PrintWriter writer;
     private final Bindings bindings;
+    private final StandardLibraryLowerings standardLibraryLowerings;
     private int indent = 0;
 
-    public JavaGenerator(Bindings bindings) {
+    public Generator(Bindings bindings) {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.bindings = bindings;
+        this.standardLibraryLowerings = new StandardLibraryLowerings();
     }
 
     public String emit(Ast ast) {
         visit(ast);
         return stringWriter.toString();
+    }
+
+    @FunctionalInterface
+    interface JavaPrint {
+        void out(Object... parts);
     }
 
     private void print(Object... objects) {
@@ -34,6 +43,10 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
                 writer.write(object.toString());
             }
         }
+    }
+
+    private JavaPrint printer() {
+        return this::print;
     }
 
     private void newline(int indent) {
@@ -97,7 +110,7 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        print(bindings.getFunction(ast).getType().getJvmName(), " ", bindings.getFunction(ast).getName());
+        print(getJavaType(bindings.getFunction(ast).returnType()), " ", bindings.getFunction(ast).name());
 
         if (ast.getParameters().isEmpty()) {
             print("() {");
@@ -134,7 +147,7 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        print(bindings.getVariable(ast).getType().getJvmName(), " ", bindings.getVariable(ast).getJvmName());
+        print(getJavaType(bindings.getVariable(ast).type()), " ", bindings.getVariable(ast).name());
 
         if (ast.getValue().isPresent()) {
             print(" = ", ast.getValue().get());
@@ -230,22 +243,22 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        if (bindings.getType(ast).equals(Environment.Type.INTEGER)) {
+        if (bindings.getType(ast).equals(Types.INTEGER)) {
             print(ast.getLiteral());
 
-        } else if (bindings.getType(ast).equals(Environment.Type.DECIMAL)) {
+        } else if (bindings.getType(ast).equals(Types.DECIMAL)) {
             print(ast.getLiteral());
 
-        } else if (bindings.getType(ast).equals(Environment.Type.STRING)) {
+        } else if (bindings.getType(ast).equals(Types.STRING)) {
             print("\"", ast.getLiteral(), "\"");
 
-        } else if (bindings.getType(ast).equals(Environment.Type.CHARACTER)) {
+        } else if (bindings.getType(ast).equals(Types.CHARACTER)) {
             print("'", ast.getLiteral(), "'");
 
-        } else if (bindings.getType(ast).equals(Environment.Type.BOOLEAN)) {
+        } else if (bindings.getType(ast).equals(Types.BOOLEAN)) {
             print(ast.getLiteral());
 
-        } else if (bindings.getType(ast).equals(Environment.Type.NIL)) {
+        } else if (bindings.getType(ast).equals(Types.NIL)) {
             print("null");
 
         } else {
@@ -281,20 +294,28 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", bindings.getVariable(ast).getJvmName());
+            print(receiver, ".", bindings.getVariable(ast).name());
         } else {
-            print(bindings.getVariable(ast).getJvmName());
+            print(bindings.getVariable(ast).name());
         }
         return null;
     }
 
     @Override
     public Void visit(Ast.Expression.Function ast) {
+        Environment.Function function = bindings.getFunction(ast);
+        Lowering builtin = standardLibraryLowerings.lowerBuiltin(function);
+
+        if (builtin != null) {
+            standardLibraryLowerings.emitCall(printer(), ast, builtin);
+            return null;
+        }
+
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", bindings.getFunction(ast).getJvmName(), "(");
+            print(receiver, ".", bindings.getFunction(ast).name(), "(");
         } else {
-            print(bindings.getFunction(ast).getJvmName(), "(");
+            print(bindings.getFunction(ast).name(), "(");
         }
 
         if (!ast.getArguments().isEmpty()) {
@@ -311,7 +332,12 @@ public final class JavaGenerator implements Ast.Visitor<Void> {
         return null;
     }
 
-    private String getJavaType(String plcTypeName) {
-        return Environment.lookupType(plcTypeName).getJvmName();
+    // helper
+    private String getJavaType(String typeName) {
+        return TypeMapper.getJavaType(Environment.lookupType(typeName));
+    }
+
+    private String getJavaType(Environment.Type type) {
+        return TypeMapper.getJavaType(type);
     }
 }
