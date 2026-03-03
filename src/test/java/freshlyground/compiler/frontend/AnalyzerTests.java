@@ -64,7 +64,7 @@ public final class AnalyzerTests {
         Analyzer analyzer = new Analyzer();
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getFunction(ast));
-        Assertions.assertEquals(expected, analyzer.getScope().lookupFunction(expected.getName(), expected.getParameterTypes().size()));
+        Assertions.assertEquals(expected, analyzer.getScope().lookupFunction(expected.name(), expected.parameterTypes().size()));
     }
 
     private static Stream<Arguments> testMethodHappyPath() {
@@ -128,7 +128,7 @@ public final class AnalyzerTests {
         Analyzer analyzer = new Analyzer();
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getFunction(ast.getExpression()));
-        Assertions.assertEquals(expected, analyzer.getScope().lookupFunction(expected.getName(), expected.getParameterTypes().size()));
+        Assertions.assertEquals(expected, analyzer.getScope().lookupFunction(expected.name(), expected.parameterTypes().size()));
     }
 
     private static Stream<Arguments> testExpressionStatementHappyPath() {

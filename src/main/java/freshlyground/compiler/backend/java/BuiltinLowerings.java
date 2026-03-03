@@ -11,10 +11,11 @@ import java.util.Map;
 
 public final class BuiltinLowerings {
     private final Map<Environment.Function, Lowering> functions = Map.of(
-        Symbols.PRINT,        Lowering.staticCall("System.out.println"),
-        Symbols.ANY_STRINGIFY,Lowering.virtualCall("toString"),
-        Symbols.STRING_LENGTH,Lowering.virtualCall("length"),
-        Symbols.STRING_SLICE, Lowering.virtualCall("substring")
+        Symbols.PRINT,         Lowering.staticCall("System.out.println"),
+        Symbols.INPUT,         Lowering.staticCall("System.in"),
+        Symbols.ANY_STRINGIFY, Lowering.virtualCall("toString"),
+        Symbols.STRING_LENGTH, Lowering.virtualCall("length"),
+        Symbols.STRING_SLICE,  Lowering.virtualCall("substring")
     );
 
     public Lowering lowerBuiltin(Environment.Function function) {

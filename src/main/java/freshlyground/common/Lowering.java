@@ -3,7 +3,7 @@ package freshlyground.common;
 public record Lowering(Kind kind, String target) {
     public enum Kind {
         STATIC_CALL,   // e.g. function(...);
-        VIRTUAL_CALL  // e.g. receiver.function(...);
+        VIRTUAL_CALL   // e.g. receiver.function(...);
     }
 
     public static Lowering staticCall(String global) {

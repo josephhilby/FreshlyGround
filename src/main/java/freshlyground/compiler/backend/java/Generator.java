@@ -109,7 +109,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        print(getJavaType(bindings.getFunction(ast).getType()), " ", bindings.getFunction(ast).getName());
+        print(getJavaType(bindings.getFunction(ast).returnType()), " ", bindings.getFunction(ast).name());
 
         if (ast.getParameters().isEmpty()) {
             print("() {");
@@ -312,9 +312,9 @@ public final class Generator implements Ast.Visitor<Void> {
 
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", bindings.getFunction(ast).getName(), "(");
+            print(receiver, ".", bindings.getFunction(ast).name(), "(");
         } else {
-            print(bindings.getFunction(ast).getName(), "(");
+            print(bindings.getFunction(ast).name(), "(");
         }
 
         if (!ast.getArguments().isEmpty()) {

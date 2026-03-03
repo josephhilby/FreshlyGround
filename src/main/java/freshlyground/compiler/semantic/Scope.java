@@ -23,7 +23,7 @@ public final class Scope {
         }
 
         Environment.Function func = new Environment.Function(name, parameterTypes, returnType);
-        functions.put(func.getName() + "/" + func.getParameterTypes().size(), func);
+        functions.put(func.name() + "/" + func.parameterTypes().size(), func);
         return func;
     }
     public Environment.Function lookupFunction(String name, int arity) {

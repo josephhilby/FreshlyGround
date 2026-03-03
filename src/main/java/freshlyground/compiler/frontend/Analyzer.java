@@ -48,7 +48,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // throws a CompilerException if: no 'main/0' type INT
         Environment.Function main = lexicalScope.lookupFunction("main", 0);
-        if (main.getType() != Environment.Type.INTEGER) {
+        if (main.returnType() != Environment.Type.INTEGER) {
             throw new CompilerException("main() return type must be an integer");
         }
 
@@ -450,7 +450,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         bindings.setFunction(ast, function);
 
         // checks provided arguments are assignable to parameter types
-        parameterTypes = function.getParameterTypes();
+        parameterTypes = function.parameterTypes();
         for (Ast.Expression argument : arguments) {
             visit(argument);
             requireAssignable(parameterTypes.get(parameterOffset), bindings.getType(argument));

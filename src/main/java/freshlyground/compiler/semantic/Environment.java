@@ -143,36 +143,24 @@ public final class Environment {
         }
     }
 
-    public static final class Function {
-        private final String name;
-        private final List<Type> parameterTypes;
-        private final Type returnType;
-
-        public Function(String name, List<Type> parameterTypes, Type returnType) {
-            this.name = name;
-            this.parameterTypes = parameterTypes;
-            this.returnType = returnType;
+    public record Function(
+        String name,
+        List<Type> parameterTypes,
+        Type returnType
+    ) {
+        public Function {
+            parameterTypes = List.copyOf(parameterTypes);
         }
 
-        public String getName() { return name; }
-        public List<Type> getParameterTypes() { return parameterTypes; }
-        public Type getType() { return returnType; }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (!(obj instanceof Function other)) return false;
-
-            return Objects.equals(name, other.name) &&
-                Objects.equals(parameterTypes, other.parameterTypes) &&
-                Objects.equals(returnType, other.returnType);
+        public int arity() {
+            return parameterTypes.size();
         }
 
         @Override
         public String toString() {
             return "Function{" +
                 "name='" + name + '\'' +
-                ", arity=" + parameterTypes.size() +
+                ", arity=" + arity() +
                 ", parameterTypes=" + parameterTypes +
                 ", returnType=" + returnType +
                 '}';

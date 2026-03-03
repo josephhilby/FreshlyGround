@@ -111,7 +111,7 @@ public abstract class BindingMap<K, V> {
 
         public Environment.Type getType(Ast.Expression node) {
             if (node instanceof Ast.Expression.Function function) {
-                return functionBindings.getBinding(function).getType();
+                return functionBindings.getBinding(function).returnType();
             }
             if (node instanceof Ast.Expression.Access access) {
                 return accessBindings.getBinding(access).getType();
