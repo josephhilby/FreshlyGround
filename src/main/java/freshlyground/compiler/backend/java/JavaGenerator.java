@@ -1,33 +1,33 @@
 package freshlyground.compiler.backend.java;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.backend.core.Generator;
 import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.artifacts.Ast;
-import freshlyground.compiler.backend.common.Lowering;
+import freshlyground.compiler.backend.core.FunctionCallLowering;
 import freshlyground.compiler.semantic.Types;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 
-public final class Generator implements Ast.Visitor<Void> {
-    private final StringWriter stringWriter;
-    private final PrintWriter writer;
-    private final Bindings bindings;
-    private final StandardLibraryLowerings standardLibraryLowerings;
-    private int indent = 0;
+public final class JavaGenerator extends Generator {
+    private final StandardLibraryLowering standardLibraryLowering;
 
-    public Generator(Bindings bindings) {
-        this.stringWriter = new StringWriter();
-        this.writer = new PrintWriter(stringWriter);
-        this.bindings = bindings;
-        this.standardLibraryLowerings = new StandardLibraryLowerings();
+    public JavaGenerator(Bindings bindings) {
+        super(bindings);
+        this.standardLibraryLowering = new StandardLibraryLowering();
     }
 
-    public String emit(Ast ast) {
-        visit(ast);
-        return stringWriter.toString();
+    private String getJavaType(String typeName) {
+        return JavaTypeLowering.getJavaType(Environment.lookupType(typeName));
+    }
+
+    private String getJavaType(Environment.Type type) {
+        return JavaTypeLowering.getJavaType(type);
+    }
+
+    private String getJavaReturnType(Environment.Type type) {
+        return JavaTypeLowering.getJavaReturnType(type);
     }
 
     @FunctionalInterface
@@ -35,26 +35,10 @@ public final class Generator implements Ast.Visitor<Void> {
         void out(Object... parts);
     }
 
-    private void print(Object... objects) {
-        for (Object object : objects) {
-            if (object instanceof Ast) {
-                visit((Ast) object);
-            } else {
-                writer.write(object.toString());
-            }
-        }
-    }
-
     private JavaPrint printer() {
         return this::print;
     }
 
-    private void newline(int indent) {
-        writer.println();
-        for (int i = 0; i < indent; i++) {
-            writer.write("    ");
-        }
-    }
 
     @Override
     public Void visit(Ast.Source ast) {
@@ -110,7 +94,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        print(getJavaType(bindings.getFunction(ast).returnType()), " ", bindings.getFunction(ast).name());
+        print(getJavaReturnType(bindings.getFunction(ast).returnType()), " ", bindings.getFunction(ast).name());
 
         if (ast.getParameters().isEmpty()) {
             print("() {");
@@ -304,10 +288,10 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Function ast) {
         Environment.Function function = bindings.getFunction(ast);
-        Lowering builtin = standardLibraryLowerings.lowerBuiltin(function);
+        FunctionCallLowering builtin = standardLibraryLowering.lowerBuiltin(function);
 
         if (builtin != null) {
-            standardLibraryLowerings.emitCall(printer(), ast, builtin);
+            standardLibraryLowering.emitCall(printer(), ast, builtin);
             return null;
         }
 
@@ -330,14 +314,5 @@ public final class Generator implements Ast.Visitor<Void> {
 
         print(")");
         return null;
-    }
-
-    // helper
-    private String getJavaType(String typeName) {
-        return TypeMapper.getJavaType(Environment.lookupType(typeName));
-    }
-
-    private String getJavaType(Environment.Type type) {
-        return TypeMapper.getJavaType(type);
     }
 }
