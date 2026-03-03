@@ -172,12 +172,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getValue());
 
         // can't assign to constant
-        if (bindings.getVariable(ast.getReceiver()).getConstant()) {
+        if (bindings.getVariable(ast.getReceiver()).constant()) {
             throw new CompilerException("Cannot reassign constant");
         }
 
         // throws a CompilerException if: value is not assignable to receiver
-        requireAssignable(bindings.getVariable(ast.getReceiver()).getType(), bindings.getType(ast.getValue()));
+        requireAssignable(bindings.getVariable(ast.getReceiver()).type(), bindings.getType(ast.getValue()));
         return null;
     }
 
@@ -419,7 +419,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         // set variable and type
         bindings.setVariable(ast, variable);
-        bindings.setType(ast, variable.getType());
+        bindings.setType(ast, variable.type());
         return null;
     }
 

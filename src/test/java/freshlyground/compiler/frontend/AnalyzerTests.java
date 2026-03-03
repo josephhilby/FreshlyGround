@@ -21,7 +21,7 @@ public final class AnalyzerTests {
         Analyzer analyzer = new Analyzer();
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getVariable(ast));
-        Assertions.assertEquals(expected, analyzer.getScope().lookupVariable(expected.getName()));
+        Assertions.assertEquals(expected, analyzer.getScope().lookupVariable(expected.name()));
     }
 
     private static Stream<Arguments> testFieldHappyPath() {
@@ -149,7 +149,7 @@ public final class AnalyzerTests {
         Analyzer analyzer = new Analyzer();
         analyzer.visit(ast);
         Assertions.assertEquals(expected, analyzer.getBindings().getVariable(ast));
-        Assertions.assertEquals(expected, analyzer.getScope().lookupVariable(expected.getName()));
+        Assertions.assertEquals(expected, analyzer.getScope().lookupVariable(expected.name()));
     }
 
     private static Stream<Arguments> testDeclarationStatementHappyPath() {

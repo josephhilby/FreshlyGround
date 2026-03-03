@@ -42,7 +42,7 @@ public final class Scope {
         }
 
         Environment.Variable variable = new Environment.Variable(name, type, constant);
-        variables.put(variable.getName(), variable);
+        variables.put(variable.name(), variable);
         return variables.get(name);
     }
     public Environment.Variable lookupVariable(String name) {

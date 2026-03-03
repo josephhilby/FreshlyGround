@@ -146,7 +146,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.Declaration ast) {
-        print(getJavaType(bindings.getVariable(ast).getType()), " ", bindings.getVariable(ast).getName());
+        print(getJavaType(bindings.getVariable(ast).type()), " ", bindings.getVariable(ast).name());
 
         if (ast.getValue().isPresent()) {
             print(" = ", ast.getValue().get());
@@ -293,9 +293,9 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expression.Access ast) {
         if (ast.getReceiver().isPresent()) {
             Ast.Expression receiver = ast.getReceiver().get();
-            print(receiver, ".", bindings.getVariable(ast).getName());
+            print(receiver, ".", bindings.getVariable(ast).name());
         } else {
-            print(bindings.getVariable(ast).getName());
+            print(bindings.getVariable(ast).name());
         }
         return null;
     }

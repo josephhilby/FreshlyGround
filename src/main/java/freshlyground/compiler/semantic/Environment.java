@@ -143,11 +143,7 @@ public final class Environment {
         }
     }
 
-    public record Function(
-        String name,
-        List<Type> parameterTypes,
-        Type returnType
-    ) {
+    public record Function(String name, List<Type> parameterTypes, Type returnType) {
         public Function {
             parameterTypes = List.copyOf(parameterTypes);
         }
@@ -167,31 +163,7 @@ public final class Environment {
         }
     }
 
-    public static final class Variable {
-        private final String name;
-        private final Type type;
-        private final boolean constant;
-
-        public Variable(String name, Type type, boolean constant) {
-            this.name = name;
-            this.type = type;
-            this.constant = constant;
-        }
-
-        public String getName() { return name; }
-        public Type getType() { return type; }
-        public boolean getConstant() { return constant; }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) return true;
-            if (!(obj instanceof Variable other)) return false;
-
-            return Objects.equals(name, other.name) &&
-                Objects.equals(constant, other.constant) &&
-                Objects.equals(type, other.type);
-        }
-
+    public record Variable(String name, Type type, boolean constant) {
         @Override
         public String toString() {
             return "Variable{" +

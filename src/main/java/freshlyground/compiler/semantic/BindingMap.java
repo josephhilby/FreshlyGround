@@ -114,7 +114,7 @@ public abstract class BindingMap<K, V> {
                 return functionBindings.getBinding(function).returnType();
             }
             if (node instanceof Ast.Expression.Access access) {
-                return accessBindings.getBinding(access).getType();
+                return accessBindings.getBinding(access).type();
             }
             return typeBindings.getBinding(node);
         }
