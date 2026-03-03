@@ -1,9 +1,9 @@
 package freshlyground.cli;
 
 import freshlyground.compiler.backend.java.Generator;
-import freshlyground.common.Token;
+import freshlyground.compiler.frontend.artifacts.common.Token;
 import freshlyground.compiler.frontend.Analyzer;
-import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.artifacts.Ast;
 import freshlyground.compiler.frontend.Lexer;
 import freshlyground.compiler.frontend.Parser;
 import freshlyground.compiler.semantic.Bindings;

@@ -2,7 +2,7 @@ package freshlyground.compiler.backend;
 
 import freshlyground.compiler.backend.java.Generator;
 import freshlyground.compiler.frontend.Analyzer;
-import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.artifacts.Ast;
 import freshlyground.compiler.semantic.Bindings;
 
 import freshlyground.compiler.semantic.Types;

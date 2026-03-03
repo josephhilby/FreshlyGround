@@ -1,7 +1,7 @@
 package freshlyground.compiler.semantic;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.artifacts.Ast;
 
 import java.util.HashMap;
 import java.util.Map;

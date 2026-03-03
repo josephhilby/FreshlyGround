@@ -1,4 +1,4 @@
-package freshlyground.common;
+package freshlyground.compiler.frontend.artifacts.common;
 
 import freshlyground.compiler.frontend.Lexer;
 

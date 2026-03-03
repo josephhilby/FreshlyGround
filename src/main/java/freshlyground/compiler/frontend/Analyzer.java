@@ -1,6 +1,7 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.frontend.artifacts.Ast;
 import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.StandardLibrary;
 import freshlyground.compiler.semantic.Environment;

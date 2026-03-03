@@ -1,6 +1,7 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.frontend.artifacts.Ast;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Types;
 import org.junit.jupiter.api.Assertions;

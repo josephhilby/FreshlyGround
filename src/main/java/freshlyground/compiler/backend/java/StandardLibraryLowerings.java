@@ -1,15 +1,15 @@
 package freshlyground.compiler.backend.java;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.frontend.Ast;
+import freshlyground.compiler.frontend.artifacts.Ast;
 import freshlyground.compiler.semantic.StandardLibrary.Symbols;
 import freshlyground.compiler.semantic.Environment;
-import freshlyground.common.Lowering;
+import freshlyground.compiler.backend.common.Lowering;
 
 import java.util.List;
 import java.util.Map;
 
-public final class BuiltinLowerings {
+public final class StandardLibraryLowerings {
     private final Map<Environment.Function, Lowering> functions = Map.of(
         Symbols.PRINT,         Lowering.staticCall("System.out.println"),
         Symbols.INPUT,         Lowering.staticCall("System.in"),

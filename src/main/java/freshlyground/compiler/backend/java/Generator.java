@@ -3,8 +3,8 @@ package freshlyground.compiler.backend.java;
 import freshlyground.common.CompilerException;
 import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.frontend.Ast;
-import freshlyground.common.Lowering;
+import freshlyground.compiler.frontend.artifacts.Ast;
+import freshlyground.compiler.backend.common.Lowering;
 import freshlyground.compiler.semantic.Types;
 
 import java.io.PrintWriter;
@@ -15,14 +15,14 @@ public final class Generator implements Ast.Visitor<Void> {
     private final StringWriter stringWriter;
     private final PrintWriter writer;
     private final Bindings bindings;
-    private final BuiltinLowerings builtinLowerings;
+    private final StandardLibraryLowerings standardLibraryLowerings;
     private int indent = 0;
 
     public Generator(Bindings bindings) {
         this.stringWriter = new StringWriter();
         this.writer = new PrintWriter(stringWriter);
         this.bindings = bindings;
-        this.builtinLowerings = new BuiltinLowerings();
+        this.standardLibraryLowerings = new StandardLibraryLowerings();
     }
 
     public String emit(Ast ast) {
@@ -304,10 +304,10 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Expression.Function ast) {
         Environment.Function function = bindings.getFunction(ast);
-        Lowering builtin = builtinLowerings.lowerBuiltin(function);
+        Lowering builtin = standardLibraryLowerings.lowerBuiltin(function);
 
         if (builtin != null) {
-            builtinLowerings.emitCall(printer(), ast, builtin);
+            standardLibraryLowerings.emitCall(printer(), ast, builtin);
             return null;
         }
 
