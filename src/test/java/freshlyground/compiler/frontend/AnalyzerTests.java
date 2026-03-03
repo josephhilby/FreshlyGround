@@ -2,7 +2,6 @@ package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
 import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.semantic.Scope;
 import freshlyground.compiler.semantic.Types;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;

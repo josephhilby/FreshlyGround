@@ -3,9 +3,7 @@ package freshlyground.compiler.backend;
 import freshlyground.compiler.backend.java.Generator;
 import freshlyground.compiler.frontend.Analyzer;
 import freshlyground.compiler.frontend.Ast;
-import freshlyground.compiler.semantic.BindingMap.Bindings;
-import freshlyground.compiler.semantic.Environment;
-import freshlyground.compiler.semantic.Scope;
+import freshlyground.compiler.semantic.Bindings;
 
 import freshlyground.compiler.semantic.Types;
 import org.junit.jupiter.api.Assertions;

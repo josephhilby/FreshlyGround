@@ -1,7 +1,7 @@
 package freshlyground.compiler.frontend;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.BindingMap.Bindings;
+import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.StandardLibrary;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.semantic.Scope;

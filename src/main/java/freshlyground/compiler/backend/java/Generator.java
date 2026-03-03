@@ -1,7 +1,7 @@
 package freshlyground.compiler.backend.java;
 
 import freshlyground.common.CompilerException;
-import freshlyground.compiler.semantic.BindingMap.Bindings;
+import freshlyground.compiler.semantic.Bindings;
 import freshlyground.compiler.semantic.Environment;
 import freshlyground.compiler.frontend.Ast;
 import freshlyground.common.Lowering;
