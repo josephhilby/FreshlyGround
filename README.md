@@ -22,8 +22,7 @@ refactored into a full compiler toolchain, and web environment. Its design is st
 programming language in [*Crafting Interpreters*](https://www.craftinginterpreters.com/), with an emphasis on explicit intermediate representations, 
 externalized semantic bindings, and multiple pluggable backends.
 
-FreshlyGround currently targets the JVM and is being extended by means of a WebAssembly backend, with a 
-browser-based execution environment, and a Hack VM backend for compilation to the nand2tetris CPU.
+FreshlyGround currently targets the JVM and is being extended by means of additional WebAssembly and Hack VM (nand2tetris CPU) backends.
 
 <br>
 <p align="center">
