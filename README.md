@@ -189,7 +189,7 @@ Web UI:
     - [ ] Change POST from Java to WAT
 - [ ] Add 
 - [ ] STRETCH GOALS
-    - [ ] Display all IR representations of code on UI
+    - [ ] Display all IR representations of code in UI
 
 #### Documentation
 
