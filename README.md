@@ -44,7 +44,7 @@ Web UI:
 - Vite v7.3.1
 
 ### Quick Start
-1. Ensure you meed the given requirements
+1. Ensure you meet the given requirements, see above
 2. Clone this repository
 3. Navigate to root (all following instructions assumed to be run from root, unless otherwise instructed)
 
