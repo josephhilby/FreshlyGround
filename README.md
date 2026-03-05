@@ -172,14 +172,15 @@ Web UI:
 
 #### Web Execution Environment
 
-- [ ] Build containerized web execution platform
-    - [ ] Develop lightweight web IDE frontend
-    - [ ] Implement minimal API service
-- [ ] Refactor `CompilerMain` into reusable compiler entrypoint
-    - [ ] CLI becomes thin wrapper over shared entrypoint
-    - [ ] API becomes thin wrapper over shared entrypoint
+- [x] Build containerized web execution platform
+    - [x] Develop lightweight web IDE frontend
+    - [x] Implement minimal API service
+- [x] Refactor `CompilerMain` into reusable entrypoint
+    - [x] CLI becomes thin wrapper over shared entrypoint
+    - [x] API becomes thin wrapper over shared entrypoint
 - [ ] Implement `/compile` API endpoint
-    - POST source code → return WAT output
+    - [x] POST source code → return Java output
+    - [ ] Change POST from Java to WAT
 
 #### Documentation
 
