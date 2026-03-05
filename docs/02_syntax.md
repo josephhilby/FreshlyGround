@@ -66,16 +66,15 @@ escape     := \\ [bnrt'"\\]
 
 ## Program Structure
 
-The **non-terminal symbols (N)** of FreshlyGround can be broken down into three categories:
+The **non-terminal symbols (N)** of FreshlyGround can be broken down into four main categories:
+* **Start Symbol** —define the entire program, and the root of the tree.
 * **Top level forms** — define program structure and global declarations.
 * **Statements** — define control flow and state transitions; they do not evaluate to values.
 * **Expressions** — define value-producing constructs.
 
-These categories partition the grammar into compositional layers of structure.
+In the EBNF definitions below they are represented as `Non-terminal symbol ::= Production rule`.
 
 ### Start Symbol
-The start symbol `source` represents a complete program.
-
 ```ebnf
 source ::= { field } { method }
 ```
@@ -113,7 +112,7 @@ statement ::=
 ```
 
 ### Expressions
-Expressions are defined using a precedence hierarchy and are the primary value-producing construct.
+Note: expressions are defined using a precedence hierarchy.
 
 ``` ebnf
 expression ::= logical_expression
@@ -156,7 +155,7 @@ primary_expression ::=
 Secondary expressions extend primary expressions to support chained member access using the dot (`.`) operator. Because
 secondary expressions are recursively defined over primary expressions, they enable successive member resolution.
 
-Semantically, the dot operator shifts the resolution context: the `identifier` is resolved within the type or value 
+Semantically, the dot operator shifts the resolution context so that the `identifier` is resolved within the type 
 denoted by the preceding `expression`, rather than within the current lexical (global or method) scope. A detailed 
 treatment of this resolution process appears in [Section 4](./04_semantics.md).
 
