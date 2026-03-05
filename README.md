@@ -2,20 +2,15 @@
 <br />
 <div align="center">
   <a href="https://github.com/<your_repo>">
-    <img src="assets/banner.png" alt="Logo" width="80%">
+    <img src="assets/banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
   </a>
 
   <h3>
-    A novel programming language for the Java Virtual Machine
+    A Java based novel programming language
   </h3>
 </div>
 
 ---
-
-<p align="center">
-  <img src="assets/front_end.png" alt="FreshlyGround Web UI" width="900" style="border-radius:12px;>
-</p>
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture 
@@ -30,6 +25,15 @@ externalized semantic bindings, and multiple pluggable backends.
 FreshlyGround currently targets the JVM and is being extended by means of a WebAssembly backend, with a 
 browser-based execution environment, and a Hack VM backend for compilation to the nand2tetris CPU.
 
+<br>
+<p align="center">
+  <img src="assets/front_end.png"
+       alt="FreshlyGround Web UI"
+       style="max-width:80%; border-radius:12px;">
+  <br>
+  <em>FreshlyGround Web Compiler User Interface</em>
+</p>
+
 ### Requirements
 Core:
 - Java 21+
@@ -41,23 +45,9 @@ Web UI:
 - Vite v7.3.1
 
 ### Quick Start
-1. Ensure you have Java 21 or higher
+1. Ensure you meed the given requirements
 2. Clone this repository
-3. Place your code in `/examples/src`
-   - Note: There is an existing sample file there to transpile (`hello.fg`)
-4. Navigate to root (all following instructions assumed to be run from root, unless otherwise instructed)
-5. Transpile with the following:
-> ```bash
-> ./gradlew build
-> ./build/install/FreshlyGround/bin/fgc examples/src/<src_name>.fg examples/dist/Main.java
-> javac examples/dist/Main.java
-> ```
-
-6. Run with the following:
-> ```bash
-> cd examples/dist
-> java Main
-> ```
+3. Navigate to root (all following instructions assumed to be run from root, unless otherwise instructed)
 
 ### Run API Server
 1. Start the server:
@@ -87,6 +77,22 @@ Web UI:
 >```
 
 4. Open your browser to [http://localhost:5173/](http://localhost:5173/)
+
+### Compile and Run from the CLI
+1. Place your code in `/examples/src`
+   - Note: There is an existing sample file there to transpile (`hello.fg`)
+2. Transpile with the following:
+> ```bash
+> ./gradlew build
+> ./build/install/FreshlyGround/bin/fgc examples/src/<src_name>.fg examples/dist/Main.java
+> javac examples/dist/Main.java
+> ```
+
+3. Run with the following:
+> ```bash
+> cd examples/dist
+> java Main
+> ```
 
 ### Run Tests
 1. Finish the 'Quick Start' steps
