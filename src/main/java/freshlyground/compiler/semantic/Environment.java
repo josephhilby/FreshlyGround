@@ -22,30 +22,24 @@ public final class Environment {
         return type;
     }
 
-    public static boolean requireSame(Type target, Type actual) {
-        if (actual.equals(target)) {
-            return true;
-        }
-        throw new CompilerException("Types mismatch: must be type " + target.getName() + " but was " + actual.getName());
+    public static void require(boolean condition, String message) {
+        if (!condition) throw new CompilerException(message);
     }
-    public static boolean requireNot(Type target, Type actual) {
-        if (actual.equals(target)) {
-            throw new CompilerException("Type must not be: " + target.getName());
-        }
-        return true;
+    public static void requireSame(Type expected, Type actual) {
+        require(expected.equals(actual),
+            "Types mismatch: must be type " + expected.getName() + " but was " + actual.getName());
     }
-    public static boolean requireAssignables(Type target, Type... actuals) {
-        for (Environment.Type actual : actuals) {
-            requireAssignable(target, actual);
-        }
-        return true;
+    public static void requireNot(Type forbidden, Type actual) {
+        require(!forbidden.equals(actual),
+            "Type must not be: " + forbidden.getName());
     }
-    public static boolean requireAssignable(Type target, Type actual) {
-        if (Types.isAssignable(target, actual)) {
-            return true;
-        }
 
-        throw new CompilerException("Type unassignable: " + actual.getName() + " -> " + target.getName());
+    public static void requireAssignable(Type target, Type actual) {
+        require(Types.isAssignable(target, actual),
+            "Type unassignable: " + actual.getName() + " -> " + target.getName());
+    }
+    public static void requireAssignables(Type target, Type... actuals) {
+        for (Type a : actuals) requireAssignable(target, a);
     }
 
     public static final class Type {
@@ -84,7 +78,6 @@ public final class Environment {
                     '}';
         }
     }
-
     public record Function(String name, List<Type> parameterTypes, Type returnType) {
         public Function {
             parameterTypes = List.copyOf(parameterTypes);
@@ -104,7 +97,6 @@ public final class Environment {
                 '}';
         }
     }
-
     public record Variable(String name, Type type, boolean constant) {
         @Override
         public String toString() {

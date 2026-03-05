@@ -18,14 +18,9 @@ public final class JavaGenerator extends Generator {
         this.standardLibraryLowering = new StandardLibraryLowering();
     }
 
-    private String getJavaType(String typeName) {
-        return JavaTypeLowering.getJavaType(Types.lookupType(typeName));
-    }
-
     private String getJavaType(Environment.Type type) {
         return JavaTypeLowering.getJavaType(type);
     }
-
     private String getJavaReturnType(Environment.Type type) {
         return JavaTypeLowering.getJavaReturnType(type);
     }
@@ -38,7 +33,6 @@ public final class JavaGenerator extends Generator {
     private JavaPrint printer() {
         return this::print;
     }
-
 
     @Override
     public Void visit(Ast.Source ast) {
@@ -82,7 +76,8 @@ public final class JavaGenerator extends Generator {
             print("final ");
         }
 
-        print(getJavaType(ast.getTypeName()), " ", ast.getName());
+        Environment.Type type = Types.lookupType(ast.getTypeName());
+        print(getJavaType(type), " ", ast.getName());
 
         if (ast.getValue().isPresent()) {
             print(" = ", ast.getValue().get());
@@ -101,7 +96,8 @@ public final class JavaGenerator extends Generator {
         } else {
             print("(");
             for (int i = 0; i < ast.getParameters().size(); i++) {
-                print(getJavaType(ast.getParameterTypeNames().get(i)), " ", ast.getParameters().get(i));
+                Environment.Type type = Types.lookupType(ast.getParameterTypeNames().get(i));
+                print(getJavaType(type), " ", ast.getParameters().get(i));
                 if (i < ast.getParameters().size() - 1) {
                     print(", ");
                 }
@@ -227,26 +223,18 @@ public final class JavaGenerator extends Generator {
 
     @Override
     public Void visit(Ast.Expression.Literal ast) {
-        if (bindings.getType(ast).equals(Types.INTEGER)) {
-            print(ast.getLiteral());
+        Environment.Type type = bindings.getType(ast);
 
-        } else if (bindings.getType(ast).equals(Types.DECIMAL)) {
+        if (type == Types.INTEGER || type == Types.DECIMAL || type == Types.BOOLEAN) {
             print(ast.getLiteral());
-
-        } else if (bindings.getType(ast).equals(Types.STRING)) {
+        } else if (type == Types.STRING) {
             print("\"", ast.getLiteral(), "\"");
-
-        } else if (bindings.getType(ast).equals(Types.CHARACTER)) {
+        } else if (type == Types.CHARACTER) {
             print("'", ast.getLiteral(), "'");
-
-        } else if (bindings.getType(ast).equals(Types.BOOLEAN)) {
-            print(ast.getLiteral());
-
-        } else if (bindings.getType(ast).equals(Types.NIL)) {
+        } else if (type == Types.NIL) {
             print("null");
-
         } else {
-            throw new CompilerException("Unknown Type: " + bindings.getType(ast));
+            throw new CompilerException("Unknown Type: " + type);
         }
         return null;
     }
@@ -266,9 +254,6 @@ public final class JavaGenerator extends Generator {
                 break;
             case "OR":
                 operator = "||";
-                break;
-            case "^":
-                operator = "math.pow";
         }
         print(ast.getLeft(), " ",operator, " ", ast.getRight());
         return null;

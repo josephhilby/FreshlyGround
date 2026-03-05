@@ -32,6 +32,39 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Bindings getBindings() { return bindings; }
     public void setReturnType(Environment.Type returnType) { this.currentReturnType = returnType; }
 
+    private void visitStatements(List<Ast.Statement> statements) {
+        try {
+            lexicalScope = new Scope(lexicalScope);
+
+            for (Ast.Statement statement : statements) {
+                visit(statement);
+            }
+
+        } finally {
+            lexicalScope = lexicalScope.getParent();
+        }
+    }
+    private void visitAllStatements(
+        List<String> parameters,
+        List<Environment.Type> paramTypes,
+        List<Ast.Statement> statements
+    ) {
+        try {
+            lexicalScope = new Scope(lexicalScope);
+
+            for (int i = 0; i < parameters.size(); i++) {
+                lexicalScope.defineVariable(parameters.get(i), paramTypes.get(i), false);
+            }
+
+            for (Ast.Statement statement : statements) {
+                visit(statement);
+            }
+
+        } finally {
+            lexicalScope = lexicalScope.getParent();
+        }
+    }
+
     public Bindings decorate(Ast ast) {
         visit(ast);
         return bindings;
@@ -110,28 +143,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         // visit statements (including parameters) in new scope
         visitAllStatements(parameters, paramTypes, statements);
         return null;
-    }
-
-    // helper
-    private void visitAllStatements(
-        List<String> parameters,
-        List<Environment.Type> paramTypes,
-        List<Ast.Statement> statements
-    ) {
-        try {
-            lexicalScope = new Scope(lexicalScope);
-
-            for (int i = 0; i < parameters.size(); i++) {
-                lexicalScope.defineVariable(parameters.get(i), paramTypes.get(i), false);
-            }
-
-            for (Ast.Statement statement : statements) {
-                visit(statement);
-            }
-
-        } finally {
-            lexicalScope = lexicalScope.getParent();
-        }
     }
 
     @Override
@@ -255,20 +266,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
-    // helper
-    private void visitStatements(List<Ast.Statement> statements) {
-        try {
-            lexicalScope = new Scope(lexicalScope);
-
-            for (Ast.Statement statement : statements) {
-                visit(statement);
-            }
-
-        } finally {
-            lexicalScope = lexicalScope.getParent();
-        }
-    }
-
     @Override
     public Void visit(Ast.Statement.Return ast) {
         visit(ast.getValue());
@@ -340,63 +337,64 @@ public final class Analyzer implements Ast.Visitor<Void> {
         Environment.Type leftType = bindings.getType(ast.getLeft());
         Environment.Type rightType = bindings.getType(ast.getRight());
 
-        // throws a CompilerException if: all errant casts
-        if (check(operator, "AND", "OR")) {
-            requireAssignables(Types.BOOLEAN, leftType, rightType);
-            bindings.setType(ast, Types.BOOLEAN);
+        switch (operator) {
 
-        } else if (check(operator, "==", "!=")) {
-            requireSame(leftType, rightType);
-            bindings.setType(ast, Types.BOOLEAN);
-
-        } else if (check(operator, "<=", ">=", "<", ">")) {
-            requireAssignables(Types.PRIMITIVE, leftType, rightType);
-            requireSame(leftType, rightType);
-            requireNot(Types.BOOLEAN, leftType);
-            bindings.setType(ast, Types.BOOLEAN);
-
-        } else if (check(operator, "+") && check(Types.STRING, leftType, rightType)) {
-            bindings.setType(ast, Types.STRING);
-
-        } else if (check(operator, "+", "-", "*", "/")) {
-            if (check(Types.INTEGER, leftType)) {
-                requireAssignables(Types.INTEGER, leftType, rightType);
-                bindings.setType(ast, Types.INTEGER);
-
-            } else if (check(Types.DECIMAL, leftType)) {
-                requireAssignables(Types.DECIMAL, leftType, rightType);
-                bindings.setType(ast, Types.DECIMAL);
-
-            } else {
-                throw new CompilerException("Arithmetic Operators must have matching types, INT or DECIMAL");
+            case "AND", "OR" -> {
+                requireAssignables(Types.BOOLEAN, leftType, rightType);
+                bindings.setType(ast, Types.BOOLEAN);
             }
 
-        } else {
-            // throws a CompilerException if: Unknown Operator
-            throw new CompilerException("Unknown Operator: " + operator);
+            case "==", "!=" -> {
+                requireSame(leftType, rightType);
+                bindings.setType(ast, Types.BOOLEAN);
+            }
+
+            case "<", "<=", ">", ">=" -> {
+                requireAssignables(Types.PRIMITIVE, leftType, rightType);
+                requireSame(leftType, rightType);
+                requireNot(Types.BOOLEAN, leftType);
+                bindings.setType(ast, Types.BOOLEAN);
+            }
+
+            case "+" -> {
+                if (leftType == Types.STRING || rightType == Types.STRING) {
+                    bindings.setType(ast, Types.STRING);
+
+                } else if (leftType == Types.INTEGER) {
+                    requireAssignables(Types.INTEGER, leftType, rightType);
+                    bindings.setType(ast, Types.INTEGER);
+
+                } else if (leftType == Types.DECIMAL) {
+                    requireAssignables(Types.DECIMAL, leftType, rightType);
+                    bindings.setType(ast, Types.DECIMAL);
+
+                } else {
+                    throw new CompilerException(
+                        "Arithmetic Operators must have matching types, INT or DECIMAL"
+                    );
+                }
+            }
+
+            case "-", "*", "/" -> {
+                if (leftType == Types.INTEGER) {
+                    requireAssignables(Types.INTEGER, leftType, rightType);
+                    bindings.setType(ast, Types.INTEGER);
+
+                } else if (leftType == Types.DECIMAL) {
+                    requireAssignables(Types.DECIMAL, leftType, rightType);
+                    bindings.setType(ast, Types.DECIMAL);
+
+                } else {
+                    throw new CompilerException(
+                        "Arithmetic Operators must have matching types, INT or DECIMAL"
+                    );
+                }
+            }
+
+            default -> throw new CompilerException("Unknown Operator: " + operator);
         }
 
         return null;
-    }
-
-    // helper
-    private boolean check(Environment.Type expectedType, Environment.Type... actualTypes) {
-        for (Environment.Type actualType : actualTypes) {
-            if (expectedType.equals(actualType)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // helper
-    private boolean check(String operator, String... literals) {
-        for (String literal : literals) {
-            if (operator.equals(literal)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
