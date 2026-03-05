@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class JavaJavaGeneratorTests {
+public class JavaGeneratorTests {
     @ParameterizedTest(name = "{0}")
     @MethodSource
     void testSource(String test, Ast.Source ast, String expected) {

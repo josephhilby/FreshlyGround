@@ -175,16 +175,16 @@ public final class JavaGenerator extends Generator {
     @Override
     public Void visit(Ast.Statement.For ast) {
         print("for ( ");
-        if (ast.getInitialization() != null) {
-            print(ast.getInitialization(), " ");
+        if (ast.getInitialization().isPresent()) {
+            print(ast.getInitialization().get(), " ");
         } else {
             print("; ");
         }
 
         print(ast.getCondition(), "; ");
 
-        if (ast.getIncrement() != null) {
-            Ast.Statement.Assignment increment = ast.getIncrement();
+        if (ast.getIncrement().isPresent()) {
+            Ast.Statement.Assignment increment = ast.getIncrement().get();
             print(increment.getReceiver(), " = ", increment.getValue(), " ");
         }
 

@@ -161,14 +161,6 @@ public final class Lexer {
         return emit(Token.Type.STRING);
     }
 
-    private void lexEscape() {
-        if (match("[bnrt'\"\\\\]")) {
-            return;
-        }
-
-        lexError("Invalid escape character");
-    }
-
     private Token lexOperator() {
         if (match("[<>!=]", "=")) {
             return emit(Token.Type.OPERATOR);
@@ -180,6 +172,21 @@ public final class Lexer {
 
         lexError("Unexpected character");
         return null;
+    }
+
+    private void lexEscape() {
+        if (match("[bnrt'\"\\\\]")) {
+            return;
+        }
+
+        lexError("Invalid escape character");
+    }
+
+    private void lexError(String message) {
+        throw new CompilerException(
+            message,
+            chars.getIndex()
+        );
     }
 
     private void matchCharacter(boolean isString) {
@@ -199,12 +206,5 @@ public final class Lexer {
         }
 
         lexError("Missing char/string literal or empty/invalid character");
-    }
-
-    private void lexError(String message) {
-        throw new CompilerException(
-            message,
-            chars.getIndex()
-        );
     }
 }

@@ -318,9 +318,9 @@ public abstract class Ast {
         }
 
         public static final class For extends Statement {
-            private final Optional<Ast.Statement.Assignment> initialization;
+            private final Ast.Statement.Assignment initialization;
             private final Ast.Expression condition;
-            private final Optional<Ast.Statement.Assignment> increment;
+            private final Ast.Statement.Assignment increment;
             private final List<Ast.Statement> statements;
 
             public For(
@@ -329,15 +329,15 @@ public abstract class Ast {
                 Ast.Statement.Assignment increment,
                 List<Ast.Statement> statements
             ) {
-                this.initialization = Optional.ofNullable(initialization);
+                this.initialization = initialization;
                 this.condition = require(condition, "condition is required");
-                this.increment = Optional.ofNullable(increment);
+                this.increment = increment;
                 this.statements = List.copyOf(require(statements, "statements is required, may be ArrayList<>()"));
             }
 
-            public Optional<Ast.Statement.Assignment> getInitialization() { return initialization; }
+            public Ast.Statement.Assignment getInitialization() { return initialization; }
             public Ast.Expression getCondition() { return condition; }
-            public Optional<Ast.Statement.Assignment> getIncrement() { return increment; }
+            public Ast.Statement.Assignment getIncrement() { return increment; }
             public List<Statement> getStatements() { return statements; }
 
             @Override
@@ -401,7 +401,7 @@ public abstract class Ast {
             private final Object literal;
 
             public Literal(Object literal) {
-                this.literal = literal;
+                this.literal = require(literal, "literal is required");
             }
 
             public Object getLiteral() { return literal; }

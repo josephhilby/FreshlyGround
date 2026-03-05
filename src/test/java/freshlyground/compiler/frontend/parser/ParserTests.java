@@ -1,6 +1,7 @@
-package freshlyground.compiler.frontend;
+package freshlyground.compiler.frontend.parser;
 
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.frontend.Parser;
 import freshlyground.compiler.frontend.artifacts.common.Token;
 import freshlyground.compiler.frontend.artifacts.Ast;
 import org.junit.jupiter.api.Assertions;
@@ -1478,9 +1479,7 @@ final class ParserTests {
         Assertions.assertEquals(expected, parser.parse());
     }
 
-    private static void testParseError(List<Token> tokens,
-                                       String expectedMessage,
-                                       int expectedIndex) {
+    private static void testParseError(List<Token> tokens, String expectedMessage, int expectedIndex) {
         Parser parser = new Parser(tokens);
         CompilerException ex = Assertions.assertThrows(CompilerException.class, parser::parse);
 

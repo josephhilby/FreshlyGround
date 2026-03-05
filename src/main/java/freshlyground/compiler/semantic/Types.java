@@ -1,5 +1,16 @@
 package freshlyground.compiler.semantic;
 
+/**
+ * Represents the type singletons in the language's type system.
+ *
+ * <p>Each {@code Type} owns a {@link Scope} that is parented to the scope of its
+ * supertype, forming a simple type hierarchy (e.g., {@code Decimal → Primitive → Any}).
+ * This scope chain is used to model inherited type-level operations and built-in
+ * functions via lexical lookup.</p>
+ *
+ * <p>The type hierarchy is intentionally shallow and closed: all types are singletons
+ * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
+ */
 public final class Types {
     private Types() {}
 

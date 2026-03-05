@@ -5,17 +5,18 @@ import freshlyground.common.CompilerException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public final class Scope {
-    private final Scope parent;
+    private final Optional<Scope> parent;
     public final Map<String, Environment.Function> functions = new HashMap<>();
     public final Map<String, Environment.Variable> variables = new HashMap<>();
 
     public Scope(Scope parent) {
-        this.parent = parent;
+        this.parent = Optional.ofNullable(parent);
     }
 
-    public Scope getParent() { return parent; }
+    public Scope getParent() { return parent.get(); }
 
     public Environment.Function defineFunction(String name, List<Environment.Type> parameterTypes, Environment.Type returnType) {
         if (functions.containsKey(name + "/" + parameterTypes.size())) {
@@ -30,8 +31,8 @@ public final class Scope {
         if (functions.containsKey(name + "/" + arity)) {
             return functions.get(name + "/" + arity);
         }
-        if (parent != null) {
-            return parent.lookupFunction(name, arity);
+        if (parent.isPresent()) {
+            return getParent().lookupFunction(name, arity);
         }
 
         throw new CompilerException("The function " + name + "/" + arity + " is not defined in this scope.");
@@ -50,8 +51,8 @@ public final class Scope {
         if (variables.containsKey(name)) {
             return variables.get(name);
         }
-        if (parent != null) {
-            return parent.lookupVariable(name);
+        if (parent.isPresent()) {
+            return getParent().lookupVariable(name);
         }
 
         throw new CompilerException("The variable " + name + " is not defined in this scope.");
