@@ -1,33 +1,40 @@
-# Gradle
+# =========================
+# Java / Gradle
+# =========================
 .gradle/
 build/
-
-# IntelliJ IDEA
-.idea/
-*.iml
-*.iws
-*.ipr
 out/
+*.class
 
-# Eclipse
-.classpath
-.project
-.settings/
-.apt_generated/
-.factorypath
-.springBeans
-.sts4-cache/
-bin/
-
-# NetBeans
-nbproject/private/
-nbbuild/
+# =========================
+# Node / Vite (web app)
+# =========================
+node_modules/
 dist/
-nbdist/
-.nb-gradle/
+.vite/
 
-# VS Code
-.vscode/
+# =========================
+# Logs
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# macOS
+# =========================
+# OS
+# =========================
 .DS_Store
+
+# =========================
+# IDEs
+# =========================
+.idea/
+.vscode/
+*.iml
+
+# =========================
+# Misc
+# =========================
+*.local

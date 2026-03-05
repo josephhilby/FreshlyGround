@@ -12,6 +12,10 @@
 
 ---
 
+<p align="center">
+  <img src="assets/front_end.png" alt="FreshlyGround Web UI" width="900" style="border-radius:12px;>
+</p>
+
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture 
