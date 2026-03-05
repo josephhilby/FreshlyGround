@@ -57,10 +57,13 @@ This allows:
 
 ### Binding Model
 
-FreshlyGround follows a static, early-binding model similar to Java, where bindings are established progressively:
+FreshlyGround follows a static, early-binding model similar to Java, where bindings are established progressively then turned over to the target platform:
 
+#### FreshlyGround
 1. **Design Time** — Grammar rules, builtins, and primitive types
 2. **Implementation Time** — Mapping language primitive types, and builtins to backend representations
 3. **Source Time** — Variable and function declarations in user code
 4. **Compile Time** — Scope construction, name resolution, and type checking
-5. **Run Time** — Storage allocation, and stack activation record are delegated to the target platform
+
+#### Target Platform
+5. **Run Time** — Storage allocation, and stack activation record
