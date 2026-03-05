@@ -128,27 +128,28 @@ Web UI:
 - [x] Redesign and refactor compiler architecture
     - [x] Centralize error handling via `CompilerException`
     - [x] Enforce semantic / syntactic seporation of concerns
-        - [x] Enforce syntactic validation within AST construction
+        - [x] Enforce syntactic validation within `AST` construction
         - [x] Remove syntactic validation logic from `Analyzer`
-        - [x] Implement semantic `Bindings` layer
-        - [x] Eliminate semantic state from AST nodes
+        - [x] Remove semantic information from `AST` nodes
         - [x] Remove semantic validation logic from `Parser`
-    - [x] Remap Scope chain
+    - [x] Remove all references to `jvmName` in `Environment` and `Builtins`
+    - [x] Remap Type Model Scope chain
         - [x] Move `String` under `Any`
         - [x] Change `Compariable` to `Primitive`
         - [x] Update comparable expression semantic rules
-        - [x] Update `Analyzer`
-    - [x] Introduce `Builtins` for member functions and variables
-        - [x] Move current member functions and variables into `StandardLibrary`
-        - [x] Restrict `Builtins` file to in scope declarations only
+    - [x] Introduce `Bindings` for semantic attachments
+        - [x] Move `AST` semantic attachements into `Bindings`
+    - [x] Introduce `Types` as singletons
+        - [x] Refactor type singletons into `Types`
+    - [x] Introduce `StandardLibrary` for member functions and variables
+        - [x] Move `Environment` member functions and variables into `StandardLibrary`
         - [x] Use generator or host ABI to implement functionality
-    - [x] Remove JVM-specific concerns from `Environment` and member functions and variables
-        - [x] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
-        - [x] Remove all references to `jvmName` in `Environment` and `Builtins`
+    - [x] Refactor `Environment` to hold semantic classes, and relivent helpers only
     - [x] Ensure consistency with `nullable` values
-        - [x] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
-        - [x] Update Scope `parent` to `Optional<Scope>`
+        - [x] Update `Ast.Statement.For`, `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
+        - [x] Update `Scope`, `parent` to `Optional<Scope>`
         - [x] Update parsing, generating, and testing to match
+    - [x] Rework Directory to match future goals for plugable backends and web UI
 
 #### Compiler Architecture
 
@@ -186,6 +187,9 @@ Web UI:
 - [ ] Implement `/compile` API endpoint
     - [x] POST source code → return Java output
     - [ ] Change POST from Java to WAT
+- [ ] Add 
+- [ ] STRETCH GOALS
+    - [ ] Display all IR representations of code on UI
 
 #### Documentation
 
