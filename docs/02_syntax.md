@@ -13,7 +13,7 @@ The syntax layer specifies:
 ## Grammatical Model (EBNF)
 FreshlyGround uses **Extended Backus–Naur Form (EBNF)** to define its **context-free grammar (CFG)** over a set of 
 terminal symbols (tokens). The grammar describes how a set of tokens may be combined into a well-formed syntactic construction.
-It serves as the formal specification for how the parser is to create an AST.
+As such, it serves as the formal specification for how the parser is to create an AST.
 
 ### Formal Definition
 
