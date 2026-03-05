@@ -80,7 +80,7 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 
 - [x] Complete COP 4020 baseline implementation
 - [x] Enforce Java 21 via Gradle toolchain
-- [ ] Redesign and refactor compiler architecture
+- [x] Redesign and refactor compiler architecture
     - [x] Centralize error handling via `CompilerException`
     - [x] Enforce semantic / syntactic seporation of concerns
         - [x] Enforce syntactic validation within AST construction
@@ -93,17 +93,17 @@ browser-based execution environment, and a Hack VM backend for compilation to th
         - [x] Change `Compariable` to `Primitive`
         - [x] Update comparable expression semantic rules
         - [x] Update `Analyzer`
-    - [ ] Introduce `Builtins` for member functions and variables
-        - [x] Move current member functions and variables into `Builtins`
+    - [x] Introduce `Builtins` for member functions and variables
+        - [x] Move current member functions and variables into `StandardLibrary`
         - [x] Restrict `Builtins` file to in scope declarations only
-        - [ ] Use generator or host ABI to implement functionality
-    - [ ] Remove JVM-specific concerns from `Environment` and member functions and variables
-        - [ ] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
-        - [ ] Remove all references to `jvmName` in `Environment` and `Builtins`
-    - [ ] Ensure consistency with `nullable` values
-        - [ ] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
-        - [ ] Update Scope `parent` to `Optional<Scope>`
-        - [ ] Update parsing, generating, and testing to match
+        - [x] Use generator or host ABI to implement functionality
+    - [x] Remove JVM-specific concerns from `Environment` and member functions and variables
+        - [x] Map builtin symbols to target representation (e.g., `jvmName`) in current generator
+        - [x] Remove all references to `jvmName` in `Environment` and `Builtins`
+    - [x] Ensure consistency with `nullable` values
+        - [x] Update For loop `initialization` and `increment` to `Optional<Ast.Statement.Assignment>`
+        - [x] Update Scope `parent` to `Optional<Scope>`
+        - [x] Update parsing, generating, and testing to match
 
 #### Compiler Architecture
 
@@ -118,9 +118,10 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 #### Testing Improvements
 
 - [ ] Refactor and expand test suite
-    - [ ] Eliminate overlap between test layers
+    - [x] Split existing tests by intermediate representation class
     - [ ] Ensure unit tests validate only class-level responsibilities
-    - [ ] Reclassify current end-to-end tests as interaction tests
+    - [x] Reclassify current end-to-end tests as interaction tests
+      - [x] Standardize integration tests with the use of a wrapper
     - [ ] Introduce CLI-driven end-to-end tests
 
 #### Compiler Backends
