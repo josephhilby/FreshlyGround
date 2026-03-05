@@ -12,10 +12,15 @@
 
 ---
 
+<p align="center">
+  <img src="assets/front_end.png" alt="FreshlyGround Web UI" width="900" style="border-radius:12px;>
+</p>
+
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture 
-that separates syntax, semantics, and code generation into explicit, single-responsibility components. 
+that separates syntax, semantics, and code generation into explicit, single-responsibility components. It can be
+run via a web UI or command line compiler (see, Quick Start).
 
 The project originated as an academic transpiler for **COP 4020** at the **University of Florida**. It has since been 
 refactored into a full compiler toolchain, and web environment. Its design is strongly influenced by the `lox` 
@@ -26,15 +31,21 @@ FreshlyGround currently targets the JVM and is being extended by means of a WebA
 browser-based execution environment, and a Hack VM backend for compilation to the nand2tetris CPU.
 
 ### Requirements
+Core:
 - Java 21+
-- Gradle (via wrapper)
+- Gradle (via included wrapper)
+
+Web UI:
+- Node.js 18+
+- npm
+- Vite v7.3.1
 
 ### Quick Start
 1. Ensure you have Java 21 or higher
 2. Clone this repository
 3. Place your code in `/examples/src`
    - Note: There is an existing sample file there to transpile (`hello.fg`)
-4. Navigate to root (following paths will assume you are in root)
+4. Navigate to root (all following instructions assumed to be run from root, unless otherwise instructed)
 5. Transpile with the following:
 > ```bash
 > ./gradlew build
@@ -47,6 +58,35 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 > cd examples/dist
 > java Main
 > ```
+
+### Run API Server
+1. Start the server:
+> ```bash
+> ./gradlew runServer
+> ```
+
+2. Run a health check:
+>```bash
+> curl http://localhost:7070/health
+> $ ok
+>```
+
+3. Send some source code:
+>```bash
+> curl -s -X POST http://localhost:7070/compile \
+> -H "Content-Type: application/json" \
+> -d '{"source": "DEF main(): Integer DO print(\"hello world\"); RETURN 0; END"}'
+>```
+
+### Run Web UI
+1. Start the API Server, see above
+2. Navigate to `root/web`
+3. Start the app:
+>```bash
+> npm run dev
+>```
+
+4. Open your browser to [http://localhost:5173/](http://localhost:5173/)
 
 ### Run Tests
 1. Finish the 'Quick Start' steps
@@ -132,14 +172,15 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 
 #### Web Execution Environment
 
-- [ ] Build containerized web execution platform
-    - [ ] Develop lightweight web IDE frontend
-    - [ ] Implement minimal API service
-- [ ] Refactor `CompilerMain` into reusable compiler entrypoint
-    - [ ] CLI becomes thin wrapper over shared entrypoint
-    - [ ] API becomes thin wrapper over shared entrypoint
+- [x] Build containerized web execution platform
+    - [x] Develop lightweight web IDE frontend
+    - [x] Implement minimal API service
+- [x] Refactor `CompilerMain` into reusable entrypoint
+    - [x] CLI becomes thin wrapper over shared entrypoint
+    - [x] API becomes thin wrapper over shared entrypoint
 - [ ] Implement `/compile` API endpoint
-    - POST source code → return WAT output
+    - [x] POST source code → return Java output
+    - [ ] Change POST from Java to WAT
 
 #### Documentation
 

@@ -2,6 +2,15 @@ package freshlyground.compiler.semantic;
 
 import java.util.List;
 
+/**
+ * <p>{@code StandardLibrary} installs the built-in functions available to all
+ * programs. Global functions are defined in the provided global {@link Scope},
+ * while member functions are defined in the scopes owned by the singleton
+ * types in {@link Types}.</p>
+ *
+ * <p>Installed member functions are recorded in {@code Symbols} so the analyzer and
+ * tests can reference the exact {@code Environment.Function} instances.</p>
+ */
 public final class StandardLibrary {
     private StandardLibrary() {}
 
@@ -17,8 +26,8 @@ public final class StandardLibrary {
     // This guard exists so that tests don't reinstall type member functions between tests
     private static boolean TYPE_MEMBERS_INSTALLED = false;
 
-    public static void install(Scope scope) {
-        installGlobals(scope);
+    public static void install(Scope global) {
+        installGlobals(global);
 
         if (!TYPE_MEMBERS_INSTALLED) {
             installTypeMembers();
@@ -26,19 +35,19 @@ public final class StandardLibrary {
         }
     }
 
-    private static void installGlobals(Scope scope) {
+    private static void installGlobals(Scope global) {
         Symbols.PRINT =
-            scope.defineFunction("print", List.of(Types.ANY), Types.NIL);
+            global.defineFunction("print", List.of(Types.ANY), Types.NIL);
         Symbols.INPUT =
-            scope.defineFunction("input", List.of(), Types.STRING);
+            global.defineFunction("input", List.of(), Types.STRING);
     }
 
     private static void installTypeMembers() {
-        Scope any = Environment.lookupType("Any").getScope();
+        Scope any = Types.lookupType("Any").getScope();
         Symbols.ANY_STRINGIFY =
             any.defineFunction("stringify", List.of(Types.ANY), Types.STRING);
 
-        Scope string = Environment.lookupType("String").getScope();
+        Scope string = Types.lookupType("String").getScope();
         Symbols.STRING_LENGTH =
             string.defineFunction("length", List.of(Types.STRING), Types.INTEGER);
         Symbols.STRING_SLICE =

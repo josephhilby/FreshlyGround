@@ -41,10 +41,10 @@ public abstract class Ast {
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || this.getClass() != o.getClass()) return false;
-        return Arrays.deepEquals(this.components(), ((Ast) o).components());
+    public final boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || this.getClass() != obj.getClass()) return false;
+        return Arrays.deepEquals(this.components(), ((Ast) obj).components());
     }
 
     @Override

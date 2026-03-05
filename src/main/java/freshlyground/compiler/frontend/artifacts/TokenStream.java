@@ -60,14 +60,14 @@ public final class TokenStream extends Stream<Token, Object> {
         return consume();
     }
 
-    public Token expectLiteral(String literal) {
+    public void expectLiteral(String literal) {
         if (!peek(literal)) {
             throw new CompilerException(
                 "Missing: " + literal,
                 location(0)
             );
         }
-        return consume();
+        consume();
     }
 
     public int location(int offset) {
