@@ -1,9 +1,8 @@
 # 01 — Compiler Pipeline Specification
 
-This document defines the overall structural architecture of the FreshlyGround compiler. More detailed 
-rules for each stage live in separate documents; this file exists to provide only a general roadmap. As
-a quick note, the language 'stage' and 'pass' are used to talk about the physical implementation, the use of 
-'layer' refers to the more theoretical level that stage or pass belongs to.
+This document explains the overall architecture of the FreshlyGround compiler. More detailed rules for each stage 
+live in their respective documents. As a quick note, I will be using the terms 'stage' and 'pass' to talk about the physical 
+implementation, the use of 'layer' refers to the more theoretical level that stage or pass belongs to.
 
 This roadmap will cover the following:
 
