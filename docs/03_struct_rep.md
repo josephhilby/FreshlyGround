@@ -4,7 +4,8 @@ This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the st
 produced by the parser according to the previously discussed context-free grammar. The AST captures 
 **program form without semantic meaning**. It encodes hierarchy, precedence, and grammatical structure.
 
-* Note: Some of the EBNF definitions have been modified to better show how the map to their respective AST class.
+Note: Some of the EBNF definitions have been modified to better show how the map to their respective AST class.
+
 ---
 
 ## AST Root
@@ -225,14 +226,14 @@ Ast.Expression.Binary
  └─ right    : Ast.Expression
 ```
 
-Operators:
+Infix Operators:
 
 * Logical operators: { `AND`, `OR` }
 * Comparison operators: { `<`, `<=`, `>`, `>=`, `==`, `!=` }
 * Arithmetic operators: { `+`, `-`, `*`, `/` }
 
 ### Member Access and Function Calls
-Please note that in the CFG these were split among primary- and secondary-expressions. However, 
+Please note that in the CFG, these were split among primary- and secondary-expressions. However, 
 both are unified here under a **receiver-based model**, where:
 
 * `receiver = null` represents an unqualified name
