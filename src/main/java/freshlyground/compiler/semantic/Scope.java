@@ -7,6 +7,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * <p>{@code Scope} represents a name-resolution system used during semantic analysis for resolving
+ * {@code Environment.Variable variables} and {@code Environment.Function functions}. Each scope
+ * maintains its own symbol tables and may reference a parent scope, forming a hierarchical
+ * scope chain.</p>
+ *
+ * <p>A scope may represent either:</p>
+ * <ul>
+ *   <li><b>Lexical scope</b> — used for resolving variables and functions defined within
+ *       program blocks (e.g., global scope, method scope, or nested statement blocks).</li>
+ *   <li><b>Type scope</b> — attached to an {@code Environment.Type} and used for resolving
+ *       member variables and member functions of that type. These scopes form a hierarchy
+ *       following the language's type system (e.g., {@code Integer → Primitive → Any}).</li>
+ * </ul>
+ *
+ * <p>Definitions are stored only in the current scope, while lookups follow the parent chain
+ * until a matching binding is found or the root scope is reached.</p>
+ */
 public final class Scope {
     private final Optional<Scope> parent;
     public final Map<String, Environment.Function> functions = new HashMap<>();

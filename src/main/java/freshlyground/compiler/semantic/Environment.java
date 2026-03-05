@@ -2,39 +2,20 @@ package freshlyground.compiler.semantic;
 
 import freshlyground.common.CompilerException;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * <p>{@code Environment} defines the data structures used during semantic analysis
- * and code generation (types, variables, functions). It does not model runtime values
- * or execution.</p>
+ * <p>{@code Environment} defines the semantic model objects used during analysis and code generation
+ * (nominal {@code Type}s, {@code Variable}s, and {@code Function}s) and provides shared semantic
+ * validation helpers (e.g., assignability/equality checks). It does not model runtime values or execution.</p>
  *
- * <p>Built-in bindings (global functions and type members) are installed separately
- * by {@link StandardLibrary}.</p>
+ * <p>The language's closed set of type singletons and type-system operations are defined by {@link Types}.</p>
+ *
+ * <p>Built-in bindings (global functions and type members) are installed separately by {@link StandardLibrary}.</p>
  */
 public final class Environment {
-    private static final Map<String, Type> TYPES = new HashMap<>();
-
-    public static void registerTypes(Type... types) {
-        for (Type type : types) {
-            if (TYPES.containsKey(type.getName())) {
-                throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
-            }
-
-            TYPES.put(type.getName(), type);
-        }
-    }
-    public static Type lookupType(String name) {
-        if (!TYPES.containsKey(name)) {
-            throw new CompilerException("Unknown type: " + name + ".");
-        }
-
-        return TYPES.get(name);
-    }
     public static Type sourceLookupType(String name) {
-        Type type = lookupType(name);
+        Type type = Types.lookupType(name);
         if (type.isInternalType()) {
             throw new CompilerException("Type: " + name + " is an internal classification for semantic resolution.");
         }
@@ -60,15 +41,8 @@ public final class Environment {
         return true;
     }
     public static boolean requireAssignable(Type target, Type actual) {
-        if (target == Types.ANY || target == actual) {
+        if (Types.isAssignable(target, actual)) {
             return true;
-        }
-
-        if (target == Types.PRIMITIVE) {
-            return actual == Types.INTEGER
-                || actual == Types.DECIMAL
-                || actual == Types.CHARACTER
-                || actual == Types.BOOLEAN;
         }
 
         throw new CompilerException("Type unassignable: " + actual.getName() + " -> " + target.getName());

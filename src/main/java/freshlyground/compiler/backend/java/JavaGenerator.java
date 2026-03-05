@@ -19,7 +19,7 @@ public final class JavaGenerator extends Generator {
     }
 
     private String getJavaType(String typeName) {
-        return JavaTypeLowering.getJavaType(Environment.lookupType(typeName));
+        return JavaTypeLowering.getJavaType(Types.lookupType(typeName));
     }
 
     private String getJavaType(Environment.Type type) {
