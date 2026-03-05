@@ -1,0 +1,80 @@
+body {
+    margin: 0;
+    background: #1B1B1B;
+    color: #E6D3B3;
+    font-family: "JetBrains Mono", monospace;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.app {
+    padding: 40px;
+    text-align: center;
+    max-width: 1000px;
+    width: 100%;
+}
+
+.title {
+    font-size: 22px;
+    margin-bottom: 30px;
+    color: #F5E6C8;
+    letter-spacing: 1px;
+}
+
+.editor-container {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+}
+
+.editor {
+    width: 420px;
+    height: 320px;
+    background: #3B322C;
+    color: #F5E6C8;
+    border: 1px solid #5A3E2B;
+    border-radius: 6px;
+    padding: 14px;
+    resize: none;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+}
+
+.editor {
+    box-shadow: 0 0 20px rgba(0,0,0,0.45);
+}
+
+.editor:focus {
+    outline: none;
+    border-color: #C89B6D;
+}
+
+.output {
+    background: #2A2420;
+}
+
+.compile-button {
+    margin-top: 28px;
+    padding: 10px 22px;
+    border-radius: 20px;
+    border: 1px solid #C89B6D;
+    background: transparent;
+    color: #F5E6C8;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.compile-button:hover {
+    background: #C89B6D;
+    color: #1B1B1B;
+}
+
+.error {
+    margin-top: 20px;
+    color: #ff8a8a;
+}

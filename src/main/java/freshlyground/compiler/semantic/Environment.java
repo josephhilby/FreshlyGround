@@ -22,7 +22,7 @@ public final class Environment {
         return type;
     }
 
-    public static void require(boolean condition, String message) {
+    private static void require(boolean condition, String message) {
         if (!condition) throw new CompilerException(message);
     }
     public static void requireSame(Type expected, Type actual) {
