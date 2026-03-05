@@ -1,7 +1,12 @@
 # 00 — FreshlyGround Language & Compiler Reference Index
 
 This documentation set serves as a detailed reference for the FreshlyGround 
-language and compiler stack, from **source text → analyzed program model → backend emission**. 
+language and compiler stack, from:
+
+<p align="center">
+<strong>source text → analyzed program model → backend emission</strong>
+</p>
+
 Each document below owns a single layer of that process, with some shared vocabulary and design between them.
 
 ---
