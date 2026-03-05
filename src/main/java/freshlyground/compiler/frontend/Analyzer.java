@@ -210,25 +210,25 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Statement.For ast) {
-        Ast.Statement.Assignment initialization;
-        Ast.Statement.Assignment increment;
+        Optional<Ast.Statement.Assignment> initialization = ast.getInitialization();
+        Optional<Ast.Statement.Assignment> increment = ast.getIncrement();
 
-        if (ast.getInitialization() != null) {
-            visit(ast.getInitialization());
+        if (initialization.isPresent()) {
+            visit(initialization.get());
             initialization = ast.getInitialization();
 
             // throws a CompilerException if: initialization exists AND not Comparable
-            requireAssignable(Types.PRIMITIVE, bindings.getType(initialization.getReceiver()));
+            requireAssignable(Types.PRIMITIVE, bindings.getType(initialization.get().getReceiver()));
         }
 
-        if (ast.getIncrement() != null) {
-            visit(ast.getIncrement());
+        if (increment.isPresent()) {
+            visit(increment.get());
             increment = ast.getIncrement();
 
-            if (ast.getInitialization() != null) {
+            if (initialization.isPresent()) {
                 initialization = ast.getInitialization();
                 // throws a CompilerException if: initialization AND increment exists AND NOT same type
-                requireAssignable(bindings.getType(initialization.getReceiver()), bindings.getType(increment.getReceiver()));
+                requireAssignable(bindings.getType(initialization.get().getReceiver()), bindings.getType(increment.get().getReceiver()));
             }
         }
 

@@ -15,11 +15,8 @@ import java.util.Map;
  * by {@link StandardLibrary}.</p>
  */
 public final class Environment {
-
-    /**
-     * Closed set of nominal types supported by the compiler.
-     */
     private static final Map<String, Type> TYPES = new HashMap<>();
+
     public static void registerTypes(Type... types) {
         for (Type type : types) {
             if (TYPES.containsKey(type.getName())) {
@@ -29,7 +26,6 @@ public final class Environment {
             TYPES.put(type.getName(), type);
         }
     }
-
     public static Type lookupType(String name) {
         if (!TYPES.containsKey(name)) {
             throw new CompilerException("Unknown type: " + name + ".");
@@ -78,17 +74,6 @@ public final class Environment {
         throw new CompilerException("Type unassignable: " + actual.getName() + " -> " + target.getName());
     }
 
-    /**
-     * Represents a nominal type in the language's type system.
-     *
-     * <p>Each {@code Type} owns a {@link Scope} that is parented to the scope of its
-     * supertype, forming a simple type hierarchy (e.g., {@code Decimal → Primitive → Any}).
-     * This scope chain is used to model inherited type-level operations and built-in
-     * functions via lexical lookup.</p>
-     *
-     * <p>The type hierarchy is intentionally shallow and closed: all types are singletons
-     * defined by the runtime, and subtyping relationships are fixed at initialization time.</p>
-     */
     public static final class Type {
         private final String name;
         private final boolean internalType;

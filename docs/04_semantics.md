@@ -21,7 +21,7 @@ chain corresponding to nested program structure.
 
 ```yaml
 Scope
- ├─ parent    : Scope | null
+ ├─ parent    : Optional<Scope>
  ├─ variables : Map<String, Environment.Variable>
  └─ functions : Map<String, Environment.Function>
 ```
@@ -285,9 +285,9 @@ AST mapping:
 
 ```yaml
 Ast.Statement.For
- ├─ initialization : Ast.Statement.Assignment | null
+ ├─ initialization : Optional<Ast.Statement.Assignment>
  ├─ condition      : Ast.Expression
- ├─ increment      : Ast.Statement.Assignment | null
+ ├─ increment      : Optional<Ast.Statement.Assignment>
  └─ statements     : List<Ast.Statement>
 ```
 
