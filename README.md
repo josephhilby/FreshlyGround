@@ -129,7 +129,6 @@ browser-based execution environment, and a Hack VM backend for compilation to th
 - [ ] Add WebAssembly backend
     - [ ] Generate WAT (WebAssembly Text) from AST + Bindings
     - [ ] Define minimal host ABI for runtime interaction (e.g., `print_i32`)
-- [ ] Remove Java transpiler backend
 
 #### Web Execution Environment
 
