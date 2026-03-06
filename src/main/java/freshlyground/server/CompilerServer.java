@@ -1,8 +1,15 @@
 package freshlyground.server;
 
+import freshlyground.api.CompilerSerializer;
 import freshlyground.api.CompilerService;
 import freshlyground.common.CompilerException;
+import freshlyground.compiler.frontend.Lexer;
+import freshlyground.compiler.frontend.Parser;
+import freshlyground.compiler.frontend.artifacts.Ast;
+import freshlyground.compiler.frontend.artifacts.common.Token;
 import io.javalin.Javalin;
+
+import java.util.List;
 
 public final class CompilerServer {
     private CompilerServer() {}
@@ -14,10 +21,11 @@ public final class CompilerServer {
             config.http.defaultContentType = "application/json";
         });
 
-        // Healthcheck
+        /* -------------- Healthcheck -------------- */
         app.get("/health", ctx -> ctx.result("ok"));
 
-        // Compile endpoint
+        /* ---------------- Compile ---------------- */
+
         app.post("/compile", ctx -> {
             CompileRequest req = ctx.bodyAsClass(CompileRequest.class);
 
@@ -29,6 +37,53 @@ public final class CompilerServer {
             try {
                 String code = CompilerService.compile(req.source());
                 ctx.status(200).json(new CompileResponse(code));
+
+            } catch (CompilerException e) {
+                Integer index = e.getIndex().orElse(null);
+                ctx.status(400).json(new CompileError(e.getMessage(), index));
+            }
+        });
+
+        /* ---------------- Tokens ---------------- */
+
+        app.post("/tokens", ctx -> {
+            CompileRequest req = ctx.bodyAsClass(CompileRequest.class);
+
+            if (req == null || req.source() == null) {
+                ctx.status(400).json(new CompileError("Missing field: source", null));
+                return;
+            }
+
+            try {
+                Lexer lexer = new Lexer(req.source());
+                List<Token> tokens = lexer.lex();
+
+                ctx.status(200).json(CompilerSerializer.serializeTokens(tokens));
+
+            } catch (CompilerException e) {
+                Integer index = e.getIndex().orElse(null);
+                ctx.status(400).json(new CompileError(e.getMessage(), index));
+            }
+        });
+
+        /* ---------------- AST ---------------- */
+
+        app.post("/ast", ctx -> {
+            CompileRequest req = ctx.bodyAsClass(CompileRequest.class);
+
+            if (req == null || req.source() == null) {
+                ctx.status(400).json(new CompileError("Missing field: source", null));
+                return;
+            }
+
+            try {
+                Lexer lexer = new Lexer(req.source());
+                List<Token> tokens = lexer.lex();
+
+                Parser parser = new Parser(tokens);
+                Ast ast = parser.parse();
+
+                ctx.status(200).json(CompilerSerializer.serializeAst(ast));
 
             } catch (CompilerException e) {
                 Integer index = e.getIndex().orElse(null);

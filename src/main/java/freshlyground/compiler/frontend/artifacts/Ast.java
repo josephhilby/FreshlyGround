@@ -32,8 +32,8 @@ import java.util.Optional;
  */
 public abstract class Ast {
 
-    protected abstract Object[] components();
-    protected abstract String[] componentNames();
+    public abstract Object[] components();
+    public abstract String[] componentNames();
 
     @Override
     public final int hashCode() {
@@ -125,12 +125,12 @@ public abstract class Ast {
         public List<Ast.Method> getMethods() { return methods; }
 
         @Override
-        protected String[] componentNames() {
+        public String[] componentNames() {
             return new String[]{ "fields", "methods" };
         }
 
         @Override
-        protected Object[] components() {
+        public Object[] components() {
             return new Object[]{ fields, methods };
         }
     }
@@ -159,12 +159,12 @@ public abstract class Ast {
         public Optional<Ast.Expression> getValue() { return value; }
 
         @Override
-        protected String[] componentNames() {
+        public String[] componentNames() {
             return new String[]{ "name", "typeName", "constant", "value" };
         }
 
         @Override
-        protected Object[] components() {
+        public Object[] components() {
             return new Object[]{ name, typeName, constant, value };
         }
     }
@@ -197,12 +197,12 @@ public abstract class Ast {
         public List<Ast.Statement> getStatements() { return statements; }
 
         @Override
-        protected String[] componentNames() {
+        public String[] componentNames() {
             return new String[]{ "name", "parameters", "parameterTypeNames", "returnTypeName", "statements" };
         }
 
         @Override
-        protected Object[] components() {
+        public Object[] components() {
             return new Object[]{ name, parameters, parameterTypeNames, returnTypeName, statements };
         }
     }
@@ -219,12 +219,12 @@ public abstract class Ast {
             public Ast.Expression.Function getExpression() { return expression; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "expression" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ expression };
             }
         }
@@ -253,12 +253,12 @@ public abstract class Ast {
             public Optional<Ast.Expression> getValue() { return value; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "name", "typeName", "value" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ name, typeName, value };
             }
         }
@@ -276,12 +276,12 @@ public abstract class Ast {
             public Ast.Expression getValue() { return value; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "receiver", "value" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ receiver, value };
             }
         }
@@ -306,12 +306,12 @@ public abstract class Ast {
             public List<Ast.Statement> getElseStatements() { return elseStatements; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "condition", "thenStatements", "elseStatements" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ condition, thenStatements, elseStatements };
             }
         }
@@ -340,12 +340,12 @@ public abstract class Ast {
             public List<Statement> getStatements() { return statements; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "initialization", "condition", "increment", "statements" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ initialization, condition, increment, statements };
             }
         }
@@ -363,12 +363,12 @@ public abstract class Ast {
             public List<Ast.Statement> getStatements() { return statements; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "condition", "statements" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ condition, statements };
             }
         }
@@ -383,12 +383,12 @@ public abstract class Ast {
             public Ast.Expression getValue() { return value; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "value" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ value };
             }
         }
@@ -406,12 +406,12 @@ public abstract class Ast {
             public Object getLiteral() { return literal; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "literal" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ literal };
             }
         }
@@ -426,12 +426,12 @@ public abstract class Ast {
             public Ast.Expression getExpression() { return expression; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "expression" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ expression };
             }
         }
@@ -452,12 +452,12 @@ public abstract class Ast {
             public Ast.Expression getRight() { return right; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "operator", "left", "right" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ operator, left, right };
             }
         }
@@ -475,12 +475,12 @@ public abstract class Ast {
             public String getName() { return name; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "receiver", "name" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ receiver, name };
             }
         }
@@ -501,12 +501,12 @@ public abstract class Ast {
             public List<Ast.Expression> getArguments() { return arguments; }
 
             @Override
-            protected String[] componentNames() {
+            public String[] componentNames() {
                 return new String[]{ "receiver", "name", "arguments" };
             }
 
             @Override
-            protected Object[] components() {
+            public Object[] components() {
                 return new Object[]{ receiver, name, arguments };
             }
         }

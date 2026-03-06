@@ -1,0 +1,17 @@
+import Modal from "./Modal";
+import AstNodeView from "./AstNodeView.tsx";
+
+type TreeModalProps = {
+    ast: any;
+    onClose: () => void;
+};
+
+export default function TreeModal({ ast, onClose }: TreeModalProps) {
+    return (
+        <Modal title="AST" onClose={onClose}>
+            <div className="ast-tree">
+                <AstNodeView node={ast} />
+            </div>
+        </Modal>
+    );
+}

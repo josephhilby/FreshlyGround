@@ -3,7 +3,6 @@ body {
     background: #1B1B1B;
     color: #E6D3B3;
     font-family: "JetBrains Mono", monospace;
-
     display: flex;
     justify-content: center;
     align-items: center;
@@ -41,10 +40,7 @@ body {
     resize: none;
     font-family: "JetBrains Mono", monospace;
     font-size: 14px;
-}
-
-.editor {
-    box-shadow: 0 0 20px rgba(0,0,0,0.45);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
 }
 
 .editor:focus {
@@ -57,7 +53,6 @@ body {
 }
 
 .compile-button {
-    margin-top: 28px;
     padding: 10px 22px;
     border-radius: 20px;
     border: 1px solid #C89B6D;
@@ -74,7 +69,236 @@ body {
     color: #1B1B1B;
 }
 
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
+}
+
 .error {
     margin-top: 20px;
     color: #ff8a8a;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    width: min(900px, 90vw);
+    max-height: 80vh;
+    overflow: auto;
+    background: #1B1B1B;
+    border: 1px solid #8B6A45;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color: #D7C3A1;
+    font-family: "JetBrains Mono", monospace;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #D7C3A1;
+}
+
+.modal-header button {
+    background: transparent;
+    border: 1px solid #8B6A45;
+    color: #D7C3A1;
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.modal-header button:hover {
+    background: #8B6A45;
+    color: #1B1B1B;
+}
+
+.modal-content {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: left;
+}
+
+.modal::-webkit-scrollbar {
+    width: 10px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: #1B1B1B;
+}
+
+.modal::-webkit-scrollbar-thumb {
+    background: #8B6A45;
+    border-radius: 6px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+    background: #B18A5A;
+}
+
+.token-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.token-chip {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.token-chip.identifier {
+    background: #5A4636;
+    border-color: #8B6A45;
+    color: #F5E6C8;
+}
+
+.token-chip.integer {
+    background: #4A3C2A;
+    border-color: #B8894F;
+    color: #FFD9A3;
+}
+
+.token-chip.decimal {
+    background: #3F3428;
+    border-color: #C89B6D;
+    color: #F3D7AE;
+}
+
+.token-chip.character {
+    background: #4B3A32;
+    border-color: #A56C5A;
+    color: #FFD1C2;
+}
+
+.token-chip.string {
+    background: #3D332B;
+    border-color: #7A8F62;
+    color: #D8F0C2;
+}
+
+.token-chip.operator {
+    background: #2E2A27;
+    border-color: #9A7B63;
+    color: #E6D3B3;
+}
+
+.ast-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    overflow: auto;
+}
+
+.ast-branch {
+    position: relative;
+    padding-left: 24px;
+}
+
+.ast-branch::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #6f5a46;
+}
+
+.ast-node {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #8b6a45;
+    margin-bottom: 10px;
+    min-width: 140px;
+}
+
+.ast-node.structural {
+    background: #2b2521;
+    color: #f5e6c8;
+}
+
+.ast-node.statement {
+    background: #4a382c;
+    color: #f5e6c8;
+}
+
+.ast-node.expression {
+    background: #2f3d46;
+    color: #dce9f2;
+}
+
+.ast-label {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.ast-kind {
+    font-weight: 700;
+}
+
+.ast-chip {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.ast-children {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 28px;
+}
+
+.ast-child-group {
+    position: relative;
+    padding-left: 20px;
+}
+
+.ast-child-group::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 18px;
+    width: 16px;
+    height: 1px;
+    background: #6f5a46;
+}
+
+.ast-edge-label {
+    font-size: 12px;
+    color: #bfa88a;
+    margin-bottom: 6px;
 }
