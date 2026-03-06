@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import Legend from "./Legend";
 
 type Token = {
     type: "IDENTIFIER" | "INTEGER" | "DECIMAL" | "CHARACTER" | "STRING" | "OPERATOR";
@@ -39,9 +40,8 @@ function tokenClass(type: Token["type"]) {
         case "IDENTIFIER":
             return "token-chip identifier";
         case "INTEGER":
-            return "token-chip integer";
         case "DECIMAL":
-            return "token-chip decimal";
+            return "token-chip numeric";
         case "CHARACTER":
             return "token-chip character";
         case "STRING":
@@ -53,7 +53,6 @@ function tokenClass(type: Token["type"]) {
 
 export default function TokenModal({ tokens, source, onClose }: TokenModalProps) {
     const lineStarts = computeLineStarts(source);
-
     const lines: Token[][] = [];
 
     tokens.forEach((token) => {
@@ -79,6 +78,16 @@ export default function TokenModal({ tokens, source, onClose }: TokenModalProps)
                     </div>
                 ))}
             </div>
+
+            <Legend
+                items={[
+                    { label: "Identifier", className: "identifier" },
+                    { label: "Numeric", className: "numeric" },
+                    { label: "Character", className: "character" },
+                    { label: "String", className: "string" },
+                    { label: "Operator", className: "operator" },
+                ]}
+            />
         </Modal>
     );
 }

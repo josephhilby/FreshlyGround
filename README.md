@@ -50,15 +50,20 @@ Web UI:
 1. Ensure you meet the given requirements, see above
 2. Clone this repository
 3. Navigate to root
-4. Run Docker Compose:
+4. Build and start containers:
 >```bash
 > docker compose up --build
 >```
 5. Open your browser to [http://localhost:5173/](http://localhost:5173/)
+6. Stop and remove containers:
+>```bash
+> docker compose down
+>```
+
+If you prefer to run the servers outside their containers...
 
 ### Run API Server
-1. Navigate to compiler
-    - All following instructions assumed to be run from root/compiler, unless otherwise instructed
+1. Navigate to `root/compiler`
 2. Start the server:
 >```bash
 > ./gradlew runServer
@@ -97,7 +102,7 @@ Web UI:
 > javac examples/dist/Main.java
 >```
 
-3. Run with the following:
+3. Run in JVM with the following:
 >```bash
 > cd examples/dist
 > java Main
