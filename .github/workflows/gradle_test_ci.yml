@@ -2,9 +2,9 @@ name: Gradle Tests (CI)
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -13,6 +13,10 @@ jobs:
   test:
     name: Test (Java 21)
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: compiler
 
     steps:
       - name: Checkout
@@ -27,6 +31,10 @@ jobs:
 
       - name: Validate Gradle Wrapper
         uses: gradle/wrapper-validation-action@v2
+        with:
+          min-wrapper-count: 1
+          allow-snapshots: false
+          wrapper-directory: compiler
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
@@ -40,6 +48,6 @@ jobs:
         with:
           name: test-reports
           path: |
-            build/reports/tests/test
-            build/test-results/test
+            compiler/build/reports/tests/test
+            compiler/build/test-results/test
           if-no-files-found: ignore
