@@ -95,6 +95,7 @@ END`
             {showTokens && (
                 <TokenModal
                     tokens={tokens as any[]}
+                    source={source}
                     onClose={() => setShowTokens(false)}
                 />
             )}

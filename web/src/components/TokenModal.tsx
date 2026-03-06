@@ -8,8 +8,31 @@ type Token = {
 
 type TokenModalProps = {
     tokens: Token[];
+    source: string;
     onClose: () => void;
 };
+
+function computeLineStarts(source: string) {
+    const starts = [0];
+
+    for (let i = 0; i < source.length; i++) {
+        if (source[i] === "\n") {
+            starts.push(i + 1);
+        }
+    }
+
+    return starts;
+}
+
+function tokenLine(index: number, lineStarts: number[]) {
+    let line = 0;
+
+    while (line + 1 < lineStarts.length && index >= lineStarts[line + 1]) {
+        line++;
+    }
+
+    return line;
+}
 
 function tokenClass(type: Token["type"]) {
     switch (type) {
@@ -28,13 +51,31 @@ function tokenClass(type: Token["type"]) {
     }
 }
 
-export default function TokenModal({ tokens, onClose }: TokenModalProps) {
+export default function TokenModal({ tokens, source, onClose }: TokenModalProps) {
+    const lineStarts = computeLineStarts(source);
+
+    const lines: Token[][] = [];
+
+    tokens.forEach((token) => {
+        const line = tokenLine(token.index, lineStarts);
+
+        if (!lines[line]) {
+            lines[line] = [];
+        }
+
+        lines[line].push(token);
+    });
+
     return (
         <Modal title="Tokens" onClose={onClose}>
-            <div className="token-grid">
-                {tokens.map((t, i) => (
-                    <div key={i} className={tokenClass(t.type)}>
-                        {t.literal}
+            <div className="token-lines">
+                {lines.map((lineTokens, lineIndex) => (
+                    <div key={lineIndex} className="token-line">
+                        {lineTokens.map((t, i) => (
+                            <div key={i} className={tokenClass(t.type)}>
+                                {t.literal}
+                            </div>
+                        ))}
                     </div>
                 ))}
             </div>

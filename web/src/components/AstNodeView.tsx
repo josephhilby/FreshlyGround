@@ -1,7 +1,28 @@
+import { useState } from "react";
+
 type AstNode = {
     node: string;
     [key: string]: any;
 };
+
+function isBranchKey(key: string) {
+    return (
+        key === "fields" ||
+        key === "methods" ||
+        key === "statements" ||
+        key === "thenStatements" ||
+        key === "elseStatements"
+    );
+}
+
+function isInlineKey(key: string) {
+    return (
+        key === "value" ||
+        key === "expression" ||
+        key === "arguments" ||
+        key === "receiver"
+    );
+}
 
 function nodeClass(nodeType: string) {
     if (nodeType === "Source" || nodeType === "Method" || nodeType === "Field") {
@@ -33,6 +54,11 @@ function renderLabel(node: AstNode) {
             {node.returnTypeName && (
                 <div className="ast-chip">{String(node.returnTypeName)}</div>
             )}
+
+            {node.node === "Field" && node.value && (
+                <div className="ast-equals">=</div>
+            )}
+
             {node.literal !== undefined && node.literal !== null && (
                 <div className="ast-chip">{String(node.literal)}</div>
             )}
@@ -59,7 +85,48 @@ function childEntries(node: AstNode) {
     });
 }
 
+function InlineAstNode({ node }: { node: AstNode }) {
+    const children = childEntries(node);
+    const inlineChildren = children.filter(([key]) => isInlineKey(key));
+
+    return (
+        <div
+            className={`ast-inline-node ${nodeClass(node.node)}`}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {renderLabel(node)}
+
+            {inlineChildren.length > 0 && (
+                <div className="ast-inline-children">
+                    {inlineChildren.map(([key, value]) => (
+                        <div key={key} className="ast-inline-group">
+
+                            {Array.isArray(value) ? (
+                                <div className="ast-inline-list">
+                                    {key === "arguments" && <span className="ast-paren">(</span>}
+
+                                    {value.map((child, i) =>
+                                        child && typeof child === "object" && "node" in child ? (
+                                            <InlineAstNode key={`${key}-${i}`} node={child} />
+                                        ) : null
+                                    )}
+
+                                    {key === "arguments" && <span className="ast-paren">)</span>}
+                                </div>
+                            ) : value && typeof value === "object" && "node" in value ? (
+                                <InlineAstNode node={value} />
+                            ) : null}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function AstNodeView({ node }: { node: AstNode }) {
+    const [collapsed, setCollapsed] = useState(false);
+
     const children = childEntries(node);
 
     if (
@@ -73,29 +140,62 @@ export default function AstNodeView({ node }: { node: AstNode }) {
         return <AstNodeView node={children[0][1]} />;
     }
 
+    const branchChildren = children.filter(([key]) => isBranchKey(key));
+    const inlineChildren = children.filter(([key]) => isInlineKey(key));
+    const hasChildren = branchChildren.length > 0;
+
     return (
         <div className="ast-branch">
-            <div className={nodeClass(node.node)}>
+            <div
+                className={`${nodeClass(node.node)} ${hasChildren ? "clickable" : ""}`}
+                onClick={hasChildren ? () => setCollapsed(!collapsed) : undefined}
+            >
                 {renderLabel(node)}
+
+                {inlineChildren.length > 0 && (
+                    <div className="ast-inline-children">
+                        {inlineChildren.map(([key, value]) => (
+                            <div key={key} className="ast-inline-group">
+                                {Array.isArray(value) ? (
+                                    <div className="ast-inline-list">
+                                        {key === "arguments" && <span className="ast-paren">(</span>}
+
+                                        {value.map((child, i) =>
+                                            child && typeof child === "object" && "node" in child ? (
+                                                <InlineAstNode key={`${key}-${i}`} node={child} />
+                                            ) : null
+                                        )}
+
+                                        {key === "arguments" && <span className="ast-paren">)</span>}
+                                    </div>
+                                ) : value && typeof value === "object" && "node" in value ? (
+                                    <InlineAstNode node={value} />
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {children.length > 0 && (
+            {hasChildren && !collapsed && (
                 <div className="ast-children">
-                    {children.map(([key, value]) => (
-                        <div key={key} className="ast-child-group">
-                            <div className="ast-edge-label">{key}</div>
+                    {branchChildren.flatMap(([key, value]) => {
+                        if (Array.isArray(value)) {
+                            return value.map((child, i) =>
+                                child && typeof child === "object" && "node" in child ? (
+                                    <div key={`${key}-${i}`} className="ast-child-group">
+                                        <AstNodeView node={child} />
+                                    </div>
+                                ) : null
+                            );
+                        }
 
-                            {Array.isArray(value) ? (
-                                value.map((child, i) =>
-                                    child && typeof child === "object" && "node" in child ? (
-                                        <AstNodeView key={`${key}-${i}`} node={child} />
-                                    ) : null
-                                )
-                            ) : value && "node" in value ? (
+                        return value && typeof value === "object" && "node" in value ? (
+                            <div key={key} className="ast-child-group">
                                 <AstNodeView node={value} />
-                            ) : null}
-                        </div>
-                    ))}
+                            </div>
+                        ) : null;
+                    })}
                 </div>
             )}
         </div>

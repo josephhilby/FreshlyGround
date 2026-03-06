@@ -12,6 +12,22 @@ export default function TreeModal({ ast, onClose }: TreeModalProps) {
             <div className="ast-tree">
                 <AstNodeView node={ast} />
             </div>
+            <div className="ast-legend">
+                <div className="legend-item">
+                    <span className="legend-box structural"></span>
+                    Structural
+                </div>
+
+                <div className="legend-item">
+                    <span className="legend-box statement"></span>
+                    Statement
+                </div>
+
+                <div className="legend-item">
+                    <span className="legend-box expression"></span>
+                    Expression
+                </div>
+            </div>
         </Modal>
     );
 }
