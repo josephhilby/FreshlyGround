@@ -21,7 +21,6 @@ import java.util.Objects;
 public final class CompilerService {
     private CompilerService() {}
 
-    /** Compiles FreshlyGround source into Java source code. */
     public static String compile(String source) {
         Objects.requireNonNull(source, "source");
 

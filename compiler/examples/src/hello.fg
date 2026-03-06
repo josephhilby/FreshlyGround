@@ -1,0 +1,6 @@
+LET msg: String = "Hello World";
+
+DEF main(): Integer DO
+    print(msg);
+    RETURN 0;
+END
