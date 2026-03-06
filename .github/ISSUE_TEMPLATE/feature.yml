@@ -1,0 +1,45 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement"]
+
+body:
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Type
+      options:
+        - Language Feature
+        - Compiler Enhancement
+        - Tooling / UI
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the feature and why it is needed.
+      placeholder: Explain the feature and the problem it solves.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example (optional)
+      description: Example FreshlyGround code demonstrating the feature.
+      render: text
+      placeholder: |
+        DEF main(): Integer DO
+            print("example");
+            RETURN 0;
+        END
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Notes (optional)
+      description: Implementation ideas or related context.
