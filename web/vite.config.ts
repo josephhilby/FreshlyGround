@@ -6,6 +6,8 @@ export default defineConfig({
     server: {
         proxy: {
             '/compile': 'http://localhost:7070',
+            "/tokens": "http://localhost:7070",
+            "/ast": "http://localhost:7070",
             '/health': 'http://localhost:7070',
         },
     },

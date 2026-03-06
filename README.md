@@ -186,10 +186,8 @@ Web UI:
     - [x] API becomes thin wrapper over shared entrypoint
 - [ ] Implement `/compile` API endpoint
     - [x] POST source code → return Java output
+    - [x] Display all IR representations of code in UI
     - [ ] Change POST from Java to WAT
-- [ ] Add 
-- [ ] STRETCH GOALS
-    - [ ] Display all IR representations of code in UI
 
 #### Documentation
 

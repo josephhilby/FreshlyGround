@@ -3,7 +3,6 @@ body {
     background: #1B1B1B;
     color: #E6D3B3;
     font-family: "JetBrains Mono", monospace;
-
     display: flex;
     justify-content: center;
     align-items: center;
@@ -41,10 +40,7 @@ body {
     resize: none;
     font-family: "JetBrains Mono", monospace;
     font-size: 14px;
-}
-
-.editor {
-    box-shadow: 0 0 20px rgba(0,0,0,0.45);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
 }
 
 .editor:focus {
@@ -57,7 +53,6 @@ body {
 }
 
 .compile-button {
-    margin-top: 28px;
     padding: 10px 22px;
     border-radius: 20px;
     border: 1px solid #C89B6D;
@@ -74,7 +69,331 @@ body {
     color: #1B1B1B;
 }
 
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
+}
+
 .error {
     margin-top: 20px;
     color: #ff8a8a;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    width: min(900px, 90vw);
+    max-height: 80vh;
+    overflow: auto;
+    background: #1B1B1B;
+    border: 1px solid #8B6A45;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    color: #D7C3A1;
+    font-family: "JetBrains Mono", monospace;
+    text-align: left;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #D7C3A1;
+}
+
+.modal-header button {
+    background: transparent;
+    border: 1px solid #8B6A45;
+    color: #D7C3A1;
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.modal-header button:hover {
+    background: #8B6A45;
+    color: #1B1B1B;
+}
+
+.modal-content {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: left;
+}
+
+.modal::-webkit-scrollbar {
+    width: 10px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: #1B1B1B;
+}
+
+.modal::-webkit-scrollbar-thumb {
+    background: #8B6A45;
+    border-radius: 6px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+    background: #B18A5A;
+}
+
+.token-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.token-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.token-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.token-chip {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 14px;
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.token-chip.identifier {
+    background: #5A4636;
+    border-color: #8B6A45;
+    color: #F5E6C8;
+}
+
+.token-chip.integer {
+    background: #4A3C2A;
+    border-color: #B8894F;
+    color: #FFD9A3;
+}
+
+.token-chip.decimal {
+    background: #3F3428;
+    border-color: #C89B6D;
+    color: #F3D7AE;
+}
+
+.token-chip.character {
+    background: #4B3A32;
+    border-color: #A56C5A;
+    color: #FFD1C2;
+}
+
+.token-chip.string {
+    background: #3D332B;
+    border-color: #7A8F62;
+    color: #D8F0C2;
+}
+
+.token-chip.operator {
+    background: #2E2A27;
+    border-color: #9A7B63;
+    color: #E6D3B3;
+}
+
+.ast-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    overflow: auto;
+    width: fit-content;
+}
+
+.ast-branch {
+    position: relative;
+    padding-left: 0;
+}
+
+.ast-node,
+.ast-inline-node {
+    position: relative;
+    z-index: 1;
+}
+
+.ast-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.ast-node.clickable {
+    cursor: default;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    transition:
+            transform 0.12s ease,
+            box-shadow 0.12s ease,
+            filter 0.12s ease;
+}
+
+.ast-node.clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+    filter: brightness(1.08);
+}
+
+.ast-node.clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+.ast-node.structural {
+    background: #2b2521;
+    color: #f5e6c8;
+}
+
+.ast-node.statement {
+    background: #4a382c;
+    color: #f5e6c8;
+}
+
+.ast-node.expression {
+    background: #2f3d46;
+    color: #dce9f2;
+}
+
+.ast-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ast-paren {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    margin: 0 2px;
+    line-height: 1;
+}
+
+.ast-equals {
+    opacity: 0.6;
+    margin: 0 4px;
+}
+
+.ast-kind {
+    font-weight: 700;
+}
+
+.ast-kind::after {
+    content: ":";
+    margin-right: 4px;
+    opacity: 0.7;
+}
+
+.ast-chip {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 11px;
+}
+
+.ast-children {
+    display: flex;
+    flex-direction: column;
+    margin-left: 20px;
+    margin-top: 5px;
+}
+
+.ast-children > .ast-child-group + .ast-child-group {
+    margin-top: 5px;
+}
+
+.ast-child-group {
+    padding-left: 0;
+    margin: 0;
+}
+
+.ast-inline-children {
+    margin-left: 10px;
+}
+
+.ast-inline-group {
+    display: inline-flex;
+    align-items: center;
+}
+
+.ast-inline-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.ast-inline-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.ast-legend {
+    display: flex;
+    gap: 18px;
+    margin-top: 14px;
+    border-top: 1px solid #3a2f25;
+    padding-top: 10px;
+    font-size: 13px;
+    color: #cdb892;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-box {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid #8b6a45;
+}
+
+.legend-box.structural {
+    background: #2b2521;
+}
+
+.legend-box.statement {
+    background: #4a382c;
+}
+
+.legend-box.expression {
+    background: #2f3d46;
 }
