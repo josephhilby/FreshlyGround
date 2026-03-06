@@ -19,6 +19,11 @@ public final class CompilerServer {
 
         Javalin app = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
+            config.bundledPlugins.enableCors(cors -> {
+                cors.addRule(rule -> {
+                    rule.allowHost("http://localhost:5173");
+                });
+            });
         });
 
         /* -------------- Healthcheck -------------- */
@@ -91,7 +96,7 @@ public final class CompilerServer {
             }
         });
 
-        app.start(port);
+        app.start("0.0.0.0", port);
         System.out.println("FreshlyGround server listening on http://localhost:" + port);
     }
 

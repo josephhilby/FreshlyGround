@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ./compiler
+      dockerfile: Dockerfile
+    ports:
+      - "7070:7070"
+
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
