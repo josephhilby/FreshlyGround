@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import Legend from "./Legend";
 import AstNodeView from "./AstNodeView.tsx";
 
 type TreeModalProps = {
@@ -12,22 +13,13 @@ export default function TreeModal({ ast, onClose }: TreeModalProps) {
             <div className="ast-tree">
                 <AstNodeView node={ast} />
             </div>
-            <div className="ast-legend">
-                <div className="legend-item">
-                    <span className="legend-box structural"></span>
-                    Structural
-                </div>
-
-                <div className="legend-item">
-                    <span className="legend-box statement"></span>
-                    Statement
-                </div>
-
-                <div className="legend-item">
-                    <span className="legend-box expression"></span>
-                    Expression
-                </div>
-            </div>
+            <Legend
+                items={[
+                    { label: "Structural", className: "structural" },
+                    { label: "Statement", className: "statement" },
+                    { label: "Expression", className: "expression" },
+                ]}
+            />
         </Modal>
     );
 }

@@ -35,6 +35,8 @@ FreshlyGround currently targets the JVM and is being extended by means of additi
 </p>
 
 ### Requirements
+Docker or...
+
 Core:
 - Java 21+
 - Gradle (via included wrapper)
@@ -47,21 +49,33 @@ Web UI:
 ### Quick Start
 1. Ensure you meet the given requirements, see above
 2. Clone this repository
-3. Navigate to root (all following instructions assumed to be run from root, unless otherwise instructed)
+3. Navigate to root
+4. Build and start containers:
+>```bash
+> docker compose up --build
+>```
+5. Open your browser to [http://localhost:5173/](http://localhost:5173/)
+6. Stop and remove containers:
+>```bash
+> docker compose down
+>```
+
+If you prefer to run the servers outside their containers...
 
 ### Run API Server
-1. Start the server:
-> ```bash
+1. Navigate to `root/compiler`
+2. Start the server:
+>```bash
 > ./gradlew runServer
-> ```
+>```
 
-2. Run a health check:
+3. Run a health check:
 >```bash
 > curl http://localhost:7070/health
 > $ ok
 >```
 
-3. Send some source code:
+4. Send some source code:
 >```bash
 > curl -s -X POST http://localhost:7070/compile \
 > -H "Content-Type: application/json" \
@@ -82,24 +96,24 @@ Web UI:
 1. Place your code in `/examples/src`
    - Note: There is an existing sample file there to transpile (`hello.fg`)
 2. Transpile with the following:
-> ```bash
+>```bash
 > ./gradlew build
 > ./build/install/FreshlyGround/bin/fgc examples/src/<src_name>.fg examples/dist/Main.java
 > javac examples/dist/Main.java
-> ```
+>```
 
-3. Run with the following:
-> ```bash
+3. Run in JVM with the following:
+>```bash
 > cd examples/dist
 > java Main
-> ```
+>```
 
 ### Run Tests
 1. Finish the 'Quick Start' steps
 2. Run the tests:
-> ```bash
+>```bash
 > ./gradlew test
-> ```
+>```
 3. Open report:
 >```bash
 > open build/reports/tests/test/index.html
@@ -189,6 +203,7 @@ Web UI:
     - [x] POST source code → return Java output
     - [x] Display all IR representations of code in UI
     - [ ] Change POST from Java to WAT
+- [ ] Containerize through Docker
 
 #### Documentation
 

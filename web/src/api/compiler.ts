@@ -13,8 +13,10 @@ export type AstResponse = {
     [key: string]: unknown;
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:7070";
+
 async function postJson<T>(path: string, source: string): Promise<T> {
-    const res = await fetch(path, {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ source }),
