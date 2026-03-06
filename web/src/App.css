@@ -1,17 +1,21 @@
-:root {
-    --bg-page: #1B1B1B;
-    --bg-editor: #3B322C;
-    --bg-output: #2A2420;
+/* ==========================================================================
+   Theme Tokens
+   ========================================================================== */
 
-    --text-primary: #F5E6C8;
-    --text-secondary: #D7C3A1;
-    --text-base: #E6D3B3;
+:root {
+    --bg-page: #1b1b1b;
+    --bg-editor: #3b322c;
+    --bg-output: #2a2420;
+
+    --text-primary: #f5e6c8;
+    --text-secondary: #d7c3a1;
+    --text-base: #e6d3b3;
     --text-error: #ff8a8a;
 
-    --accent: #8B6A45;
-    --accent-hover: #B18A5A;
-    --accent-bright: #C89B6D;
-    --editor-border: #5A3E2B;
+    --accent: #8b6a45;
+    --accent-hover: #b18a5a;
+    --accent-bright: #c89b6d;
+    --editor-border: #5a3e2b;
 
     --radius-sm: 6px;
     --radius-md: 12px;
@@ -25,20 +29,47 @@
     --font-mono: "JetBrains Mono", monospace;
 }
 
+
+/* ==========================================================================
+   Global Layout + Page Scrollbar
+   ========================================================================== */
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg-page);
+}
+
 body {
     margin: 0;
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     background: var(--bg-page);
     color: var(--text-base);
     font-family: var(--font-mono);
+    overflow-y: auto;
+}
+
+body::-webkit-scrollbar {
+    width: 10px;
+}
+
+body::-webkit-scrollbar-track {
+    background: var(--bg-page);
+}
+
+body::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+}
+
+body::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
 }
 
 .app {
     width: 100%;
     max-width: 1000px;
+    box-sizing: border-box;
+    margin: 0 auto;
     padding: 40px;
     text-align: center;
 }
@@ -50,6 +81,16 @@ body {
     letter-spacing: 1px;
 }
 
+.error {
+    margin-top: 20px;
+    color: var(--text-error);
+}
+
+
+/* ==========================================================================
+   Editor / Output Pane Layout
+   ========================================================================== */
+
 .editor-container {
     display: flex;
     justify-content: center;
@@ -60,13 +101,17 @@ body {
     width: 420px;
     height: 320px;
     padding: 14px;
-    resize: none;
     border: 1px solid var(--editor-border);
     border-radius: var(--radius-sm);
     background: var(--bg-editor);
     color: var(--text-primary);
     font-size: 14px;
     box-shadow: var(--shadow-panel);
+    resize: none;
+    overflow-y: auto;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg-editor);
 }
 
 .editor:focus {
@@ -74,9 +119,31 @@ body {
     border-color: var(--accent-bright);
 }
 
+.editor::-webkit-scrollbar {
+    width: 10px;
+}
+
+.editor::-webkit-scrollbar-track {
+    background: var(--bg-editor);
+}
+
+.editor::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+}
+
+.editor::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
 .output {
     background: var(--bg-output);
 }
+
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
 
 .button-row {
     display: flex;
@@ -91,8 +158,8 @@ body {
     border-radius: var(--radius-pill);
     background: transparent;
     color: var(--text-primary);
-    font-size: 14px;
     font-family: inherit;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -102,25 +169,25 @@ body {
     color: var(--bg-page);
 }
 
-.error {
-    margin-top: 20px;
-    color: var(--text-error);
-}
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
 
 .modal-backdrop {
     position: fixed;
     inset: 0;
     z-index: 1000;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
     background: rgba(0, 0, 0, 0.65);
 }
 
 .modal {
     width: min(900px, 90vw);
-    max-height: 80vh;
-    overflow: auto;
     padding: 1.5rem;
     border: 1px solid var(--accent);
     border-radius: var(--radius-lg);
@@ -160,60 +227,52 @@ body {
 
 .modal-content {
     margin: 0;
+    text-align: left;
     white-space: pre-wrap;
     word-break: break-word;
-    text-align: left;
 }
 
-.modal::-webkit-scrollbar {
-    width: 10px;
-}
 
-.modal::-webkit-scrollbar-track {
-    background: var(--bg-page);
-}
+/* ==========================================================================
+   Token Palette
+   ========================================================================== */
 
-.modal::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: var(--radius-sm);
-}
-
-.modal::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-hover);
-}
-
-/* Shared token type palette */
 .identifier {
-    --token-bg: #5A4636;
-    --token-border: #8B6A45;
-    --token-text: #F5E6C8;
+    --token-bg: #5a4636;
+    --token-border: #8b6a45;
+    --token-text: #f5e6c8;
 }
 
 .integer,
 .decimal,
 .numeric {
-    --token-bg: #4A3C2A;
-    --token-border: #B8894F;
-    --token-text: #FFD9A3;
+    --token-bg: #4a3c2a;
+    --token-border: #b8894f;
+    --token-text: #ffd9a3;
 }
 
 .character {
-    --token-bg: #4B3A32;
-    --token-border: #A56C5A;
-    --token-text: #FFD1C2;
+    --token-bg: #4b3a32;
+    --token-border: #a56c5a;
+    --token-text: #ffd1c2;
 }
 
 .string {
-    --token-bg: #3D332B;
-    --token-border: #7A8F62;
-    --token-text: #D8F0C2;
+    --token-bg: #3d332b;
+    --token-border: #7a8f62;
+    --token-text: #d8f0c2;
 }
 
 .operator {
-    --token-bg: #2E2A27;
-    --token-border: #9A7B63;
-    --token-text: #E6D3B3;
+    --token-bg: #2e2a27;
+    --token-border: #9a7b63;
+    --token-text: #e6d3b3;
 }
+
+
+/* ==========================================================================
+   Token Layout
+   ========================================================================== */
 
 .token-grid {
     display: flex;
@@ -245,7 +304,11 @@ body {
     box-shadow: var(--shadow-soft);
 }
 
-/* Shared AST palette */
+
+/* ==========================================================================
+   AST Palette
+   ========================================================================== */
+
 .structural {
     --ast-bg: #2b2521;
     --ast-text: #f5e6c8;
@@ -264,107 +327,32 @@ body {
     --ast-legend: #2f3d46;
 }
 
+
+/* ==========================================================================
+   AST Tree Layout
+   ========================================================================== */
+
 .ast-tree {
     --ast-node-height: 28px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
-    overflow: auto;
     width: fit-content;
+    overflow: visible;
 }
 
 .ast-branch,
+.ast-children,
 .ast-child-group {
-    padding-left: 0;
-    margin: 0;
-}
-
-.ast-node,
-.ast-inline-node {
     position: relative;
-    z-index: 1;
-    display: inline-flex;
-    align-items: center;
-    background: var(--ast-bg);
-    color: var(--ast-text);
-    line-height: 1;
+    margin: 0;
+    padding-left: 0;
+    overflow: visible;
 }
 
-.ast-node {
-    gap: 8px;
-    padding: 4px 8px;
-    min-height: var(--ast-node-height);
-    border-radius: var(--radius-sm);
-    align-items: stretch;
-}
-
-.ast-inline-node {
-    gap: 6px;
-    padding: 0 6px;
-    align-self: stretch;
-    display: inline-flex;
-    align-items: center;
-    border-radius: 4px;
-}
-
-.ast-node.clickable {
-    cursor: default;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
-}
-
-.ast-node.clickable:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
-    filter: brightness(1.08);
-}
-
-.ast-node.clickable:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-}
-
-.ast-label,
-.ast-paren,
-.ast-inline-group {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-}
-
-.ast-label {
-    gap: 8px;
-}
-
-.ast-paren {
-    justify-content: center;
-    margin: 0 2px;
-    line-height: 1;
-    opacity: 0.7;
-}
-
-.ast-equals {
-    margin: 0 4px;
-    opacity: 0.6;
-}
-
-.ast-kind {
-    font-weight: 700;
-}
-
-.ast-kind::after {
-    content: ":";
-    margin-right: 4px;
-    opacity: 0.7;
-}
-
-.ast-chip {
-    padding: 1px 6px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.08);
-    font-size: 11px;
+.ast-branch:hover {
+    z-index: 5000;
 }
 
 .ast-children {
@@ -388,6 +376,180 @@ body {
     align-items: center;
     gap: 10px;
 }
+
+
+/* ==========================================================================
+   AST Nodes
+   ========================================================================== */
+
+.ast-node,
+.ast-inline-node {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    background: var(--ast-bg);
+    color: var(--ast-text);
+    line-height: 1;
+}
+
+.ast-node {
+    gap: 8px;
+    padding: 4px 8px;
+    min-height: var(--ast-node-height);
+    border-radius: var(--radius-sm);
+    align-items: center;
+}
+
+.ast-inline-node {
+    gap: 6px;
+    padding: 0 6px;
+    align-self: stretch;
+    border-radius: 4px;
+}
+
+.ast-node.clickable {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.ast-node.clickable.collapsed {
+    cursor: zoom-in;
+}
+
+.ast-node.clickable.expanded {
+    cursor: zoom-out;
+}
+
+.ast-node.clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+    filter: brightness(1.08);
+}
+
+.ast-node.clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+
+/* ==========================================================================
+   AST Caret
+   ========================================================================== */
+
+.ast-caret {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    margin-right: 6px;
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.7;
+    transform-origin: center;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.ast-node.clickable.collapsed .ast-caret {
+    transform: rotate(0deg);
+}
+
+.ast-node.clickable.expanded .ast-caret {
+    transform: rotate(90deg);
+}
+
+
+/* ==========================================================================
+   AST Inline Text Elements
+   ========================================================================== */
+
+.ast-label,
+.ast-paren,
+.ast-inline-group {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.ast-label {
+    gap: 8px;
+}
+
+.ast-paren {
+    justify-content: center;
+    margin: 0 2px;
+    opacity: 0.7;
+}
+
+.ast-equals {
+    margin: 0 4px;
+    opacity: 0.6;
+}
+
+.ast-kind {
+    font-weight: 700;
+    cursor: help;
+}
+
+.ast-kind::after {
+    content: ":";
+    margin-right: 4px;
+    opacity: 0.7;
+}
+
+.ast-chip {
+    padding: 1px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+}
+
+/* ==========================================================================
+   AST Tooltips
+   ========================================================================== */
+
+.ast-kind-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.ast-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 6000;
+    min-width: 260px;
+    max-width: 420px;
+    padding: 10px 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--bg-page);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-modal);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.ast-kind-wrapper:hover .ast-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ast-tooltip pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+
+/* ==========================================================================
+   Legend
+   ========================================================================== */
 
 .legend {
     display: flex;
