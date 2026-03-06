@@ -265,7 +265,7 @@ body {
 }
 
 .ast-tree {
-    --ast-node-height: auto;
+    --ast-node-height: 28px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -289,24 +289,27 @@ body {
     border-radius: var(--radius-sm);
     background: var(--ast-bg);
     color: var(--ast-text);
+    line-height: 1;
 }
 
 .ast-node {
     gap: 8px;
     padding: 4px 8px;
+    min-height: var(--ast-node-height);
 }
 
 .ast-inline-node {
     gap: 6px;
-    padding: 4px 8px;
-    height: 16px;
+    padding: 0 8px;
+    min-height: 0;
+    height: auto;
+    border-radius: 0;
 }
 
 .ast-node.clickable {
     cursor: default;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
-    min-height: var(--ast-node-height, auto);
 }
 
 .ast-node.clickable:hover {
