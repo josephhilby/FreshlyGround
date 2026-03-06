@@ -1,9 +1,10 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/<your_repo>">
-    <img src="assets/banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
-  </a>
+  
+  [![Issues][issues-shield]][issues-url] [![Gradle Tests][test-shield]][test-url]
+  
+  <img src="assets/banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
 
   <h3>
     A Java based novel programming language
@@ -250,3 +251,13 @@ Based on the book **Crafting Interpreters** by Robert Nystrom.
 
 If you are interested in programming languages, I strongly recommend the book — it provided the scaffolding for 
 everything implemented here.
+
+<!-- MARKDOWN LINKS & IMAGES -->
+
+<!-- Tests Shield -->
+[test-shield]: https://github.com/josephhilby/FreshlyGround/actions/workflows/gradle_test_ci.yml/badge.svg
+[test-url]: https://github.com/josephhilby/FreshlyGround/actions/workflows/gradle_test_ci.yml
+
+<!-- Issues Shield -->
+[issues-shield]: https://img.shields.io/github/issues/josephhilby/FreshlyGround.svg
+[issues-url]: https://github.com/josephhilby/FreshlyGround/issues
