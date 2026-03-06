@@ -1,8 +1,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  [![Issues][issues-shield]][issues-url]
-  [![Gradle Tests][test-shield]][test-url]
+  
+  [![Issues][issues-shield]][issues-url] [![Gradle Tests][test-shield]][test-url]
   
   <img src="assets/banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
 
