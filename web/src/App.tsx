@@ -64,12 +64,13 @@ END`
 
             <div className="editor-container">
                 <textarea
+                    id="left"
                     className="editor"
                     value={source}
                     onChange={(e) => setSource(e.target.value)}
                 />
 
-                <textarea className="editor output" value={output} readOnly />
+                <textarea id="right" className="editor output" value={output} readOnly />
             </div>
 
             <div className="button-row">

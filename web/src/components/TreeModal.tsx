@@ -8,6 +8,7 @@ type TreeModalProps = {
 };
 
 export default function TreeModal({ ast, onClose }: TreeModalProps) {
+
     return (
         <Modal title="AST" onClose={onClose}>
             <div className="ast-tree">

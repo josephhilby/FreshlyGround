@@ -265,6 +265,7 @@ body {
 }
 
 .ast-tree {
+    --ast-node-height: 28px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -285,19 +286,26 @@ body {
     z-index: 1;
     display: inline-flex;
     align-items: center;
-    border-radius: var(--radius-sm);
     background: var(--ast-bg);
     color: var(--ast-text);
+    line-height: 1;
 }
 
 .ast-node {
     gap: 8px;
     padding: 4px 8px;
+    min-height: var(--ast-node-height);
+    border-radius: var(--radius-sm);
+    align-items: stretch;
 }
 
 .ast-inline-node {
     gap: 6px;
-    padding: 4px 8px;
+    padding: 0 6px;
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 4px;
 }
 
 .ast-node.clickable {
@@ -322,6 +330,7 @@ body {
 .ast-inline-group {
     display: inline-flex;
     align-items: center;
+    line-height: 1;
 }
 
 .ast-label {
