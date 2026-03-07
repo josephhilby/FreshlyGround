@@ -26,7 +26,14 @@ async function postJson<T>(path: string, source: string): Promise<T> {
     const json = text ? JSON.parse(text) : null;
 
     if (!res.ok) {
-        throw new Error(json?.message ?? `Request failed: ${path}`);
+        const message =
+            json?.message ??
+            json?.error ??
+            `${res.status} ${res.statusText}`;
+
+        throw new Error(
+            `Request failed (${res.status}) [${path}]: ${message}`
+        );
     }
 
     return json as T;

@@ -57,7 +57,9 @@ Web UI:
 > docker compose down
 >```
 
-If you prefer to run the servers outside their containers...
+<details>
+
+<summary>If you prefer to run the servers outside their containers...</summary>
 
 ### Run API Server
 1. Navigate to `root/compiler`
@@ -104,6 +106,8 @@ If you prefer to run the servers outside their containers...
 > cd examples/dist
 > java Main
 >```
+
+</details>
 
 ### Run Tests
 1. Finish the 'Quick Start' steps
