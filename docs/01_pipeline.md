@@ -112,6 +112,6 @@ Each stage transforms one artifact into another and enforces only the rules it o
 
 ## Navigation
 
-* Index: [Overview & Index](./00_index.md)
-* Previous: N/A
 * Next: [Syntactic Definitions](./02_syntax.md)
+* Previous: N/A
+* Index: [Overview & Index](./00_index.md)
