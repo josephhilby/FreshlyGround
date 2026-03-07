@@ -241,20 +241,20 @@ This structure allows new targets (Hack bytecode, WASM) to be added without modi
 
 ### Technical Reference
 The full language and compiler specification is maintained in /docs:
-- Language Grammar — EBNF, tokens, and syntactic forms
-- Abstract Syntax Tree (AST) — node taxonomy and syntactic structural model
-- Semantic Model — scope, bindings, type system, and resolution of semantic rules
-- Compiler Pipeline — single pass structure and intermediate representations
+- Compiler Pipeline — highlevel overview of structures and intermediate representations
+- Language Syntax — EBNF, tokens, and syntactic forms
+- Abstract Syntax Tree (AST) — node taxonomy and tree structural model
+- Semantic Model — scope, environment, type system, bindings, and resolution of semantic rules
 - Backends — WebAssembly (WAT/WASM) targets
 
 #### /docs
 | Topic               | Document                                         |
 | ------------------- |--------------------------------------------------|
-| Overview & Index    | [docs/00_index.md](./docs/00_index.md)           |
+| Index               | [docs/00_index.md](./docs/00_index.md)           |
 | Compiler Pipeline   | [docs/01_pipeline.md](./docs/01_pipeline.md)     |
-| Language Grammar    | [docs/02_syntax.md](./docs/02_syntax.md)         |
+| Language Syntax     | [docs/02_syntax.md](./docs/02_syntax.md)         |
 | AST Specification   | [docs/03_struct_rep.md](./docs/03_struct_rep.md) |
-| Semantic Rules      | [docs/04_semantics.md](./docs/04_semantics.md)   |
+| Semantic Model      | [docs/04_semantics.md](./docs/04_semantics.md)   |
 | WebAssembly Backend | [docs/05_backend.md](./docs/05_backend.md)       |
 
 ---
