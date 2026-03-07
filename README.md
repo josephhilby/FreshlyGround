@@ -123,17 +123,15 @@ Web UI:
 ### Repository Structure
 ```text
 ./
- ├─ assets/            # Repo/docs Images
- ├─ api/               # REST adapter (POST /compile, file.fg → file.wat)
- ├─ docs/              # Technical reference and language specifications
- ├─ examples/          # Example programs
- ├─ gradle/            # Gradle wrapper
- ├─ src/
- │  ├─ main/           # Core compiler passes (cli (fgc), lexer, parser, analyzer, generator(s))
- │  └─ test/           # Generated outputs
- ├─ tests/             # Unit, interaction, and end-to-end tests
- ├─ web/               # Web UI
- └─ build.gradle
+ ├─ assets/              # Repo/docs Images
+ ├─ compiler/
+ │   ├─ src/
+ │  ...  ├─ main/java... # Core compiler (logic, api, server)
+ │       └─ test/java... # Gradle tests
+ │
+ ├─ docs/                # Technical reference
+ ├─ web/                 # Web UI
+ └─ README.md
 ```
 
 ### Roadmap
