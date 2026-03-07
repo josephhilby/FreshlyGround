@@ -4,11 +4,8 @@
   
   [![Issues][issues-shield]][issues-url] [![Gradle Tests][test-shield]][test-url]
   
-  <img src="assets/banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
+  <img src="assets/fg_banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
 
-  <h3>
-    A Java based novel programming language
-  </h3>
 </div>
 
 ---

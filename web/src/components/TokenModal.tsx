@@ -13,6 +13,21 @@ type TokenModalProps = {
     onClose: () => void;
 };
 
+const KEYWORDS = new Set([
+    "LET",
+    "CONST",
+    "DEF",
+    "DO",
+    "END",
+    "IF",
+    "ELSE",
+    "FOR",
+    "WHILE",
+    "RETURN",
+]);
+
+const PUNCTUATION = new Set(["(", ")", ":", ";", ","]);
+
 function computeLineStarts(source: string) {
     const starts = [0];
 
@@ -35,20 +50,41 @@ function tokenLine(index: number, lineStarts: number[]) {
     return line;
 }
 
-function tokenClass(type: Token["type"]) {
-    switch (type) {
-        case "IDENTIFIER":
-            return "token-chip identifier";
-        case "INTEGER":
-        case "DECIMAL":
-            return "token-chip numeric";
-        case "CHARACTER":
-            return "token-chip character";
-        case "STRING":
-            return "token-chip string";
-        case "OPERATOR":
-            return "token-chip operator";
+function tokenClass(token: Token) {
+    if (token.type === "IDENTIFIER" && KEYWORDS.has(token.literal)) {
+        return "token-chip keyword";
     }
+
+    if (token.type === "IDENTIFIER") {
+        return "token-chip identifier";
+    }
+
+    if (token.type === "INTEGER" || token.type === "DECIMAL") {
+        return "token-chip numeric";
+    }
+
+    if (token.type === "CHARACTER") {
+        return "token-chip character";
+    }
+
+    if (token.type === "STRING") {
+        return "token-chip string";
+    }
+
+    if (token.type === "OPERATOR" && PUNCTUATION.has(token.literal)) {
+        return "token-chip punctuation";
+    }
+
+    return "token-chip operator";
+}
+
+function tokenTitle(token: Token, lineNumber: number) {
+    return [
+        `Type: ${token.type}`,
+        `Literal: ${token.literal}`,
+        `Index: ${token.index}`,
+        `Line: ${lineNumber + 1}`,
+    ].join("\n");
 }
 
 export default function TokenModal({ tokens, source, onClose }: TokenModalProps) {
@@ -69,22 +105,32 @@ export default function TokenModal({ tokens, source, onClose }: TokenModalProps)
         <Modal title="Tokens" onClose={onClose}>
             <div className="token-lines">
                 {lines.map((lineTokens, lineIndex) => (
-                    <div key={lineIndex} className="token-line">
-                        {lineTokens.map((t, i) => (
-                            <div key={i} className={tokenClass(t.type)}>
-                                {t.literal}
-                            </div>
-                        ))}
+                    <div key={lineIndex} className="token-line-row">
+                        <div className="token-line-number">{lineIndex + 1}</div>
+
+                        <div className="token-line">
+                            {lineTokens.map((t, i) => (
+                                <div
+                                    key={i}
+                                    className={tokenClass(t)}
+                                    title={tokenTitle(t, lineIndex)}
+                                >
+                                    {t.literal}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 ))}
             </div>
 
             <Legend
                 items={[
+                    { label: "Keyword", className: "keyword" },
                     { label: "Identifier", className: "identifier" },
                     { label: "Numeric", className: "numeric" },
                     { label: "Character", className: "character" },
                     { label: "String", className: "string" },
+                    { label: "Punctuation", className: "punctuation" },
                     { label: "Operator", className: "operator" },
                 ]}
             />
