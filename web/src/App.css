@@ -269,6 +269,18 @@ body::-webkit-scrollbar-thumb:hover {
     --token-text: #e6d3b3;
 }
 
+.keyword {
+    --token-bg: #5a3f2b;
+    --token-border: #c89b6d;
+    --token-text: #f5e6c8;
+}
+
+.punctuation {
+    --token-bg: #332d29;
+    --token-border: #8b6a45;
+    --token-text: #e6d3b3;
+}
+
 
 /* ==========================================================================
    Token Layout
@@ -279,6 +291,20 @@ body::-webkit-scrollbar-thumb:hover {
     flex-wrap: wrap;
     align-items: flex-start;
     gap: 12px;
+}
+
+.token-line-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.token-line-number {
+    min-width: 2ch;
+    padding-top: 10px;
+    color: var(--text-secondary);
+    opacity: 0.75;
+    text-align: right;
 }
 
 .token-lines {
@@ -302,6 +328,11 @@ body::-webkit-scrollbar-thumb:hover {
     font-size: 14px;
     line-height: 1;
     box-shadow: var(--shadow-soft);
+}
+
+.token-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.35);
 }
 
 
@@ -519,8 +550,8 @@ body::-webkit-scrollbar-thumb:hover {
     bottom: calc(100% + 8px);
     left: 0;
     z-index: 6000;
-    min-width: 260px;
-    max-width: 420px;
+    min-width: 320px;
+    max-width: 520px;
     padding: 10px 12px;
     border: 1px solid var(--accent);
     border-radius: var(--radius-sm);
@@ -540,7 +571,7 @@ body::-webkit-scrollbar-thumb:hover {
 
 .ast-tooltip pre {
     margin: 0;
-    white-space: pre-wrap;
+    white-space: pre;
     font-family: var(--font-mono);
     font-size: 12px;
     line-height: 1.35;
@@ -569,6 +600,7 @@ body::-webkit-scrollbar-thumb:hover {
     width: 0.9rem;
     height: 0.9rem;
     border-radius: 0.2rem;
+    border: 1px solid var(--token-border);
 }
 
 .legend-box.structural,
@@ -577,10 +609,12 @@ body::-webkit-scrollbar-thumb:hover {
     background: var(--ast-legend);
 }
 
+.legend-box.keyword,
 .legend-box.identifier,
 .legend-box.numeric,
-.legend-box.character,
 .legend-box.string,
+.legend-box.character,
+.legend-box.punctuation,
 .legend-box.operator {
     background: var(--token-border);
 }
