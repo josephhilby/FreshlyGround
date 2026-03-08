@@ -1,3 +1,5 @@
+import "./modal.css";
+
 type ModalProps = {
     title: string;
     onClose: () => void;

@@ -1,3 +1,5 @@
+import "./legend.css";
+
 type LegendItem = {
     label: string;
     className: string;

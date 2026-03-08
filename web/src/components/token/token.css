@@ -1,0 +1,88 @@
+/* ==========================================================================
+   Token Palette
+   ========================================================================== */
+
+.identifier {
+    --token-bg: #5a4636;
+    --token-border: #8b6a45;
+    --token-text: #f5e6c8;
+}
+
+.integer,
+.decimal,
+.numeric {
+    --token-bg: #4a3c2a;
+    --token-border: #b8894f;
+    --token-text: #ffd9a3;
+}
+
+.character {
+    --token-bg: #4b3a32;
+    --token-border: #a56c5a;
+    --token-text: #ffd1c2;
+}
+
+.string {
+    --token-bg: #3d332b;
+    --token-border: #7a8f62;
+    --token-text: #d8f0c2;
+}
+
+.operator {
+    --token-bg: #2e2a27;
+    --token-border: #9a7b63;
+    --token-text: #e6d3b3;
+}
+
+/* ==========================================================================
+   Token Layout
+   ========================================================================== */
+
+.token-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.token-line-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.token-line-number {
+    min-width: 2ch;
+    padding-top: 10px;
+    color: var(--text-secondary);
+    opacity: 0.75;
+    text-align: right;
+}
+
+.token-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.token-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.token-chip {
+    padding: 10px 14px;
+    border: 1px solid var(--token-border);
+    border-radius: var(--radius-md);
+    background: var(--token-bg);
+    color: var(--token-text);
+    font-size: 14px;
+    line-height: 1;
+    box-shadow: var(--shadow-soft);
+}
+
+.token-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.35);
+}

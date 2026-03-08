@@ -1,0 +1,330 @@
+/* ==========================================================================
+   AST Palette
+   ========================================================================== */
+
+.top-level {
+    --ast-bg: var(--ast-top-level-bg);
+    --ast-text: var(--ast-top-level-text);
+    --ast-legend: var(--ast-top-level-bg);
+}
+
+.statement {
+    --ast-bg: var(--ast-statement-bg);
+    --ast-text: #f5e6c8;
+    --ast-legend: var(--ast-statement-bg);
+}
+
+.expression {
+    --ast-bg: var(--ast-expression-bg);
+    --ast-text: #dce9f2;
+    --ast-legend: var(--ast-expression-bg);
+}
+
+
+/* ==========================================================================
+   AST Tree Layout
+   ========================================================================== */
+
+.ast-tree {
+    --ast-node-height: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: fit-content;
+    overflow: visible;
+}
+
+.ast-branch,
+.ast-children,
+.ast-child-group {
+    position: relative;
+    margin: 0;
+    padding-left: 0;
+    overflow: visible;
+}
+
+.ast-child-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ast-for-header {
+    display: flex;
+    align-items: center;   /* centers parentheses vertically */
+    gap: 8px;
+    margin-left: 8px;
+}
+
+.ast-for-control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ast-for-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ast-for-semi {
+    opacity: 0.6;
+}
+
+.ast-section-label {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.65;
+}
+
+.ast-branch {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: fit-content;
+}
+
+.ast-branch:hover {
+    z-index: 5000;
+}
+
+.ast-branch-source {
+    background: transparent;
+    padding: 0;
+}
+
+.ast-branch-top-level {
+    background: var(--ast-top-level-bg);
+    border-radius: var(--radius-md);
+    padding: 12px;
+}
+
+.ast-branch-top-level.clickable {
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    transition: box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.ast-branch-top-level.clickable:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+    filter: brightness(1.05);
+}
+
+.ast-branch-top-level.clickable:active {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.ast-branch-top-level > .ast-node.top-level {
+    background: transparent;
+    padding: 0;
+    min-height: var(--ast-node-height);
+}
+
+.ast-children {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+    margin-left: 16px;
+    gap: 6px;
+}
+
+.ast-inline-children {
+    margin-left: 10px;
+}
+
+.ast-inline-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* ==========================================================================
+   AST Nodes
+   ========================================================================== */
+
+.ast-node,
+.ast-inline-node {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    background: var(--ast-bg);
+    color: var(--ast-text);
+    line-height: 1;
+}
+
+.ast-node {
+    gap: 8px;
+    padding: 4px 8px;
+    min-height: var(--ast-node-height);
+    border-radius: var(--radius-sm);
+}
+
+.ast-node-source {
+    background: transparent;
+    box-shadow: none;
+}
+
+.ast-inline-node {
+    gap: 6px;
+    padding: 0 6px;
+    align-self: stretch;
+    border-radius: 4px;
+}
+
+.ast-node.clickable {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.ast-node.clickable.collapsed {
+    cursor: zoom-in;
+}
+
+.ast-node.clickable.expanded {
+    cursor: zoom-out;
+}
+
+.ast-node.clickable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+    filter: brightness(1.08);
+}
+
+.ast-node.clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+
+/* ==========================================================================
+   AST Caret
+   ========================================================================== */
+
+.ast-caret {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    margin-right: 6px;
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.7;
+    transform: rotate(0deg);
+    transform-origin: center;
+    transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+/* Row-owned expansion: If / While / etc. */
+.ast-node.clickable.collapsed > .ast-caret {
+    transform: rotate(0deg);
+}
+
+.ast-node.clickable.expanded > .ast-caret {
+    transform: rotate(90deg);
+}
+
+/* Branch-owned expansion: Source / Method */
+.ast-branch.clickable.collapsed > .ast-node > .ast-caret {
+    transform: rotate(0deg);
+}
+
+.ast-branch.clickable.expanded > .ast-node > .ast-caret {
+    transform: rotate(90deg);
+}
+
+
+/* ==========================================================================
+   AST Inline Text Elements
+   ========================================================================== */
+
+.ast-label,
+.ast-paren,
+.ast-inline-group {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+}
+
+.ast-label {
+    gap: 8px;
+}
+
+.ast-paren {
+    justify-content: center;
+    margin: 0 2px;
+    opacity: 0.7;
+}
+
+.ast-equals {
+    margin: 0 4px;
+    opacity: 0.6;
+}
+
+.ast-kind {
+    font-weight: 700;
+    cursor: help;
+}
+
+.ast-kind::after {
+    content: ":";
+    margin-right: 4px;
+    opacity: 0.7;
+}
+
+.ast-chip {
+    padding: 1px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+}
+
+
+/* ==========================================================================
+   AST Tooltips
+   ========================================================================== */
+
+.ast-kind-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.ast-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 6000;
+    min-width: 320px;
+    max-width: 520px;
+    padding: 10px 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--bg-page);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-modal);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.ast-kind-wrapper:hover .ast-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.ast-tooltip pre {
+    margin: 0;
+    white-space: pre;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.35;
+}
