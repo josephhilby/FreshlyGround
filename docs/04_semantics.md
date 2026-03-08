@@ -502,6 +502,6 @@ Note: Integer and Decimal are bounded within a 32-bit int and 64-bit double
 
 ## Navigation
 
-* Index: [Overview & Index](./00_index.md)
-* Previous: [Structural Representation](./03_struct_rep.md)
 * Next: [Modular Backends](./05_backend.md)
+* Previous: [Structural Representation](./03_struct_rep.md)
+* Index: [Overview & Index](./00_index.md)

@@ -1,0 +1,169 @@
+/* ==========================================================================
+   App Layout
+   ========================================================================== */
+
+.app {
+    width: 100%;
+    max-width: 1400px;
+    height: 100vh;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 20px 40px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.title {
+    margin-bottom: 30px;
+    color: var(--text-primary);
+    font-size: 22px;
+    letter-spacing: 1px;
+}
+
+.error {
+    margin-top: 20px;
+    color: var(--text-error);
+}
+
+
+/* ==========================================================================
+   Editor / Output Pane Layout
+   ========================================================================== */
+
+.editor-container {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+}
+
+.editor {
+    flex: 1;
+    min-width: 0;
+    min-height: 400px;
+    height: 100%;
+    padding: 14px;
+    border: 1px solid var(--editor-border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-editor);
+    color: var(--text-primary);
+    font-size: 14px;
+    box-shadow: var(--shadow-panel);
+    resize: none;
+    overflow-y: auto;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg-editor);
+    white-space: pre;
+    overflow-x: auto;
+    overflow-y: auto;
+    line-height: 1.5;
+    tab-size: 4;
+
+}
+
+.editor-left {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.editor-wrapper {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    background: var(--bg-editor);
+    border: 1px solid var(--editor-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-panel);
+    overflow: hidden;
+}
+
+.editor-wrapper .editor {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.editor-wrapper textarea {
+    flex: 1;
+}
+
+.line-numbers {
+    width: 48px;
+    padding: 14px 8px;
+    text-align: right;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.08);
+    border-right: 1px solid var(--editor-border);
+    font-size: 14px;
+    line-height: 1.5;
+    user-select: none;
+    overflow: hidden;
+    box-sizing: border-box;
+    flex: 0 0 48px;
+}
+
+.line-numbers div {
+    height: 21px;
+}
+
+.editor:focus {
+    outline: none;
+    border-color: var(--accent-bright);
+}
+
+.editor::-webkit-scrollbar {
+    width: 10px;
+}
+
+.editor::-webkit-scrollbar-track {
+    background: var(--bg-editor);
+}
+
+.editor::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+}
+
+.editor::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+.output {
+    background: var(--bg-output);
+}
+
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 28px;
+}
+
+.compile-button {
+    padding: 10px 22px;
+    border: 1px solid var(--accent-bright);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.compile-button:hover {
+    background: var(--accent-bright);
+    color: var(--bg-page);
+}

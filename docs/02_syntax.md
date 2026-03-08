@@ -166,30 +166,8 @@ treatment of this resolution process appears in [Section 4](./04_semantics.md).
 
 ---
 
-## Example Derivation
-For example:
-
-```fg
-LET x: Integer = 10;
-```
-
-### Token Stream
-This code would lex to the following token stream:
-
-```text
-{ "LET", "x", ":", "Integer", "=", "10", ";" }
-```
-
-Which would match with the following top level form:
-
-```ebnf
-field ::= "LET" identifier ":" identifier "=" expression ";"
-```
-
----
-
 ## Navigation
 
-* Index: [Overview & Index](./00_index.md)
-* Previous: [Compiler Pipeline](./01_pipeline.md)
 * Next: [Structural Representation](./03_struct_rep.md)
+* Previous: [Compiler Pipeline](./01_pipeline.md)
+* Index: [Overview & Index](./00_index.md)

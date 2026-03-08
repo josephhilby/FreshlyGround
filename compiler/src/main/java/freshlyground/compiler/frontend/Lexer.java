@@ -80,9 +80,13 @@ public final class Lexer {
      */
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
+
         while (chars.has(0)) {
             if (match("[ \b\n\r\t]")) {
                 chars.skip();
+
+            } else if (peek("/", "/")) {
+                lexComment();
 
             } else {
                 tokens.add(lexToken());
@@ -180,6 +184,16 @@ public final class Lexer {
         }
 
         lexError("Invalid escape character");
+    }
+
+    private void lexComment() {
+        match("/", "/");
+
+        while (chars.has(0) && !peek("[\n\r]")) {
+            match("[^\n\r]");
+        }
+
+        chars.skip();
     }
 
     private void lexError(String message) {

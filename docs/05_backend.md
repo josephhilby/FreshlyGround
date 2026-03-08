@@ -309,6 +309,6 @@ END
 
 ## Navigation
 
-* Index: [Overview & Index](./00_index.md)
-* Previous: [Semantic Model & Bindings](./04_semantics.md)
 * Next: N/A
+* Previous: [Semantic Model & Bindings](./04_semantics.md)
+* Index: [Overview & Index](./00_index.md)

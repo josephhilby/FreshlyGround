@@ -1,0 +1,61 @@
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.modal {
+    width: min(900px, 90vw);
+    padding: 1.5rem;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    background: var(--bg-page);
+    color: var(--text-secondary);
+    text-align: left;
+    box-shadow: var(--shadow-modal);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.modal-header button {
+    padding: 4px 10px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modal-header button:hover {
+    background: var(--accent);
+    color: var(--bg-page);
+}
+
+.modal-content {
+    margin: 0;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+}

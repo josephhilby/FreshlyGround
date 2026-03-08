@@ -2,16 +2,9 @@ import { useState } from "react";
 import { compileSource, getTokens, getAst } from "./api/compiler";
 import TokenModal from "./components/TokenModal";
 import TreeModal from "./components/TreeModal";
-import "./App.css";
+import "./styles/app.css";
 
 function App() {
-    const [source, setSource] = useState(
-        `DEF main(): Integer DO
-    print("hello world");
-    RETURN 0;
-END`
-    );
-
     const [output, setOutput] = useState("");
     const [error, setError] = useState<string | null>(null);
 
@@ -19,6 +12,37 @@ END`
     const [showAst, setShowAst] = useState(false);
     const [tokens, setTokens] = useState<unknown[]>([]);
     const [ast, setAst] = useState<unknown | null>(null);
+
+    const [source, setSource] = useState(
+        `// A quick tour of fields, methods, loops, conditionals, 
+// and function calls.
+
+LET brewCount: Integer;
+LET drink: String = "coffee";
+
+DEF pourMany(cup: String): Nil DO
+    FOR ( brewCount = 0; brewCount < 3; brewCount = brewCount + 1 )
+        print("pouring " + cup);
+    END
+END
+
+DEF main(): Integer DO
+    brewCount = 0;
+    LET sleepyLevel: Integer = 5;
+
+    WHILE brewCount < 6 DO
+        IF brewCount < sleepyLevel DO
+            pourMany(drink);
+        ELSE
+            print(drink.length());
+        END
+
+        brewCount = brewCount + 1;
+    END
+
+    RETURN 0;
+END`
+    );
 
     async function compile() {
         setError(null);
@@ -63,27 +87,45 @@ END`
             </div>
 
             <div className="editor-container">
-                <textarea
-                    id="left"
-                    className="editor"
-                    value={source}
-                    onChange={(e) => setSource(e.target.value)}
-                />
+                <div className="editor-wrapper">
+                    <div className="line-numbers">
+                        {source.split("\n").map((_, i) => (
+                            <div key={i}>{i + 1}</div>
+                        ))}
+                    </div>
+
+                    <textarea
+                        id="left"
+                        className="editor editor-left"
+                        value={source}
+                        wrap="off"
+                        spellCheck={false}
+                        onChange={(e) => setSource(e.target.value)}
+                        onScroll={(e) => {
+                            const wrapper = e.currentTarget.parentElement;
+                            const gutter = wrapper?.querySelector(".line-numbers") as HTMLElement | null;
+
+                            if (gutter) {
+                                gutter.scrollTop = e.currentTarget.scrollTop;
+                            }
+                        }}
+                    />
+                </div>
 
                 <textarea id="right" className="editor output" value={output} readOnly />
             </div>
 
             <div className="button-row">
-                <button className="compile-button" onClick={compile}>
-                    Compile
-                </button>
-
                 <button className="compile-button" onClick={openTokens}>
                     Tokens
                 </button>
 
                 <button className="compile-button" onClick={openAst}>
                     AST
+                </button>
+
+                <button className="compile-button" onClick={compile}>
+                    Compile
                 </button>
             </div>
 
