@@ -315,6 +315,6 @@ Type Map (literal → java object):
 
 ## Navigation
 
-* Index: [Overview & Index](./00_index.md)
-* Previous: [Syntactic Definitions](./02_syntax.md)
 * Next: [Semantic Model & Bindings](./04_semantics.md)
+* Previous: [Syntactic Definitions](./02_syntax.md)
+* Index: [Overview & Index](./00_index.md)
