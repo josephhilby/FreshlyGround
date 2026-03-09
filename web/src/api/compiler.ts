@@ -13,7 +13,7 @@ export type AstResponse = {
     [key: string]: unknown;
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:7070";
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "") ?? "http://localhost:7070";
 
 async function postJson<T>(path: string, source: string): Promise<T> {
     const res = await fetch(`${API_BASE_URL}${path}`, {
