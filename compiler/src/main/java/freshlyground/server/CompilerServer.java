@@ -15,7 +15,7 @@ public final class CompilerServer {
     private CompilerServer() {}
 
     public static void main(String[] args) {
-        int port = 7070;
+        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "7070"));
 
         Javalin app = Javalin.create(config -> {
             config.http.defaultContentType = "application/json";
