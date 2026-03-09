@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jdk AS build
 
 WORKDIR /app
 
@@ -8,7 +8,14 @@ COPY build.gradle.kts settings.gradle.kts ./
 COPY src src
 
 RUN chmod +x gradlew
+RUN ./gradlew --no-daemon build
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 7070
 
-ENTRYPOINT ["./gradlew", "runServer", "--no-daemon"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
