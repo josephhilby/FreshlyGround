@@ -65,7 +65,8 @@ Web UI:
 1. Navigate to `root/compiler`
 2. Start the server:
 >```bash
-> ./gradlew runServer
+> ./gradlew clean shadowJar
+> java -jar build/libs/*.jar
 >```
 
 3. Run a health check:
