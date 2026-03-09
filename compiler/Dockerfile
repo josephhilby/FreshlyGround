@@ -8,7 +8,7 @@ COPY build.gradle.kts settings.gradle.kts ./
 COPY src src
 
 RUN chmod +x gradlew
-RUN ./gradlew --no-daemon build
+RUN ./gradlew --no-daemon clean shadowJar
 
 FROM eclipse-temurin:21-jre
 

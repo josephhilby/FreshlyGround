@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("application")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "org.example"
@@ -13,6 +14,7 @@ repositories {
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+
     implementation("io.javalin:javalin:6.4.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
 }
@@ -25,6 +27,9 @@ tasks.test {
     }
 }
 
+/**
+ * Local development task for running the HTTP API through Gradle.
+ */
 tasks.register<JavaExec>("runServer") {
     group = "application"
     description = "Run the FreshlyGround HTTP compiler server."
@@ -32,6 +37,9 @@ tasks.register<JavaExec>("runServer") {
     mainClass.set("freshlyground.server.CompilerServer")
 }
 
+/**
+ * Plain jar manifest.
+ */
 tasks.jar {
     manifest {
         attributes(
@@ -40,6 +48,21 @@ tasks.jar {
     }
 }
 
+/**
+ * Build a fat jar / uber jar with all runtime dependencies included.
+ */
+tasks.shadowJar {
+    archiveClassifier.set("")
+    manifest {
+        attributes(
+            "Main-Class" to "freshlyground.server.CompilerServer"
+        )
+    }
+}
+
+/**
+ * Keep the CLI app entrypoint for local start scripts like `fgc`.
+ */
 application {
     mainClass.set("freshlyground.cli.Fgc")
 }
