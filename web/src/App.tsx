@@ -10,8 +10,8 @@ function App() {
 
     const [showTokens, setShowTokens] = useState(false);
     const [showAst, setShowAst] = useState(false);
-    const [tokens, setTokens] = useState<unknown[]>([]);
-    const [ast, setAst] = useState<unknown | null>(null);
+    const [tokens, setTokens] = useState<any[]>([]);
+    const [ast, setAst] = useState<any | null>(null);
 
     const [source, setSource] = useState(
         `// A quick tour of fields, methods, loops, conditionals, 
@@ -137,7 +137,7 @@ END`
 
             {showTokens && (
                 <TokenModal
-                    tokens={tokens as any[]}
+                    tokens={tokens}
                     source={source}
                     onClose={() => setShowTokens(false)}
                 />
