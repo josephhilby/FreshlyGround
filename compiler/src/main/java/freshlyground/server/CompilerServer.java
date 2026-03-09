@@ -22,6 +22,7 @@ public final class CompilerServer {
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(rule -> {
                     rule.allowHost("http://localhost:5173");
+                    rule.allowHost("https://freshlyground.onrender.com");
                 });
             });
         });
