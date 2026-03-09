@@ -28,7 +28,7 @@ tasks.test {
 }
 
 /**
- * Local development task for running the HTTP API through Gradle.
+ * Local helper task if you still want to run the server through Gradle.
  */
 tasks.register<JavaExec>("runServer") {
     group = "application"
@@ -38,7 +38,7 @@ tasks.register<JavaExec>("runServer") {
 }
 
 /**
- * Plain jar manifest.
+ * Plain jar metadata.
  */
 tasks.jar {
     manifest {
@@ -49,7 +49,7 @@ tasks.jar {
 }
 
 /**
- * Build a fat jar / uber jar with all runtime dependencies included.
+ * Fat jar for Docker / Render deployment.
  */
 tasks.shadowJar {
     archiveClassifier.set("")
@@ -61,14 +61,10 @@ tasks.shadowJar {
 }
 
 /**
- * Keep the CLI app entrypoint for local start scripts like `fgc`.
+ * The deployed application should be the HTTP server, not the CLI.
  */
 application {
-    mainClass.set("freshlyground.cli.Fgc")
-}
-
-tasks.named<CreateStartScripts>("startScripts") {
-    applicationName = "fgc"
+    mainClass.set("freshlyground.server.CompilerServer")
 }
 
 java {
