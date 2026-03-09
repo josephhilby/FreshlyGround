@@ -32,6 +32,14 @@ tasks.register<JavaExec>("runServer") {
     mainClass.set("freshlyground.server.CompilerServer")
 }
 
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to "freshlyground.server.CompilerServer"
+        )
+    }
+}
+
 application {
     mainClass.set("freshlyground.cli.Fgc")
 }
