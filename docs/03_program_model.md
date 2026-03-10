@@ -1,15 +1,17 @@
 # Program Model
 
-This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the structured, intermediate representation
-produced by the parser according to the previously discussed context-free grammar. The AST captures 
-**program form without semantic meaning**. It encodes hierarchy, precedence, and grammatical structure.
+This document specifies FreshlyGround's program model. This model is used to map the previously discussed
+context-free grammar onto an encoded **Abstract Syntax Tree (AST)**. This AST will serve as the primary structured, 
+intermediate representation for any code written in the FreshlyGround language. It will capture that 
+**program's form without semantic meaning**. It encodes hierarchy, conditional logic, and overall grammatical structure.
 
 ::: info Note
 Some of the EBNF definitions have been modified to better show how the map to their respective AST class.
 :::
 
-## AST Root
-All programs are parsed from a single root node: `Ast.Source`.
+## Root
+
+At the top most level is `Ast.Source`. This will serve as the programs entry point in any target representation.
 
 ::: tip **Ast.Source**
 
@@ -32,7 +34,9 @@ Ast.Source
 
 :::
 
-## Top-Level Declarations
+## Top-Level
+
+lorem
 
 ::: tip **Ast.Field**
 
@@ -80,7 +84,10 @@ Ast.Method
 :::
 
 ## Statements
-### Declaration
+
+### Variables
+
+::: tip **Ast.Statement.Declaration**
 
 Grammar:
 
@@ -97,7 +104,9 @@ Ast.Statement.Declaration
  └─ value    : Optional<Ast.Expression>
 ```
 
-### Assignment
+:::
+
+::: tip **Ast.Statement.Assignment**
 
 Grammar:
 
@@ -113,7 +122,11 @@ Ast.Statement.Assignment
  └─ value    : Ast.Expression
 ```
 
-### Expression
+:::
+
+### Functions
+
+::: tip **Ast.Statement.Expression**
 
 Grammar:
 
@@ -128,7 +141,11 @@ Ast.Statement.Expression
  └─ expression : Ast.Expression.Function
 ```
 
-### Conditional
+:::
+
+### Conditional Logic
+
+::: tip **Ast.Statement.If**
 
 Grammar:
 
@@ -150,7 +167,11 @@ Ast.Statement.If
  └─ elseStatements : List<Ast.Statement>
 ```
 
-### For Loop
+:::
+
+### Loops
+
+::: tip **Ast.Statement.For**
 
 Grammar:
 
@@ -171,7 +192,9 @@ Ast.Statement.For
  └─ statements     : List<Ast.Statement>
 ```
 
-### While Loop
+:::
+
+::: tip **Ast.Statement.While**
 
 Grammar:
 
@@ -189,6 +212,8 @@ Ast.Statement.While
  ├─ condition  : Ast.Expression
  └─ statements : List<Ast.Statement>
 ```
+
+:::
 
 ### Return
 
@@ -310,11 +335,3 @@ Type Map (literal → java object):
 * `decimal`              → `BigDecimal`
 * `character`            → `Character`
 * `string`               → `String`
-
----
-
-## Navigation
-
-* Next: [Semantic Model & Bindings](./04_semantics.md)
-* Previous: [Syntactic Definitions](./02_syntax.md)
-* Index: [Overview & Index](./00_index.md)

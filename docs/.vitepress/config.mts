@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from "vitepress-plugin-mermaid"
+import { withMermaid } from 'vitepress-plugin-mermaid'
 import type MarkdownIt from 'markdown-it'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -48,13 +48,21 @@ export default withMermaid(defineConfig({
           return defaultFence(tokens, idx, options, env, self)
         }
 
-        return ebnfHighlighter.codeToHtml(token.content, {
+        const html = ebnfHighlighter.codeToHtml(token.content, {
           lang: 'ebnf',
           themes: {
             light: 'github-light',
             dark: 'github-dark'
           }
         })
+
+        return [
+          '<div class="language-ebnf vp-adaptive-theme">',
+          '<button title="Copy Code" class="copy"></button>',
+          '<span class="lang">ebnf</span>',
+          html,
+          '</div>'
+        ].join('')
       }
     }
   },

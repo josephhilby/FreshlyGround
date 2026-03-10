@@ -3,13 +3,13 @@
 This document describes the architecture of the FreshlyGround compiler.
 
 The compiler is organized as a sequence of **stages**, each responsible for transforming one program 
-representation into another.
+representation into another. From a conceptual perspective these stages belong to three broader **layers**.
 
-From a conceptual perspective these stages belong to three broader **layers**:
-
+::: tip **Layers**:
 - **Syntax layer** — lexing and parsing
 - **Semantic layer** — analysis and binding
 - **Backend layer** — target emission
+:::
 
 The layers group stages by the level of interpretation they operate on: syntactic structure,
 semantic meaning, or target (backend) representation. Within their respective level each 
@@ -20,29 +20,29 @@ At a high level, FreshlyGround follows a layered, single-direction pipeline. The
 compilation pipeline and the artifacts produced between stages.
 
 ```mermaid
-flowchart TD
+flowchart LR
 
-Source@{ shape: doc, label: "Source Code" }
+Source@{ shape: doc, label: "Source\nCode" }
 
 subgraph Syntax_Layer
-    Lexer
-    Parser
+    Lexer["Lexer:\nTokens"]
+    Parser["Parser:\nAST"]
 end
 
 subgraph Semantic_Layer
-    Analyzer
+    Analyzer["Analyzer:\nAST+Bindings"]
 end
 
 subgraph Backend_Layer
-    Generator
+    Generator["Generator"]
 end
 
-Target@{ shape: lin-doc, label: "Target Rep." }
+Target@{ shape: lin-doc, label: "Target\nRep." }
 
 Source --> Lexer
-Lexer -- Tokens --> Parser
-Parser -- AST --> Analyzer
-Analyzer -- AST+Bindings --> Generator
+Lexer --> Parser
+Parser --> Analyzer
+Analyzer --> Generator
 Generator --> Target
 
 %% Layer coloring
@@ -63,7 +63,7 @@ The guarantees established by one stage become the assumptions relied upon by th
 
 ::: info Lexing (Tokenization)
 
-**Input:** Source Text
+**Input:** Source Code
 
 **Output:** Token Stream
 

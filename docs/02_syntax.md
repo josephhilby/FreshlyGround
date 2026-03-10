@@ -54,11 +54,13 @@ string     := " ( [^"\n\r\\] | escape )* "
 escape     := \\ [bnrt'"\\]
 ```
 
-### Notes
+::: info Note(s)
 
 * Keywords (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and promoted to keyword tokens during parsing
 * Whitespace and comments are not removed by the Lexer
 * Spaces in the productions are for readability only; they do not represent literal space characters
+
+:::
 
 ## Program Structure
 
@@ -70,7 +72,7 @@ tree — as it is for the AST — or the top construct that represents the entir
 ```ebnf
 source ::= { field } { method }
 ```
-::: info **Legend:**
+::: tip **Legend:**
 - `{ … }` = zero or more
 - `[ … ]` = optional (zero or one)
 - `|` = alternative
@@ -164,7 +166,7 @@ Semantically, the dot operator shifts the resolution context so that the `identi
 denoted by the preceding `expression`, rather than within the current lexical (global or method) scope. A detailed 
 explanation of this resolution process appears in [Semantics](./04_semantics.md).
 
-::: info Forms
+::: tip Forms
 `expression . identifier`
 
 `expression . identifier ( argument_list )`

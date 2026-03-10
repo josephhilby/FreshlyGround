@@ -2,7 +2,7 @@
 /* FreshlyGround EBNF block styling */
 /* ------------------------------------------------ */
 
-pre.shiki {
+.language-ebnf pre.shiki {
     background: #0f0f0f !important;
     padding: 1.2rem 1.4rem;
     border-radius: 14px;
@@ -13,15 +13,21 @@ pre.shiki {
     box-shadow: 0 6px 20px rgba(0,0,0,.35);
 }
 
-/* force dark tokens */
+/* force dark tokens only inside EBNF blocks */
 
-html.dark pre.shiki span {
+html.dark .language-ebnf pre.shiki span {
     color: var(--shiki-dark) !important;
 }
 
-/* remove accidental large indents */
+/* preserve normal code spacing */
 
-pre.shiki code {
+.language-ebnf pre.shiki code {
     display: block;
     white-space: pre;
+}
+
+/* keep line spacing identical to normal VitePress blocks */
+
+.language-ebnf pre.shiki .line {
+    line-height: inherit;
 }
