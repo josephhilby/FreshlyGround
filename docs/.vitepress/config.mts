@@ -78,13 +78,12 @@ export default withMermaid(defineConfig({
       {
         text: 'Compiler Architecture',
         items: [
-          { text: 'Index', link: '/' },
-          { text: 'About', link: '/00_about.md' },
+          { text: 'Home', link: '/' },
           { text: 'Compiler Pipeline', link: '/01_pipeline' },
           { text: 'Language Syntax', link: '/02_syntax' },
           { text: 'Program Model', link: '/03_program_model' },
-          { text: 'Semantics', link: '/04_semantics' },
-          { text: 'Backend', link: '/05_backend' }
+          { text: 'Semantic Model', link: '/04_semantics' },
+          { text: 'Backend Emissions', link: '/05_backend' }
         ]
       }
     ]

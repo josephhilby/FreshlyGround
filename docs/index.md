@@ -8,16 +8,13 @@ hero:
   tagline: A programming language brewed from first principles
   actions:
     - theme: brand
-      text: Read the Docs
+      text: Start with the Compiler Pipeline
       link: /01_pipeline
     - theme: alt
       text: Try the Live Compiler
       link: https://freshlyground.onrender.com
 
 features:
-  - title: About
-    details: A quick overview of the project and related terms.
-    link: /00_about
   - title: Compiler Pipeline
     details: Understand how FreshlyGround transforms source text into executable output through a disciplined multi-pass architecture.
     link: /01_pipeline
@@ -34,3 +31,40 @@ features:
     details: Deterministic lowering of analyzed programs into backend targets such as WebAssembly and other runtimes.
     link: /05_backend
 ---
+
+---
+
+# About the Project
+
+FreshlyGround is an educational programming language and compiler designed to explore modern compiler
+architecture from first principles. The system separates compilation into distinct stages, each stage is documented independently
+in this reference.
+
+<div class="callout-grid">
+
+::: tip Recommended reading order:
+1. **Compiler Pipeline** — overview of the compilation architecture
+2. **Language Syntax** — grammar and lexical structure
+3. **Program Model** — AST specification and internal program model
+4. **Semantics** — binding rules and type checking
+5. **Backend** — lowering to an executable target
+
+:::
+
+::: warning Core terminology used throughout the documentation...
+
+- **Token Stream:** Ordered sequence of lexical units produced by the lexer.
+
+- **AST (Abstract Syntax Tree):** Tree representation produced by the parser that mirrors grammar structure.
+
+- **Environment:** Global catalog of known types, functions, and variables.
+
+- **Bindings:** Semantic mappings that associate AST nodes with their resolved entities.
+
+- **Scope:** Visibility chain used for resolving identifiers.
+
+- **Lowering:** Deterministic emission from analyzed AST to backend representation.
+
+:::
+
+</div>

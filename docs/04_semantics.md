@@ -1,61 +1,25 @@
-# 04 — Semantic Model & Bindings Specification
+# Semantic Model
 
-This document specifies the **FreshlyGround semantic layer**: the rules that assign *meaning* to
-syntactically valid programs by resolving names, enforcing types, and constructing a scoped binding environment
+This document specifies the **FreshlyGround semantic layer**. This layer sets the rules that assign *meaning* to
+syntactically valid programs by enforcing types, and constructing a scoped binding environment
 over the Abstract Syntax Tree (AST).
 
-Semantics define **what programs mean and how they are interpreted**. This layer
-guarantees that all identifiers, expressions, and control structures are well-typed, well-scoped, and resolvable
-before any backend lowers the program into an executable form.
+Semantics define **what programs mean and how they are interpreted**. This layer guarantees that all 
+identifiers, expressions, and control structures are well-typed, well-scoped, and resolvable before 
+any backend lowers the program into an executable form.
 
----
-
-## Scope Model
-
-FreshlyGround enforces **lexical (static) scoping**.
-
-A Scope represents a lexical region of name visibility. Scopes form a parent-linked 
-chain corresponding to nested program structure.
-
-### Conceptual Structure
-
-```yaml
-Scope
- ├─ parent    : Optional<Scope>
- ├─ variables : Map<String, Environment.Variable>
- └─ functions : Map<String, Environment.Function>
-```
-
-**Note:** The function must be searched by both identifier and arity, "name + '/' + arity".
-
-### Scope Rules
-1. Declarations 
-   * Bind a `Environment.Variable` or `Environment.Function` in the **current scope**
-   * **Shadowing is allowed** across nested scopes
-   * **Redeclaration in the same scope is forbidden**
-
-2. Resolutions
-   * Lookup `Environment.Variable` or `Environment.Function` in the **current scope**
-   * If not found, resolution proceeds recursively through **parent scopes**
-   * Failure to resolve results in a compile-time error
-
-3. Nesting Scopes
-   * Occurs within: method bodies, conditional blocks, loop blocks 
----
+Practically what this means is that after semantic analysis every `Ast.Expression` node 
+will resolve to exactly one `Environment.Type`
 
 ## Environment Model
-The `Environment` defines the semantic entities used during analysis. At its core the model enforces one 
-key guarantee: 
+The `Environment` defines the semantic entities used during analysis.
 
-> After analysis every `Ast.Expression` node will resolve to exactly one `Environment.Type`
+::: tip Semantic Entities
 
-This invariant ensures that all expressions are well-typed and fully bound prior to lowering.
-
-### Conceptual Structure
+:::
 
 ```yaml
 Environment
- ├─ types    : Map<String, Type>
  ├─ type     : Class { name : String, internalType: boolean, scope : Scope }
  ├─ function : Class { name : String, parameterTypes : List<Type>, returnType : Type }
  └─ variable : Class { name : String, constant : boolean, type : Type }
@@ -70,10 +34,12 @@ Environment
    * Member resolution proceeds through the owning type’s scope, then iteratively through its scope chain
 4. Internal types are only for managing shared member functions/variables, and restricted from use in source code
 
+// TODO: add Type Singletons and Builtin Standard Lib here
+
 #### Member Access / Resolution (Dot Operator)
 Each `Environment.Variable` associated with an `Environment.Type`. That type contains a `Scope` populated
-at Design Time, and set with builtin member variables and functions. To access these member builtins, FreshlyGround 
-uses a dot operator to shift the resolution context from the current lexical scope to the scope owned by the expression’s 
+at Design Time, and set with builtin member variables and functions. To access these member builtins, FreshlyGround
+uses a dot operator to shift the resolution context from the current lexical scope to the scope owned by the expression’s
 resolved type.
 
 Member resolution is purely static. The dot operator performs compile-time lookup within the owning type’s
@@ -84,12 +50,12 @@ Assume there exists a variable:
 Message : String = "Hello World"
 ```
 
+// NOTE: All builtins where changed to functions for convenience
+
 The `Environment.Type.STRING` contains:
-- variable `length` with type `Integer`
 - function `slice(start, end)` with return type `String`
 
-So calling... 
-- `Message.length` resolves to type `Integer`
+So calling...
 - `Message.slice(0,5)` resolves to type `String`
 
 #### Scope Chain
@@ -114,12 +80,22 @@ The `Environment.Type.PRIMITIVE` contains:
 So calling...
 - `Number.stringify` resolves to type `String`
 
----
-
 ## Bindings Model
 
-Bindings store the results of semantic analysis. They associate specific AST nodes with the 
+Bindings store the results of semantic analysis. They associate specific AST nodes with the
 semantic entities produced during resolution.
+
+FreshlyGround follows a static, early-binding model similar to Java, where bindings are established 
+progressively then turned over to the target platform:
+
+#### FreshlyGround
+1. **Design Time** — Grammar rules, builtins, and primitive types
+2. **Implementation Time** — Mapping language primitive types, and builtins to backend representations
+3. **Source Time** — Variable and function declarations in user code
+4. **Compile Time** — Scope construction, name resolution, and type checking
+
+#### Target Platform
+5. **Run Time** — Storage allocation, and stack activation record
 
 ### Conceptual Model
 
@@ -146,11 +122,46 @@ Environment entity resolved
 Binding recorded
 ```
 
----
+## Scope Model
+
+FreshlyGround enforces **lexical (static) scoping**.
+
+A Scope represents a lexical region of name visibility. Scopes form a parent-linked 
+chain corresponding to nested program structure.
+
+### Conceptual Structure
+
+```yaml
+Scope
+ ├─ parent    : Optional<Scope>
+ ├─ variables : Map<String, Environment.Variable>
+ └─ functions : Map<String, Environment.Function>
+```
+
+::: info Note 
+The function must be searched by both identifier and arity, "name + '/' + arity".
+:::
+
+### Scope Rules
+1. Declarations 
+   * Bind a `Environment.Variable` or `Environment.Function` in the **current scope**
+   * **Shadowing is allowed** across nested scopes
+   * **Redeclaration in the same scope is forbidden**
+
+2. Resolutions
+   * Lookup `Environment.Variable` or `Environment.Function` in the **current scope**
+   * If not found, resolution proceeds recursively through **parent scopes**
+   * Failure to resolve results in a compile-time error
+
+3. Nesting Scopes
+   * Occurs within: method bodies, conditional blocks, loop blocks 
 
 ## Semantic Model
-### AST Root
+// TODO check rules and move any syntax rules to previous section.
 
+### Root
+
+::: tip **Ast.Source**
 AST mapping:
 
 ```yaml
@@ -168,11 +179,11 @@ Rules:
 >- **[Rule]** — semantic restriction
 >- **(T: …)** — type constraint
 
----
+:::
 
-## Top-Level Declarations
-### Fields
+### Top-Level
 
+::: tip **Ast.Field**
 AST mapping:
 
 ```yaml
@@ -189,8 +200,9 @@ Rules:
 * **[Rule]** If `value` is present, **(T: `value.type` assignable to `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
 
-### Method
+:::
 
+::: tip **Ast.Method**
 AST mapping:
 
 ```yaml
@@ -210,11 +222,12 @@ Rules:
 * **[Rule]** Each `RETURN` must satisfy **(T: `value.type` assignable to `returnType`)**
 * **[Rule]** Declares an `Environment.Function` in the current scope
 
----
+:::
 
-## Statements
-### Declaration
+### Statements
+#### Variables
 
+::: tip **Ast.Statement.Declaration**
 AST mapping:
 
 ```yaml
@@ -231,8 +244,9 @@ Rules:
 * **[Rule]** If both present, **(T: `value.type` assignable to `typeName`)**
 * **[Rule]** Declares an `Environment.Variable` in the current scope
 
-### Assignment
+:::
 
+::: tip **Ast.Statement.Assignment**
 AST mapping:
 
 ```yaml
@@ -246,8 +260,11 @@ Rules:
 * **[Rule]** Receiver must not be constant
 * **[Rule]** **(T: `value.type` assignable to `receiver.type`)**
 
-### Expression
+:::
 
+#### Functions
+
+::: tip **Ast.Statement.Expression**
 AST mapping:
 
 ```yaml
@@ -262,8 +279,11 @@ alone as complete statements.
 
 Rules: See, `Ast.Expression.Function`
 
-### Conditional
+:::
 
+#### Conditional Logic
+
+::: tip **Ast.Statement.If**
 AST mapping:
 
 ```yaml
@@ -279,8 +299,11 @@ Rules:
 * **[Rule]** `thenStatements` must be non-empty
 * **[Rule]** Then/Else bodies analyzed in **new nested scopes**
 
-### For Loop
+:::
 
+#### Loops
+
+::: tip **Ast.Statement.For**
 AST mapping:
 
 ```yaml
@@ -299,8 +322,9 @@ Rules:
 * **[Rule]** If `increment` and `initialization` exist, **(T: `init.receiver` must be the same variable as `inc.receiver`)**
 * **[Rule]** Statements body analyzed in a **new nested scope**
 
-### While Loop
+:::
 
+::: tip **Ast.Statement.While**
 AST mapping:
 
 ```yaml
@@ -314,8 +338,11 @@ Rules:
 * **[Rule]** **(T: `condition.type` assignable to `Boolean`)**
 * **[Rule]** Statements body analyzed in a **new nested scope**
 
-### Return
+:::
 
+#### Return
+
+::: tip **Ast.Statement.Return**
 AST mapping:
 
 ```yaml
@@ -327,11 +354,13 @@ Rules:
 
 * **[Rule]** **(T: `value.type` assignable to current method `returnType`)**
 
----
+:::
 
-## Expressions
-### Binary Operations
-#### Logical
+### Expressions
+#### Binary
+
+::: tip **Ast.Statement.Binary**
+##### Logical
 
 AST mapping:
 
@@ -347,7 +376,7 @@ Rules:
 * **[Rule]** **(T: `left.type` and `right.type` assignable to `Boolean`)**
 * **[Rule]** `result.type` must resolve to `Boolean`
 
-#### Comparison Equality
+##### Comparison (Equality)
 
 AST mapping:
 
@@ -363,7 +392,7 @@ Rules:
 * **[Rule]** **(T: `left.type` must be the same as `right.type`)**
 * **[Rule]** `result.type` must resolve to `Boolean`
 
-#### Comparison Inequality
+##### Comparison (Inequality)
 
 AST mapping:
 
@@ -381,7 +410,7 @@ Rules:
 * **[Rule]** **(T: `left.type` must be the same as `right.type`)**
 * **[Rule]** `result.type` must resolve to `Boolean`
 
-#### Arithmetic
+##### Arithmetic
 
 AST mapping:
 
@@ -398,17 +427,21 @@ Rules:
 * **[Rule]** Otherwise, **(T: both operands must be `Integer` or both `Decimal`)**
 * **[Rule]** `result.type` must resolve to the numeric operand type (`Integer` or `Decimal`)
 
-### Member Access and Function Calls
-#### Resolution and Lowering
+:::
+
+#### Member Access and Function Calls
+##### Resolution and Lowering
 
 FreshlyGround defaults to resolving fields and functions within the current lexical scope, however
-it also supports a statically-dispatched dot (`.`) operator for accessing type-associated fields 
-and functions.
+it also supports a dot (`.`) operator for accessing type-associated variables and functions. The dot 
+expressions are resolved against the static type of the left operand (i.e., receiver).
 
-Although the language is not object-oriented, dot expressions are resolved against the static type of 
-the left operand (i.e., receiver).
+Although the language is not object-oriented it's not unfair to think of the type singletons as an almost 
+proto-object for the FreshlyGround language.
 
-#### Member Access
+##### Member Access
+
+::: tip **Ast.Expression.Access**
 
 AST mapping:
 
@@ -423,7 +456,7 @@ Rules:
 * **[Rule]** If `receiver` = `null`, resolve name in the **current lexical scope**
 * **[Rule]** If `receiver` != `null`, resolve name in the **receiver’s type scope**
 
-##### Access Resolution Model
+###### Access Resolution Model
 Given:
 
     receiver.member
@@ -431,8 +464,11 @@ Given:
 1. Evaluate `receiver` to type **T**
 2. Resolve `member` inside the **type scope of T**
 
-#### Function Call
+:::
 
+##### Function Call
+
+::: tip **Ast.Expression.Function**
 AST mapping:
 
 ```yaml
@@ -449,7 +485,7 @@ Rules:
 * **[Rule]** Each argument must be **assignable to the corresponding parameter type**
 * **[Rule]** If `receiver` != `null`, implicit receiver is prepended to argument list
 
-##### Function Resolution Model
+###### Function Resolution Model
 Given:
 
     receiver.function(a, b)
@@ -464,8 +500,11 @@ The expression is then lowered to:
 
 As the receiver is inserted as the first argument.
 
-### Primary Expressions
-#### Grouping
+:::
+
+#### Primary Expressions
+
+::: tip **Ast.Expression.Group**
 
 AST mapping:
 
@@ -478,7 +517,9 @@ Rules:
 
 * **[Rule]** `group.type` must be the same as `expression.type`
 
-#### Literals
+:::
+
+::: tip **Ast.Expression.Literal**
 
 AST mapping:
 
@@ -487,7 +528,9 @@ Ast.Expression.Literal
  └─ literal : Object
 ```
 
-Type Map (java object → Environment.Type):
+:::
+
+::: warning Type Map (java object → Environment.Type):
 
 * `null`       → `Environment.Type.NIL`
 * `Boolean`    → `Environment.Type.BOOLEAN`
@@ -498,10 +541,4 @@ Type Map (java object → Environment.Type):
 
 Note: Integer and Decimal are bounded within a 32-bit int and 64-bit double
 
----
-
-## Navigation
-
-* Next: [Modular Backends](./05_backend.md)
-* Previous: [Structural Representation](./03_struct_rep.md)
-* Index: [Overview & Index](./00_index.md)
+:::

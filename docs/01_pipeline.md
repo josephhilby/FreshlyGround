@@ -61,6 +61,8 @@ class Generator backend
 Each stage in the pipeline consumes a specific artifact and produces the artifact required by the next stage.
 The guarantees established by one stage become the assumptions relied upon by the next.
 
+<div class="callout-grid">
+
 ::: info Lexing (Tokenization)
 
 **Input:** Source Code
@@ -135,3 +137,5 @@ The guarantees established by one stage become the assumptions relied upon by th
 * backend output faithfully preserves language semantics
 
 :::
+
+</div>

@@ -56,7 +56,9 @@ escape     := \\ [bnrt'"\\]
 
 ::: info Note(s)
 
-* Keywords (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and promoted to keyword tokens during parsing
+* Reserved words (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and updated to keywords during parsing
+* Reserved words (`AND`, `OR`) are lexed as identifiers and updated to operators during parsing
+* Reserved words (`NIL`, `TRUE`, `FALSE`) are lexed as identifiers and updated to void and boolean respectively during parsing
 * Whitespace and comments are not removed by the Lexer
 * Spaces in the productions are for readability only; they do not represent literal space characters
 
@@ -142,25 +144,26 @@ secondary_expression ::=
     { "." identifier [ "(" [ expression { "," expression } ] ")" ] }
 
 primary_expression ::=
-      "NIL"
+      identifier [ "(" [ expression { "," expression } ] ")" ]
+    | "(" expression ")"
+    | "NIL"
     | "TRUE"
     | "FALSE"
     | integer
     | decimal
     | character
     | string
-    | "(" expression ")"
-    | identifier [ "(" [ expression { "," expression } ] ")" ]
 ```
 
 ::: info Note 
-Expressions are defined using a precedence hierarchy.
+Expressions are defined using a precedence hierarchy. This allows the encoding of chained member access and mathematical
+order of operations.
 :::
 
-##### Secondary Expressions (Dot Operator Syntax)
+##### Secondary Expressions (Chained Member Access)
 
 Secondary expressions extend primary expressions to support chained member access using the dot (`.`) operator. Because
-secondary expressions are recursively defined over primary expressions, they enable successive member resolution.
+secondary expressions are recursively defined over primary expressions, they enable successive member resolution(s).
 
 Semantically, the dot operator shifts the resolution context so that the `identifier` is resolved within the type 
 denoted by the preceding `expression`, rather than within the current lexical (global or method) scope. A detailed 

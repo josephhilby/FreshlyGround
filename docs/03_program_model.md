@@ -11,7 +11,7 @@ Some of the EBNF definitions have been modified to better show how the map to th
 
 ## Root
 
-At the top most level is `Ast.Source`. This will serve as the programs entry point in any target representation.
+At the top most level is `Ast.Source`. This will serve as the programs entry point for any target representation.
 
 ::: tip **Ast.Source**
 
@@ -29,14 +29,12 @@ Ast.Source
  └─ methods : List<Ast.Method>
 ```
 
-* **Fields** define global storage
-* **Methods** define executable entry points
-
 :::
 
 ## Top-Level
 
-lorem
+* **Fields** define global storage
+* **Methods** define executable entry points
 
 ::: tip **Ast.Field**
 
@@ -92,7 +90,7 @@ Ast.Method
 Grammar:
 
 ```ebnf
-statement_declaration ::= "LET" name [ ":" type ] [ "=" value ] ";"
+statement_declaration ::= "LET" name [ ":" typeName ] [ "=" value ] ";"
 ```
 
 AST mapping:
@@ -103,6 +101,9 @@ Ast.Statement.Declaration
  ├─ typeName : Optional<String>
  └─ value    : Optional<Ast.Expression>
 ```
+
+Rules:
+- Must have `value` or `typeName`
 
 :::
 
@@ -167,6 +168,9 @@ Ast.Statement.If
  └─ elseStatements : List<Ast.Statement>
 ```
 
+Rules:
+- `thenStatements` must be non-empty
+
 :::
 
 ### Loops
@@ -192,6 +196,9 @@ Ast.Statement.For
  └─ statements     : List<Ast.Statement>
 ```
 
+Rules:
+- `condition` must be present
+
 :::
 
 ::: tip **Ast.Statement.While**
@@ -213,9 +220,14 @@ Ast.Statement.While
  └─ statements : List<Ast.Statement>
 ```
 
+Rules:
+- `condition` must be present
+
 :::
 
 ### Return
+
+::: tip **Ast.Statement.Return**
 
 Grammar:
 
@@ -230,12 +242,13 @@ Ast.Statement.Return
  └─ value : Ast.Expression
 ```
 
----
+:::
 
 ## Expressions
-### Binary Operations
+### Binary
 All infix operators are normalized into a single binary node type.
 
+::: tip **Ast.Expression.Binary**
 Grammar:
 
 ```ebnf
@@ -257,16 +270,28 @@ Infix Operators:
 * Comparison operators: { `<`, `<=`, `>`, `>=`, `==`, `!=` }
 * Arithmetic operators: { `+`, `-`, `*`, `/` }
 
+:::
+
 ### Member Access and Function Calls
-Please note that in the CFG, these were split among primary- and secondary-expressions. However, 
-both are unified here under a **receiver-based model**, where:
+Recall that in the CFG, variable access and function calls were split between 
+**primary-** and **secondary-expressions**. Where the primary-expression allowed for 
+a direct reference to the variable or function and the secondary-expression allowed
+for recursive chained-member access call(s). Here both are unified here under the 
+**receiver-based model**.
 
-* `receiver = null` represents an unqualified name
-* `receiver != null` represents member access
+::: warning Receiver-Based Model
+* No receiver, represents an access/call to the referenced variable or function, in the current or parent lexical scope(s)
+* A receiver, represents a member access/call in the receiver's type scope
+* This allows for calling specialized functions like `"string".length()`
+  * Or recursively calling specialized functions like `"string".slice(1,3).length()`
+:::
 
-Semantic resolution of this construct is defined in the next section.
+Semantic resolution of this construct and discussion of these specialized variables/functions (Standard Library) 
+can be found in the [next section](04_semantics.md).
 
 #### Member Access
+
+::: tip **Ast.Expression.Access**
 Grammar fragment:
 
 ```ebnf
@@ -281,8 +306,11 @@ Ast.Expression.Access
  └─ name     : String
 ```
 
+:::
+
 #### Function Call
 
+::: tip **Ast.Expression.Function**
 Grammar fragment:
 
 ```ebnf
@@ -298,8 +326,11 @@ Ast.Expression.Function
  └─ arguments : List<Ast.Expression>
 ```
 
+:::
+
 ### Primary Expressions
-#### Grouping
+
+::: tip **Ast.Expression.Group**
 
 Grammar:
 
@@ -314,7 +345,9 @@ Ast.Expression.Group
  └─ expression : Ast.Expression
 ```
 
-#### Literals
+:::
+
+::: tip **Ast.Expression.Literal**
 
 ```ebnf
 expression_literal ::= literal
@@ -327,11 +360,16 @@ Ast.Expression.Literal
  └─ literal : Object
 ```
 
-Type Map (literal → java object):
+:::
 
-* `"NIL"`                → `null`
-* (`"TRUE"` | `"FALSE"`) → `Boolean`
+::: warning Type Map (token → java object):
+
+* `identifier`
+    * `"NIL"`                → `null`
+    * (`"TRUE"` | `"FALSE"`) → `Boolean`
 * `integer`              → `BigInteger`
 * `decimal`              → `BigDecimal`
 * `character`            → `Character`
 * `string`               → `String`
+
+:::
