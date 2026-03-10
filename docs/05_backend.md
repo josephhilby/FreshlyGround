@@ -1,4 +1,4 @@
-# 05 — WebAssembly (WAT) Backend Specification
+# Backend Specification
 
 This document specifies the **FreshlyGround WebAssembly (WAT) backend**: the lowering rules, runtime 
 interface (host ABI), and representation strategy for compiling semantically-analyzed FreshlyGround programs 
