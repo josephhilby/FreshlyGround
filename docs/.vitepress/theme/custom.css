@@ -65,3 +65,18 @@ html:not(.dark) .language-ebnf pre.shiki {
         grid-template-columns: 1fr;
     }
 }
+
+/* ------------------------------------------------ */
+/* mermaid fallback text */
+/* ------------------------------------------------ */
+
+.mermaid .error-icon {
+    display: none;
+}
+
+.mermaid::after {
+    content: "Diagram failed to render.";
+    display: block;
+    font-size: 0.9rem;
+    color: var(--vp-c-text-2);
+}

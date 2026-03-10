@@ -26,6 +26,8 @@ in this reference.
 
 <center>
 
+<div class="diagram-wrapper">
+
 ```mermaid
 flowchart LR
 
@@ -64,6 +66,8 @@ class Lexer,Parser syntax
 class Analyzer semantic
 class Generator backend
 ```
+
+</div>
 
 </center>
 
