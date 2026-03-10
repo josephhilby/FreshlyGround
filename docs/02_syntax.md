@@ -34,11 +34,11 @@ constructing a tree structure rooted at the start symbol (S). In this process, t
 while non-terminal symbols represent intermediate syntactic structures defined by the grammar.
 
 ## Lexical Model (Tokens)
-The lexical layer partitions raw source text into a sequence of **terminal symbols (Σ)** (a.k.a., tokens). 
-The construction of those tokens follows the below regular expressions, forming the terminal alphabet of 
-the language's grammar.
+The lexical layer partitions raw source text into numerous valid sequences of characters (i.e., lexemes)
+that can be classified in one of seven categories (i.e., tokens). The classification of those lexemes follows 
+the below regular expression definitions and form the **terminal symbols (Σ)** of the language's grammar.
 
-### Token Classes
+### Terminal Symbols
 
 ```regexp
 identifier := [A-Za-z_] [A-Za-z0-9_]* ( - [A-Za-z0-9_]+ )*
@@ -54,7 +54,7 @@ string     := " ( [^"\n\r\\] | escape )* "
 escape     := \\ [bnrt'"\\]
 ```
 
-::: info Note(s)
+::: info Note(s):
 
 * Reserved words (`LET`, `DEF`, `IF`, etc.) are lexed as identifiers and updated to keywords during parsing
 * Reserved words (`AND`, `OR`) are lexed as identifiers and updated to operators during parsing
@@ -75,10 +75,10 @@ tree — as it is for the AST — or the top construct that represents the entir
 source ::= { field } { method }
 ```
 ::: tip **Legend:**
+- `Non-terminal symbol ::= Production rule`
 - `{ … }` = zero or more
 - `[ … ]` = optional (zero or one)
 - `|` = alternative
-- `Non-terminal symbol ::= Production rule`
 :::
 
 ### Non-Terminal Definitions
@@ -166,7 +166,7 @@ Secondary expressions extend primary expressions to support chained member acces
 secondary expressions are recursively defined over primary expressions, they enable successive member resolution(s).
 
 Semantically, the dot operator shifts the resolution context so that the `identifier` is resolved within the type 
-denoted by the preceding `expression`, rather than within the current lexical (global or method) scope. A detailed 
+denoted by the preceding `expression`, rather than within the current lexical scope. A detailed 
 explanation of this resolution process appears in [Semantics](./04_semantics.md).
 
 ::: tip Forms

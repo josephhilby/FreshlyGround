@@ -68,6 +68,10 @@ export default withMermaid(defineConfig({
   },
 
   themeConfig: {
+    outline: {
+      level: [2, 3, 4]
+    },
+
     nav: [
       { text: 'Docs', link: '/' },
       { text: 'Live Compiler', link: 'https://freshlyground.onrender.com' },

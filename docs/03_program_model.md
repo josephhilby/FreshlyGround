@@ -144,7 +144,7 @@ Ast.Statement.Expression
 
 :::
 
-### Conditional Logic
+### Conditional
 
 ::: tip **Ast.Statement.If**
 
@@ -172,8 +172,6 @@ Rules:
 - `thenStatements` must be non-empty
 
 :::
-
-### Loops
 
 ::: tip **Ast.Statement.For**
 

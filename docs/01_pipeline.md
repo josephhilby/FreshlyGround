@@ -24,16 +24,16 @@ flowchart LR
 
 Source@{ shape: doc, label: "Source\nCode" }
 
-subgraph Syntax_Layer
+subgraph syntax["Syntax Layer"]
     Lexer["Lexer:\nTokens"]
     Parser["Parser:\nAST"]
 end
 
-subgraph Semantic_Layer
+subgraph semantic["Semantic Layer"]
     Analyzer["Analyzer:\nAST+Bindings"]
 end
 
-subgraph Backend_Layer
+subgraph backend["Backend Layer"]
     Generator["Generator"]
 end
 
@@ -71,7 +71,7 @@ The guarantees established by one stage become the assumptions relied upon by th
 
 **Responsibilities:**
 
-* classify characters into typed tokens
+* classify valid character groupings (lexemes) into typed tokens
 * preserve positional metadata for diagnostics
 
 **Guarantees:**
@@ -89,14 +89,14 @@ The guarantees established by one stage become the assumptions relied upon by th
 
 **Responsibilities:**
 
-* enforce grammar correctness (EBNF)
-* encode precedence and associativity in tree shape
+* enforce context free grammar (syntactic) rules
+* encode precedence and associativity in AST shape
 
 **Guarantees:**
 
 * the AST is structurally valid and internally consistent
 * all syntactic rules are satisfied
-* invalid syntax produces compiler errors
+* invalid syntaxes produce compiler errors
 
 :::
 
@@ -108,9 +108,9 @@ The guarantees established by one stage become the assumptions relied upon by th
 
 **Responsibilities:**
 
-* build lexical scope chains
+* build lexical scope chains to record binding visibility
 * resolve identifiers into variables, functions, or types
-* attach semantic meaning to AST nodes through Bindings
+* attach semantic meaning to AST through Bindings
 
 **Guarantees:**
 

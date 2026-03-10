@@ -14,13 +14,15 @@ It:
 * emits **WAT source**
 * does not perform name resolution or type checking
 
----
+::: danger Note:
+This section is **not yet complete**. It is being written in parallel with the WAT generator and is subject to change.
+:::
 
 ## Backend Overview
 
 The WAT backend targets a **browser-hosted execution environment**.
 
-Execution model:
+::: tip Execution model:
 
 * The module exports a single function: `main`
 * `main` returns `i32` (matching `Integer`)
@@ -31,19 +33,23 @@ Execution model:
     * WASM globals
     * Linear memory (for strings)
 
----
+:::
 
 ## Type Mapping
 
 FreshlyGround types lower into WASM value types as follows:
 
-| FreshlyGround | WASM Representation    |
-| ------------- | ---------------------- |
-| `Integer`     | `i32`                  |
-| `Boolean`     | `i32` (`0` or `1`)     |
-| `Decimal`     | `f64`                  |
-| `Nil`         | no value / omitted     |
-| `String`      | `(ptr: i32, len: i32)` |
+
+::: warning Type Map (Environment.Type → WASM value):
+
+- `Nil` → no value / omitted
+- `Boolean` → `i32` (`0` or `1`)
+- `Integer` → `i32`
+- `Decimal` → `f64`
+- `Character` → `i32.const`
+- `String` → `(ptr: i32.const, len: i32)`
+
+:::
 
 ### Boolean Convention
 
@@ -54,9 +60,7 @@ Booleans are represented as `i32`:
 
 Logical operations should normalize to `0/1`.
 
----
-
-## String Representation
+### String Representation
 
 Strings are represented using linear memory:
 
@@ -76,8 +80,6 @@ Example:
 ```
 
 The backend assigns fixed offsets for literals.
-
----
 
 ## Host ABI (Imports)
 
@@ -102,7 +104,6 @@ The WAT backend requires the following imports:
 
 The host environment (browser runtime) must implement these.
 
----
 
 ## Module Skeleton
 
@@ -123,8 +124,6 @@ Every compiled module follows this structure:
     (i32.const 0))
 )
 ```
-
----
 
 ## Lowering Rules
 
@@ -246,7 +245,6 @@ call $function_name
 
 If member call lowering inserted receiver as first argument during analysis, backend simply emits arguments in order.
 
----
 
 ## Printing
 
@@ -265,8 +263,6 @@ print(expr: String)
 → compile expr (ptr,len)
 → call $print_str
 ```
-
----
 
 ## Example
 
@@ -304,11 +300,3 @@ END
 )
 ```
 
----
-
-
-## Navigation
-
-* Next: N/A
-* Previous: [Semantic Model & Bindings](./04_semantics.md)
-* Index: [Overview & Index](./00_index.md)

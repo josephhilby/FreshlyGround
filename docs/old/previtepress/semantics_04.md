@@ -505,3 +505,12 @@ Note: Integer and Decimal are bounded within a 32-bit int and 64-bit double
 * Next: [Modular Backends](./05_backend.md)
 * Previous: [Structural Representation](./03_struct_rep.md)
 * Index: [Overview & Index](./00_index.md)
+
+
+#### FreshlyGround
+1. **Design Time** — Definition of semantic entities, builtin types, and standard library functions available to programs
+2. **Source Time** — Introduction of user-defined variables and functions
+3. **Compile Time** — Scope construction, variable/function name resolution, expression type checking, and semantic rule validation
+
+#### Target Platform
+4. **Run Time** — Program execution, memory management, and stack activation records
