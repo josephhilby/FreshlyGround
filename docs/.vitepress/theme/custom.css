@@ -75,7 +75,6 @@ html:not(.dark) .language-ebnf pre.shiki {
 }
 
 .mermaid::after {
-    content: "Diagram failed to render.";
     display: block;
     font-size: 0.9rem;
     color: var(--vp-c-text-2);
