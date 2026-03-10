@@ -240,16 +240,8 @@ and execution format. To do this it uses the following components:
 
 This structure allows new targets (Hack bytecode, WASM) to be added without modifying the language front-end.
 
-### Technical Reference
-The full language and compiler specification is maintained in /docs:
-- Compiler Pipeline — highlevel overview of structures and intermediate representations
-- Language Syntax — EBNF, tokens, and syntactic forms
-- Abstract Syntax Tree (AST) — node taxonomy and tree structural model
-- Semantic Model — scope, environment, type system, bindings, and resolution of semantic rules
-- Backends — WebAssembly (WAT/WASM) targets
-
 #### /docs
-link TBD
+Read the [docs](https://freshlyground-docs.onrender.com) to get a better understanding of the project.
 
 ---
 
