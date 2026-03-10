@@ -1,55 +1,77 @@
-# 01 — Compiler Pipeline Specification
+# Compiler Pipeline
 
-This document explains the overall architecture of the FreshlyGround compiler. More detailed rules for each stage 
-live in their respective documents. As a quick note, I will be using the terms 'stage' and 'pass' to talk about the physical 
-implementation, the use of 'layer' refers to the more theoretical level that stage or pass belongs to.
+This document describes the architecture of the FreshlyGround compiler.
 
-This roadmap will cover the following:
+The compiler is organized as a sequence of **stages**, each responsible for transforming one program 
+representation into another. From a conceptual perspective these stages belong to three broader **layers**.
 
-- System Overview of stages and their artifact production
-- Responsibilities of each stage
-- Guarantees each stage has with the next
+::: tip **Layers**:
+- **Syntax layer** — lexing and parsing
+- **Semantic layer** — analysis and binding
+- **Backend layer** — target emission
+:::
 
----
+The layers group stages by the level of interpretation they operate on: syntactic structure,
+semantic meaning, or target (backend) representation. Within their respective level each 
+stage performs a single transformation and produces a well-defined artifact consumed by the next stage.
 
 ## System Overview
-FreshlyGround follows a layered, single-direction pipeline:
+At a high level, FreshlyGround follows a layered, single-direction pipeline. The diagram below shows the 
+compilation pipeline and the artifacts produced between stages.
 
-```text
-Source Text
-   ↓
- Lexer      (Syntax Layer)
-   ↓
-Parser      (Syntax Layer)
-   ↓
-Analyzer    (Semantic Layer)
-   ↓
-Emitter     (Backend Layer)
+```mermaid
+flowchart LR
+
+Source@{ shape: doc, label: "Source\nCode" }
+
+subgraph syntax["Syntax Layer"]
+    Lexer["Lexer:\nTokens"]
+    Parser["Parser:\nAST"]
+end
+
+subgraph semantic["Semantic Layer"]
+    Analyzer["Analyzer:\nAST+Bindings"]
+end
+
+subgraph backend["Backend Layer"]
+    Generator["Generator"]
+end
+
+Target@{ shape: lin-doc, label: "Target\nRep." }
+
+Source --> Lexer
+Lexer --> Parser
+Parser --> Analyzer
+Analyzer --> Generator
+Generator --> Target
+
+%% Layer coloring
+
+classDef syntax fill:#1f2937,stroke:#6b7280,color:#e5e7eb
+classDef semantic fill:#2f3352,stroke:#6366f1,color:#e5e7eb
+classDef backend fill:#4a3a12,stroke:#f59e0b,color:#e5e7eb
+
+class Lexer,Parser syntax
+class Analyzer semantic
+class Generator backend
 ```
 
-Each stage transforms one artifact into another and enforces only the rules it owns.
+## Individual Stages
 
-### Artifact Production
+Each stage in the pipeline consumes a specific artifact and produces the artifact required by the next stage.
+The guarantees established by one stage become the assumptions relied upon by the next.
 
-| Stage    | Produces              | Consumed By |
-| -------- |-----------------------| ----------- |
-| Lexer    | Token Stream          | Parser      |
-| Parser   | AST                   | Analyzer    |
-| Analyzer | AST + Bindings        | Emitter     |
-| Emitter  | Target Representation | Runtime     |
+<div class="callout-grid">
 
----
+::: info Lexing (Tokenization)
 
-## Compilation Stages
-### 1) Lexing (Tokenization)
-
-**Input:** Source Text
+**Input:** Source Code
 
 **Output:** Token Stream
 
 **Responsibilities:**
 
-* classify characters into typed tokens
+* classify valid character groupings (lexemes) into typed tokens
 * preserve positional metadata for diagnostics
 
 **Guarantees:**
@@ -57,7 +79,9 @@ Each stage transforms one artifact into another and enforces only the rules it o
 * tokens are well-formed (integers, identifiers, strings, operators)
 * invalid lexemes produce compiler errors
 
-### 2) Parsing (Syntactic Analysis)
+:::
+
+::: info Parsing (Syntactic Analysis)
 
 **Input:** Token Stream
 
@@ -65,16 +89,18 @@ Each stage transforms one artifact into another and enforces only the rules it o
 
 **Responsibilities:**
 
-* enforce grammar correctness (EBNF)
-* encode precedence and associativity in tree shape
+* enforce context free grammar (syntactic) rules
+* encode precedence and associativity in AST shape
 
 **Guarantees:**
 
 * the AST is structurally valid and internally consistent
 * all syntactic rules are satisfied
-* invalid syntax produces compiler errors
+* invalid syntaxes produce compiler errors
 
-### 3) Analyzing (Semantic Analysis)
+:::
+
+::: tip Analyzing (Semantic Analysis)
 
 **Input:** AST
 
@@ -82,9 +108,9 @@ Each stage transforms one artifact into another and enforces only the rules it o
 
 **Responsibilities:**
 
-* build lexical scope chains
+* build lexical scope chains to record binding visibility
 * resolve identifiers into variables, functions, or types
-* attach semantic meaning to AST nodes through Bindings
+* attach semantic meaning to AST through Bindings
 
 **Guarantees:**
 
@@ -93,7 +119,9 @@ Each stage transforms one artifact into another and enforces only the rules it o
 * all semantic rules are satisfied
 * invalid semantics produce compiler errors
 
-### 4) Generating (Lowering / Emitting)
+:::
+
+::: warning Generating (Lowering / Emitting)
 
 **Input:** AST + Bindings
 
@@ -108,10 +136,6 @@ Each stage transforms one artifact into another and enforces only the rules it o
 
 * backend output faithfully preserves language semantics
 
----
+:::
 
-## Navigation
-
-* Next: [Syntactic Definitions](./02_syntax.md)
-* Previous: N/A
-* Index: [Overview & Index](./00_index.md)
+</div>

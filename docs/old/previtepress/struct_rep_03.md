@@ -1,7 +1,7 @@
 # 03 — Structural Representation Specification
 
 This document specifies the **FreshlyGround Abstract Syntax Tree (AST)**: the structured, intermediate representation
-produced by the parser according to the previously discussed context-free grammar. The AST captures 
+produced by the parser according to the previously discussed context-free grammar. The AST captures
 **program form without semantic meaning**. It encodes hierarchy, precedence, and grammatical structure.
 
 Note: Some of the EBNF definitions have been modified to better show how the map to their respective AST class.
@@ -13,7 +13,7 @@ All programs are parsed from a single root node: `Ast.Source`.
 
 Grammar:
 
-```ebnf
+```bnf
 source ::= { fields } { methods }
 ```
 >**Legend:**
@@ -41,7 +41,7 @@ Ast.Source
 
 Grammar:
 
-```ebnf
+```bnf
 field ::= "LET" [ "CONST" ] name ":" type [ "=" value ] ";"
 ```
 
@@ -59,7 +59,7 @@ Ast.Field
 
 Grammar:
 
-```ebnf
+```bnf
 method ::= 
 "DEF" name "(" [ param ":" paramType ] ")" [ ":" returnType ] "DO"
     { statements }
@@ -84,7 +84,7 @@ Ast.Method
 
 Grammar:
 
-```ebnf
+```bnf
 statement_declaration ::= "LET" name [ ":" type ] [ "=" value ] ";"
 ```
 
@@ -101,7 +101,7 @@ Ast.Statement.Declaration
 
 Grammar:
 
-```ebnf
+```bnf
 statement_assignment ::= receiver "=" value ";"
 ```
 
@@ -117,7 +117,7 @@ Ast.Statement.Assignment
 
 Grammar:
 
-```ebnf
+```bnf
 statement_expression ::= expression ";"
 ```
 
@@ -132,7 +132,7 @@ Ast.Statement.Expression
 
 Grammar:
 
-```ebnf
+```bnf
 statement_if ::=
 "IF" condition "DO"
     { thenStatements }
@@ -154,7 +154,7 @@ Ast.Statement.If
 
 Grammar:
 
-```ebnf
+```bnf
 statement_for ::=
 "FOR" "(" [ initialization ] ";" condition ";" [ increment ] ")"
     { statements }
@@ -175,7 +175,7 @@ Ast.Statement.For
 
 Grammar:
 
-```ebnf
+```bnf
 statement_while ::=
 "WHILE" condition "DO"
   { statements }
@@ -194,7 +194,7 @@ Ast.Statement.While
 
 Grammar:
 
-```ebnf
+```bnf
 statement_return ::= "RETURN" value ";"
 ```
 
@@ -213,7 +213,7 @@ All infix operators are normalized into a single binary node type.
 
 Grammar:
 
-```ebnf
+```bnf
 expression_binary ::= left operator right
 ```
 
@@ -233,7 +233,7 @@ Infix Operators:
 * Arithmetic operators: { `+`, `-`, `*`, `/` }
 
 ### Member Access and Function Calls
-Please note that in the CFG, these were split among primary- and secondary-expressions. However, 
+Please note that in the CFG, these were split among primary- and secondary-expressions. However,
 both are unified here under a **receiver-based model**, where:
 
 * `receiver = null` represents an unqualified name
@@ -244,7 +244,7 @@ Semantic resolution of this construct is defined in the next section.
 #### Member Access
 Grammar fragment:
 
-```ebnf
+```bnf
 expression_access ::= [ receiver "." ] name
 ```
 
@@ -260,7 +260,7 @@ Ast.Expression.Access
 
 Grammar fragment:
 
-```ebnf
+```bnf
 expression_function ::= [ receiver "." ] name "(" [ arguments ] ")"
 ```
 
@@ -278,7 +278,7 @@ Ast.Expression.Function
 
 Grammar:
 
-```ebnf
+```bnf
 expression_group ::= "(" expression ")"
 ```
 
@@ -291,7 +291,7 @@ Ast.Expression.Group
 
 #### Literals
 
-```ebnf
+```bnf
 expression_literal ::= literal
 ```
 
