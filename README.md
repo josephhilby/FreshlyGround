@@ -249,14 +249,7 @@ The full language and compiler specification is maintained in /docs:
 - Backends — WebAssembly (WAT/WASM) targets
 
 #### /docs
-| Topic               | Document                                         |
-| ------------------- |--------------------------------------------------|
-| Index               | [docs/00_index.md](./docs/00_index.md)           |
-| Compiler Pipeline   | [docs/01_pipeline.md](./docs/01_pipeline.md)     |
-| Language Syntax     | [docs/02_syntax.md](./docs/02_syntax.md)         |
-| AST Specification   | [docs/03_struct_rep.md](./docs/03_struct_rep.md) |
-| Semantic Model      | [docs/04_semantics.md](./docs/04_semantics.md)   |
-| WebAssembly Backend | [docs/05_backend.md](./docs/05_backend.md)       |
+link TBD
 
 ---
 
