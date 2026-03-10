@@ -19,6 +19,8 @@ stage performs a single transformation and produces a well-defined artifact cons
 At a high level, FreshlyGround follows a layered, single-direction pipeline. The diagram below shows the 
 compilation pipeline and the artifacts produced between stages.
 
+<div class="diagram-wrapper">
+
 ```mermaid
 flowchart LR
 
@@ -55,6 +57,8 @@ class Lexer,Parser syntax
 class Analyzer semantic
 class Generator backend
 ```
+
+</div>
 
 ## Individual Stages
 
