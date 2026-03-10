@@ -75,7 +75,7 @@ String literals are emitted using **data segments**.
 
 Example:
 
-```wat
+```text
 (data (i32.const 1024) "hello")
 ```
 
@@ -85,7 +85,7 @@ The backend assigns fixed offsets for literals.
 
 The WAT backend requires the following imports:
 
-```wat
+```text
 (import "env" "print_i32" (func $print_i32 (param i32)))
 (import "env" "print_str" (func $print_str (param i32 i32)))
 ```
@@ -109,7 +109,7 @@ The host environment (browser runtime) must implement these.
 
 Every compiled module follows this structure:
 
-```wat
+```text
 (module
   (import "env" "print_i32" (func $print_i32 (param i32)))
   (import "env" "print_str" (func $print_str (param i32 i32)))
@@ -140,7 +140,7 @@ Lowering is mechanical and driven entirely by semantic bindings.
 
 Fields may be lowered as module globals:
 
-```wat
+```text
 (global $x (mut i32) (i32.const 0))
 ```
 
@@ -212,7 +212,7 @@ WASM uses structured control flow.
 
 #### If
 
-```wat
+```text
 (if (result i32)
   (then ...)
   (else ...))
@@ -222,7 +222,7 @@ WASM uses structured control flow.
 
 Lowered using block/loop pattern:
 
-```wat
+```text
 (block
   (loop
     ;; condition
@@ -239,7 +239,7 @@ Lowered using block/loop pattern:
 
 Resolved functions lower to direct calls:
 
-```wat
+```text
 call $function_name
 ```
 
@@ -268,7 +268,7 @@ print(expr: String)
 
 ### FreshlyGround Source
 
-```fg
+```text
 DEF main() : Integer DO
   print(10);
   print("hello");
@@ -278,7 +278,7 @@ END
 
 ### Lowered WAT
 
-```wat
+```text
 (module
   (import "env" "print_i32" (func $print_i32 (param i32)))
   (import "env" "print_str" (func $print_str (param i32 i32)))
