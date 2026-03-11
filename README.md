@@ -240,17 +240,25 @@ and execution format. To do this it uses the following components:
 
 This structure allows new targets (Hack bytecode, WASM) to be added without modifying the language front-end.
 
-#### /docs
+---
+
+## The /docs
 Read the [docs](https://freshlyground-docs.onrender.com) to get a better understanding of the project.
 
 ---
 
 ## Acknowledgments
 
-Based on the book **Crafting Interpreters** by Robert Nystrom.
+### Robert Nystrom
+Based on the book [**Crafting Interpreters**](https://www.craftinginterpreters.com/) by Robert Nystrom.
 
 If you are interested in programming languages, I strongly recommend the book — it provided the scaffolding for 
 everything implemented here.
+
+### Christian Vallentin
+The [**EBNF syntax highlighting file**](https://github.com/vallentin/vscode-bnf) was created by Christian
+Vallentin and published under the MIT License. If you like the highlighting style, please check out his work.
+
 
 <!-- MARKDOWN LINKS & IMAGES -->
 
