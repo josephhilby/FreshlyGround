@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { compileSource, getTokens, getAst } from "./api/compiler";
+import {useEffect, useState} from "react";
+import { wakeBackend, compileSource, getTokens, getAst } from "./api/compiler";
 import TokenModal from "./components/TokenModal";
 import TreeModal from "./components/TreeModal";
 import "./styles/app.css";
@@ -44,6 +44,17 @@ DEF main(): Integer DO
 END`
     );
 
+    async function startApi() {
+        setError("Waking the API, this could take up to a minute...");
+
+        try {
+            await wakeBackend();
+            setError("API is awake, try to assemble Tokens, build an AST, or Compiler your code.")
+        } catch (e: any) {
+            setError(e.message ?? "API failed to wake. Please, try again later.")
+        }
+    }
+
     async function compile() {
         setError(null);
 
@@ -79,6 +90,10 @@ END`
             setError(e.message ?? "Failed to load AST");
         }
     }
+
+    useEffect(() => {
+        startApi();
+    }, []);
 
     return (
         <div className="app">
