@@ -256,8 +256,11 @@ If you are interested in programming languages, I strongly recommend the book â€
 everything implemented here.
 
 ### Christian Vallentin
-The [**EBNF syntax highlighting file**](https://github.com/vallentin/vscode-bnf) was created by Christian
-Vallentin and published under the MIT License. If you like the highlighting style, please check out his work.
+EBNF syntax highlighting file authored by Christian Vallentin, licensed under the MIT License. The original 
+author retains full credit for their work.
+
+Christian, V. (2020-06-03). bnf.tmLanguage.json â€” File used in FreshlyGround documentation syntax.
+- Original source repository: https://github.com/vallentin/vscode-bnf
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
