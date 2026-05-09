@@ -88,6 +88,7 @@ open compiler/build/reports/tests/test/index.html
  │
  ├─ docs/                # Technical reference
  ├─ web/                 # Web UI
+ ├─ ...                  # gitignore, docker-compose, etc.
  └─ README.md
 ```
 
