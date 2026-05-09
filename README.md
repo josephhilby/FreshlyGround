@@ -47,12 +47,12 @@ FreshlyGround currently targets the JVM and is being extended by means of additi
 docker compose up --build
 ```
 
-1. Open your browser to:
+4. Open your browser to:
 
 * Frontend: [http://localhost:5173/](http://localhost:5173/)
 * Backend: [http://localhost:7070/](http://localhost:7070/)
 
-1. Stop and remove containers:
+5. Stop and remove containers:
 
 ```bash
 docker compose down
@@ -70,7 +70,7 @@ docker compose run --rm \
   backend sh -c 'cp -a /app /tmp/app-test && cd /tmp/app-test && ./gradlew test --no-daemon --console=plain'
 ```
 
-1. Open the generated report:
+4. Open the generated report:
 
 ```bash
 open compiler/build/reports/tests/test/index.html
