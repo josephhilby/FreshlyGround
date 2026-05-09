@@ -33,6 +33,7 @@ pnpm-debug.log*
 .idea/
 .vscode/
 *.iml
+*.code-workspace
 
 # =========================
 # Misc

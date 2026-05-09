@@ -4,11 +4,11 @@ WORKDIR /app
 
 COPY gradlew gradlew
 COPY gradle gradle
-COPY build.gradle.kts settings.gradle.kts ./
+COPY build.gradle.kts settings.gradle.kts gradle.properties ./
 COPY src src
 
 RUN chmod +x gradlew
-RUN ./gradlew --no-daemon clean shadowJar
+RUN ./gradlew clean shadowJar
 
 FROM eclipse-temurin:21-jre
 
@@ -18,4 +18,4 @@ COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 7070
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+CMD ["java", "-jar", "/app/app.jar"]
