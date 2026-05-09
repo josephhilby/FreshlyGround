@@ -1,9 +1,9 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  
+
   [![Issues][issues-shield]][issues-url] [![Gradle Tests][test-shield]][test-url]
-  
+
   <img src="assets/fg_banner.png" alt="Logo" style="max-width:100%; border-radius:12px;">
 
 </div>
@@ -11,13 +11,13 @@
 ---
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture 
+FreshlyGround is a **novel programming language and compiler** designed around a clean, multi-pass architecture
 that separates syntax, semantics, and code generation into explicit, single-responsibility components. It can be
 run via a web UI or command line compiler (see, Quick Start).
 
-The project originated as an academic transpiler for **COP 4020** at the **University of Florida**. It has since been 
-refactored into a full compiler toolchain, and web environment. Its design is strongly influenced by the `lox` 
-programming language in [*Crafting Interpreters*](https://www.craftinginterpreters.com/), with an emphasis on explicit intermediate representations, 
+The project originated as an academic transpiler for **COP 4020** at the **University of Florida**. It has since been
+refactored into a full compiler toolchain, and web environment. Its design is strongly influenced by the `lox`
+programming language in [*Crafting Interpreters*](https://www.craftinginterpreters.com/), with an emphasis on explicit intermediate representations,
 externalized semantic bindings, and multiple pluggable backends.
 
 FreshlyGround currently targets the JVM and is being extended by means of additional WebAssembly and Hack VM (nand2tetris CPU) backends.
@@ -31,95 +31,51 @@ FreshlyGround currently targets the JVM and is being extended by means of additi
   <em>FreshlyGround Web Compiler User Interface</em>
 </p>
 
+
 ### Requirements
-Docker or...
 
-Core:
-- Java 21+
-- Gradle (via included wrapper)
-
-Web UI:
-- Node.js 18+
-- npm
-- Vite v7.3.1
+* Docker
+* Docker Compose
 
 ### Quick Start
-1. Ensure you meet the given requirements, see above
-2. Clone this repository
-3. Navigate to root
-4. Build and start containers:
->```bash
-> docker compose up --build
->```
-5. Open your browser to [http://localhost:5173/](http://localhost:5173/)
-6. Stop and remove containers:
->```bash
-> docker compose down
->```
 
-<details>
+1. Clone this repository
+2. Navigate to the project root
+3. Build and start the development containers:
 
-<summary>If you prefer to run the servers outside their containers...</summary>
+```bash
+docker compose up --build
+```
 
-### Run API Server
-1. Navigate to `root/compiler`
-2. Start the server:
->```bash
-> ./gradlew clean shadowJar
-> java -jar build/libs/*.jar
->```
+1. Open your browser to:
 
-3. Run a health check:
->```bash
-> curl http://localhost:7070/health
-> $ ok
->```
+* Frontend: [http://localhost:5173/](http://localhost:5173/)
+* Backend: [http://localhost:7070/](http://localhost:7070/)
 
-4. Send some source code:
->```bash
-> curl -s -X POST http://localhost:7070/compile \
-> -H "Content-Type: application/json" \
-> -d '{"source": "DEF main(): Integer DO print(\"hello world\"); RETURN 0; END"}'
->```
+1. Stop and remove containers:
 
-### Run Web UI
-1. Start the API Server, see above
-2. Navigate to `root/web`
-3. Start the app:
->```bash
-> npm run dev
->```
-
-4. Open your browser to [http://localhost:5173/](http://localhost:5173/)
-
-### Compile and Run from the CLI
-1. Place your code in `/examples/src`
-   - Note: There is an existing sample file there to transpile (`hello.fg`)
-2. Transpile with the following:
->```bash
-> ./gradlew build
-> ./build/install/FreshlyGround/bin/fgc examples/src/<src_name>.fg examples/dist/Main.java
-> javac examples/dist/Main.java
->```
-
-3. Run in JVM with the following:
->```bash
-> cd examples/dist
-> java Main
->```
-
-</details>
+```bash
+docker compose down
+```
 
 ### Run Tests
-1. Finish the 'Quick Start' steps
-2. Run the tests:
->```bash
-> ./gradlew test
->```
-3. Open report:
->```bash
-> open build/reports/tests/test/index.html
->```
+
+1. Ensure Docker is running
+2. Navigate to the project root
+3. Run the backend test suite:
+
+```bash
+docker compose run --rm \
+  -e GRADLE_USER_HOME=/tmp/gradle-test \
+  backend sh -c 'cp -a /app /tmp/app-test && cd /tmp/app-test && ./gradlew test --no-daemon --console=plain'
+```
+
+1. Open the generated report:
+
+```bash
+open compiler/build/reports/tests/test/index.html
+```
+
 
 ### Repository Structure
 ```text
@@ -216,7 +172,7 @@ Web UI:
 ---
 
 ## Project Architecture
-FreshlyGround follows a linear, multi-pass compiler pipeline with explicit separation between syntax, semantics, 
+FreshlyGround follows a linear, multi-pass compiler pipeline with explicit separation between syntax, semantics,
 and execution format. To do this it uses the following components:
 
 ### Compilation Pipeline (Passes)
@@ -252,11 +208,11 @@ Read the [docs](https://freshlyground-docs.onrender.com) to get a better underst
 ### Robert Nystrom
 Based on the book [**Crafting Interpreters**](https://www.craftinginterpreters.com/) by Robert Nystrom.
 
-If you are interested in programming languages, I strongly recommend the book — it provided the scaffolding for 
+If you are interested in programming languages, I strongly recommend the book — it provided the scaffolding for
 everything implemented here.
 
 ### Christian Vallentin
-EBNF syntax highlighting file authored by Christian Vallentin, licensed under the MIT License. The original 
+EBNF syntax highlighting file authored by Christian Vallentin, licensed under the MIT License. The original
 author retains full credit for their work.
 
 Christian, V. (2020-06-03). bnf.tmLanguage.json — File used in FreshlyGround documentation syntax.

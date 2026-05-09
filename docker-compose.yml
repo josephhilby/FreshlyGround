@@ -2,15 +2,30 @@ services:
   backend:
     build:
       context: ./compiler
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
     ports:
-      - "7070:7070"
+      - "${BACKEND_PORT}:7070"
+    volumes:
+      - ./compiler:/app
+      - gradle-cache:/root/.gradle
+    command: ./gradlew runServer
 
   frontend:
     build:
       context: ./web
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
     depends_on:
       - backend
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  gradle-cache:
